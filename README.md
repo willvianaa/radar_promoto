@@ -33,3 +33,7 @@ Sempre que faltou informação, o documento registra uma premissa em vez de inve
 ## Próximo passo
 
 Validação desta especificação pelas áreas (Diretoria, RH, DP, Compliance, P&P, Merchandising/TD, Supervisão e TI). O desenvolvimento do MVP só começa depois da aprovação e da resposta às perguntas marcadas como bloqueantes.
+
+## Protótipo navegável
+
+Em [prototipo/index.html](prototipo/index.html) há um protótipo das telas (Painel, Ficha do Colaborador e Emissão), com dados fictícios. Abra o arquivo no navegador. Ele serve para demonstração e validação: não é o sistema, não grava nada e não se conecta a nenhuma base.

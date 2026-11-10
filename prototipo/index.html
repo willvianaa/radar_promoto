@@ -1,0 +1,457 @@
+<meta charset="utf-8">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Radar Promotor Protótipo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: barra fixa de aplicação + três telas (painel, ficha, emissão) em coluna única de até 1180px; blocos em grid que empilham no celular. */
+:root{
+  --bg:#f2f4f8; --surface:#ffffff; --surface2:#f7f9fc; --ink:#152033; --muted:#5a6779; --line:#d8dee8;
+  --accent:#1d4f91; --accent-ink:#ffffff; --accent-soft:#e3ecf8;
+  --q-red:#b83227; --q-yellow:#a86f00; --q-blue:#2565ad; --q-green:#25784d; --q-grey:#616b7a;
+  --q-red-bg:#fbe9e7; --q-yellow-bg:#fbf1d6; --q-blue-bg:#e3eefb; --q-green-bg:#e0f3e8; --q-grey-bg:#e9ecf1;
+  --warn-bg:#fff4d6; --warn-line:#e0b23c;
+  --font-d:"Archivo","Segoe UI",Arial,sans-serif; --font-b:"IBM Plex Sans","Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f141b; --surface:#171e28; --surface2:#1d2633; --ink:#e5eaf2; --muted:#9aa6b8; --line:#2c3848;
+  --accent:#86b4f0; --accent-ink:#0f141b; --accent-soft:#1f2f47;
+  --q-red:#f08b80; --q-yellow:#e6b84d; --q-blue:#86b4f0; --q-green:#6fd09b; --q-grey:#a3adbb;
+  --q-red-bg:#3a1f1c; --q-yellow-bg:#3a2f12; --q-blue-bg:#1b2c45; --q-green-bg:#15301f; --q-grey-bg:#262e3a;
+  --warn-bg:#3a2f12; --warn-line:#8a6a1a; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f141b; --surface:#171e28; --surface2:#1d2633; --ink:#e5eaf2; --muted:#9aa6b8; --line:#2c3848;
+  --accent:#86b4f0; --accent-ink:#0f141b; --accent-soft:#1f2f47;
+  --q-red:#f08b80; --q-yellow:#e6b84d; --q-blue:#86b4f0; --q-green:#6fd09b; --q-grey:#a3adbb;
+  --q-red-bg:#3a1f1c; --q-yellow-bg:#3a2f12; --q-blue-bg:#1b2c45; --q-green-bg:#15301f; --q-grey-bg:#262e3a;
+  --warn-bg:#3a2f12; --warn-line:#8a6a1a; color-scheme:dark }
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:14px;line-height:1.45;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+h1,h2,h3{font-family:var(--font-d);margin:0;text-wrap:balance}
+h2{font-size:15px;font-weight:600;letter-spacing:.02em}
+button,select,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.num{font-variant-numeric:tabular-nums}
+
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding-block:10px}
+.brand{font-family:var(--font-d);font-weight:700;font-size:17px;letter-spacing:.01em}
+.brand small{font-family:var(--font-b);font-weight:500;font-size:12px;color:var(--muted);margin-left:6px}
+.nav{display:flex;gap:4px;flex-wrap:wrap}
+.nav a{padding:6px 12px;border-radius:6px;text-decoration:none;color:var(--muted);font-weight:500}
+.nav a.on{background:var(--accent-soft);color:var(--accent)}
+.perfil{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+select,input[type=text],input[type=date],textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
+textarea{width:100%;resize:vertical;line-height:1.5}
+
+.demo{background:var(--warn-bg);border-bottom:1px solid var(--warn-line);font-size:13px}
+.demo .wrap{padding-block:7px}
+main.wrap{padding-block:18px 48px;display:grid;gap:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;min-width:0}
+.panel>h2{margin-bottom:10px}
+.row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.field{display:grid;gap:3px;min-width:0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:7px 14px;cursor:pointer;font-weight:500;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 14px;cursor:pointer;font-weight:500}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.link{background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-decoration:underline;text-align:left;font-weight:500}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:grid;gap:2px}
+.card b{font-family:var(--font-d);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums}
+.card span{font-size:12px;color:var(--muted)}
+.two{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:16px}
+@media (max-width:860px){.two{grid-template-columns:minmax(0,1fr)}}
+
+.matrix{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;align-items:stretch}
+.matrix .ax{font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:center;text-align:center;padding:2px 4px}
+.q{border:1px solid transparent;border-radius:6px;padding:12px 10px;cursor:pointer;text-align:left;display:grid;gap:2px;min-height:74px}
+.q b{font-family:var(--font-d);font-size:22px}
+.q small{font-size:12px}
+.q.sel{border-color:currentColor;box-shadow:inset 0 0 0 1px currentColor}
+.c-VERMELHO{background:var(--q-red-bg);color:var(--q-red)} .c-AMARELO{background:var(--q-yellow-bg);color:var(--q-yellow)}
+.c-AZUL{background:var(--q-blue-bg);color:var(--q-blue)} .c-VERDE{background:var(--q-green-bg);color:var(--q-green)}
+.c-CINZA{background:var(--q-grey-bg);color:var(--q-grey)}
+.pill{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill.n{background:var(--q-grey-bg);color:var(--q-grey)}
+
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;white-space:nowrap}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+tr.hl td{background:var(--surface2)}
+.fita{display:inline-flex;gap:2px;vertical-align:middle}
+.fita i{width:9px;height:14px;border-radius:2px;display:block;background:var(--q-green)}
+.fita i.neg{background:var(--q-red)} .fita i.none{background:transparent;border:1px solid var(--line)}
+.muted{color:var(--muted)} .small{font-size:12px}
+.note{background:var(--surface2);border:1px dashed var(--line);border-radius:6px;padding:10px 12px;color:var(--muted);font-size:13px}
+.block{background:var(--q-red-bg);color:var(--q-red);border:1px solid currentColor;border-radius:6px;padding:10px 12px;display:grid;gap:6px}
+.ok{background:var(--q-green-bg);color:var(--q-green);border:1px solid currentColor;border-radius:6px;padding:10px 12px}
+
+.head{display:grid;gap:6px}
+.head h1{font-size:20px}
+.kv{display:flex;flex-wrap:wrap;gap:4px 18px;color:var(--muted);font-size:13px}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;background:none;padding:8px 12px;cursor:pointer;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tl{display:grid;gap:0}
+.tl div{display:grid;grid-template-columns:86px 120px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+@media (max-width:560px){.tl div{grid-template-columns:70px 1fr}.tl div span:last-child{grid-column:1/-1}}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.ph{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.ph .img{height:110px;background:repeating-linear-gradient(0deg,var(--surface2) 0 22px,var(--line) 22px 25px),var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px}
+.ph .cap{padding:8px 10px;font-size:12px;display:grid;gap:2px}
+
+.steps{display:flex;flex-wrap:wrap;gap:6px}
+.steps span{padding:4px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px;color:var(--muted)}
+.steps span.done{background:var(--q-green-bg);color:var(--q-green);border-color:transparent}
+.steps span.cur{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.ponto{border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:grid;gap:8px}
+.checks{display:grid;gap:4px;font-size:13px}
+.checks .bad{color:var(--q-red);font-weight:600} .checks .good{color:var(--q-green)}
+.doc{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:28px clamp(16px,5vw,44px);max-width:820px;display:grid;gap:14px}
+.doc h3{font-size:14px;margin-top:6px}
+.doc .cab{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--ink);padding-bottom:10px}
+.doc .rod{border-top:1px solid var(--line);padding-top:8px;font-size:11px;color:var(--muted)}
+.doc p{margin:0;max-width:68ch}
+.bars{display:grid;gap:5px}
+.bars div{display:grid;grid-template-columns:54px 1fr 46px;gap:8px;align-items:center;font-size:12px}
+.bars i{display:block;height:12px;background:var(--line);border-radius:2px;overflow:hidden}
+.bars i b{display:block;height:100%;background:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.q,.btn,.seg button{transition:background-color .12s}}
+</style>
+
+<header class="bar"><div class="wrap">
+  <div class="brand">Radar Promotor<small>2P RT</small></div>
+  <nav class="nav" id="nav"></nav>
+  <label class="perfil" for="perfil">Perfil
+    <select id="perfil">
+      <option value="pp">P&amp;P – Ana Exemplo</option>
+      <option value="rh">RH – Bia Exemplo</option>
+      <option value="sup">Supervisor – Carlos Exemplo Souza</option>
+      <option value="dp">DP – Davi Exemplo</option>
+      <option value="dir">Diretoria – Eva Exemplo</option>
+    </select>
+  </label>
+</div></header>
+<div class="demo"><div class="wrap"><strong>Protótipo de demonstração.</strong> Todos os nomes, lojas e números são fictícios. Nada é gravado nem enviado. Troque o perfil para ver o que cada área enxerga.</div></div>
+<main class="wrap" id="app"></main>
+
+<script>
+(function(){
+"use strict";
+/* ---------- parâmetros (premissas da especificação) ---------- */
+var PAR={tol:15,corteAder:93,corteDesemp:85,adesaoMin:85,humorAlerta:50,seqNeg:3,queda:20,pesos:[.4,.4,.2],ini:420,fim:920};
+var PREV=[1,2,3,4,5,8,9,10,11,12,14,15,16,17,18,19,21,22,23,24,25,26,28,29,30];
+var DOW=["dom","seg","ter","qua","qui","sex","sáb"];
+var SEM=[["S36","01/09 a 05/09",35,[1,5]],["S37","08/09 a 12/09",35,[8,12]],["S38","14/09 a 19/09",40,[14,19]],["S39","21/09 a 26/09",42,[21,26]],["S40","28/09 a 30/09",16,[28,30]]];
+var HUM={F:["Feliz",100,0],B:["Bem",75,0],N:["Neutro",50,0],C:["Cansado",25,1],S:["Sobrecarregado",25,1],T:["Triste",0,1],D:["Doente",0,1]};
+var SUPS={car:{nome:"Carlos Exemplo Souza",reg:"Nordeste 1",uf:"BA"},mar:{nome:"Marta Fictícia Rocha",reg:"Nordeste 1",uf:"PE"},pau:{nome:"Paulo Modelo Dias",reg:"Sudeste 2",uf:"MG"}};
+
+var PERFIS={
+ pp:{rot:"P&P",nome:"Ana Exemplo",ind:true,humorInd:false,humorAgr:true,quad:true,oper:true,gera:true,contexto:false,conversa:false,motivo:false,abas:["resumo","jornada","pesquisas","aderencia","faltas","fotos"]},
+ rh:{rot:"RH",nome:"Bia Exemplo",ind:true,humorInd:true,doente:true,humorAgr:true,quad:true,oper:true,gera:true,contexto:true,conversa:true,motivo:true,abas:["resumo","jornada","pesquisas","aderencia","humor","faltas","fotos"]},
+ sup:{rot:"Supervisor",nome:"Carlos Exemplo Souza",escopo:"car",ind:true,humorInd:true,humorAgr:true,quad:true,oper:true,gera:false,contexto:true,conversa:true,motivo:false,abas:["resumo","jornada","pesquisas","aderencia","humor","faltas","fotos"]},
+ dp:{rot:"DP",nome:"Davi Exemplo",ind:true,humorInd:false,humorAgr:false,quad:false,oper:"jornada",gera:false,contexto:false,conversa:false,motivo:true,abas:["jornada","faltas"]},
+ dir:{rot:"Diretoria",nome:"Eva Exemplo",ind:false,humorInd:false,humorAgr:true,quad:true,oper:true,gera:false,contexto:false,conversa:false,motivo:false,abas:[]}
+};
+
+/* ---------- dados fictícios ---------- */
+var BASE=[
+ {m:"900001",nome:"Joana Modelo Pereira",sup:"car",vinc:"CLT",h:"BFBBFB-NBBFCBN-FBC-CNBFBF",m60:72,lojas:[["Loja Fictícia 01",44,38],["Loja Fictícia 02",20,19]],resp:[33,32,36,27,11],
+  fx:{saida:{5:842,12:838,15:861,22:827,24:850,26:835},atraso:{3:461,16:458,23:485},auto:[22,24,26],semAlm:[12,22,24,26],falta:[18]},
+  fotos:[[10,"10:14","Loja Fictícia 01","Abastecimento – Marca A","Imagem idêntica à da visita de 17/09","FT-000000001"],[17,"09:52","Loja Fictícia 01","Abastecimento – Marca A","Imagem idêntica à da visita de 10/09","FT-000000002"],[24,"11:03","Loja Fictícia 01","Ponto extra – Marca B","Captura a 640 m da loja","FT-000000003"]],
+  ruptura:[["08/09","Marca A","Item A-01","36 un.","Divergente"],["08/09","Marca A","Item A-02","0 un.","Coerente"],["14/09","Marca A","Item A-03","48 un.","Divergente"],["14/09","Marca B","Item B-01","24 un.","Divergente"],["21/09","Marca A","Item A-01","12 un.","Divergente"],["21/09","Marca B","Item B-02","0 un.","Coerente"],["25/09","Marca A","Item A-04","Sem relatório","Sem dados"],["25/09","Marca B","Item B-01","Sem relatório","Sem dados"],["28/09","Marca B","Item B-03","60 un.","Divergente"]],
+  relato:"Supervisão relata saídas antes do horário, ruptura informada sem fundamento na Loja Fictícia 01 e pesquisas não respondidas na última semana do mês."},
+ {m:"900002",nome:"Pedro Fictício Lima",sup:"car",vinc:"CLT",h:"BNBCNBCCNBTCNCSBNCCTNCSCT",m60:48,lojas:[["Loja Fictícia 03",40,33],["Loja Fictícia 04",24,21]],pct:.78,g:[5,4,2,3,1],etapa:"Aberto",dias:1},
+ {m:"900003",nome:"Rita Exemplo Santos",sup:"car",vinc:"CLT",h:"B--N---B-F--B---N--B---B-",m60:66,lojas:[["Loja Fictícia 01",40,35],["Loja Fictícia 05",24,21]],pct:.82,g:[3,2,1,1,0],dias:6},
+ {m:"900004",nome:"Bruno Teste Almeida",sup:"car",vinc:"PJ",h:"FBFFBBFBFFBFBBFFBFBFFBBFF",m60:86,lojas:[["Loja Fictícia 05",36,35],["Loja Fictícia 06",28,28]],pct:.96,g:[1,1,0,0,0]},
+ {m:"900005",nome:"Lúcia Modelo Castro",sup:"mar",vinc:"CLT",h:"NCBCSNCCBNSCNCCBSCNCCSNCS",m60:44,lojas:[["Loja Fictícia 07",44,42],["Loja Fictícia 08",20,19]],pct:.94,g:[1,2,0,0,0],etapa:"Conversa agendada",dias:2},
+ {m:"900006",nome:"Diego Exemplo Nunes",sup:"mar",vinc:"CLT",h:"BBFBNBBFBBFBBNBFBBFBBBFBB",m60:78,lojas:[["Loja Fictícia 07",40,39],["Loja Fictícia 09",24,23]],pct:.95,g:[0,1,0,0,0]},
+ {m:"900007",nome:"Sara Fictícia Melo",sup:"mar",vinc:"CLT",h:"NCDCNCBTCCNSCCTNCSCBCTCSC",m60:40,lojas:[["Loja Fictícia 09",40,32],["Loja Fictícia 10",24,20]],pct:.74,g:[6,3,3,4,2],etapa:"Ação registrada",dias:9,
+  conversa:{data:"24/09/2026",resp:"Marta Fictícia Rocha",plano:"Revisão da rota das terças e quintas com Merchandising; acompanhamento semanal por 4 semanas; reavaliação em 08/10/2026."}},
+ {m:"900008",nome:"Tiago Modelo Reis",sup:"mar",vinc:"CLT",h:"BNBBFBNBBBFNBBNBFBBNBBFBN",m60:70,lojas:[["Loja Fictícia 11",40,35],["Loja Fictícia 12",24,22]],pct:.80,g:[4,3,1,2,1]},
+ {m:"900009",nome:"Helena Teste Barros",sup:"pau",vinc:"CLT",h:"FFBFBFFBBFFBFBFFBFFBFBFFB",m60:88,lojas:[["Loja Fictícia 13",36,36],["Loja Fictícia 14",28,27]],pct:.97,g:[0,0,0,0,0]},
+ {m:"900010",nome:"Caio Exemplo Pinto",sup:"pau",vinc:"CLT",h:"FBFFBFBBFFBFBFBBFBNNCNCNN",m60:82,lojas:[["Loja Fictícia 13",44,42],["Loja Fictícia 15",20,19]],pct:.93,g:[1,1,0,0,0],etapa:"Aberto",dias:1},
+ {m:"900011",nome:"Nina Fictícia Lopes",sup:"pau",vinc:"PJ",h:"BFBBFBFBBFBBFBFBBFBBFBFBB",m60:80,lojas:[["Loja Fictícia 14",40,39],["Loja Fictícia 16",24,23]],pct:.95,g:[1,0,0,0,0]},
+ {m:"900012",nome:"Otávio Modelo Cruz",sup:"pau",vinc:"CLT",h:"FB-B--N-B--BF---B-N--B-B-",m60:74,lojas:[["Loja Fictícia 15",40,38],["Loja Fictícia 16",24,22]],pct:.90,g:[2,1,0,1,1],dias:4}
+];
+
+function rng(seed){var a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function hm(min){var h=Math.floor(min/60),m=Math.round(min%60);return (h<10?"0":"")+h+":"+(m<10?"0":"")+m}
+function dur(min){return Math.floor(min/60)+"h"+(min%60<10?"0":"")+(min%60)}
+function dd(d){return (d<10?"0":"")+d+"/09"}
+function pc(x,n){return (x*100).toFixed(n==null?1:n).replace(".",",")+"%"}
+function n1(x){return x.toFixed(1).replace(".",",")}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+
+function build(b){
+  var r=rng(parseInt(b.m,10)), fx=b.fx;
+  if(!fx){ // gera desvios de jornada a partir das contagens g=[saídas, atrasos, automáticos, sem almoço, fotos]
+    var idx=PREV.slice().sort(function(){return r()-.5});
+    fx={saida:{},atraso:{},auto:[],semAlm:[],falta:[]};
+    idx.slice(0,b.g[0]).forEach(function(d,i){fx.saida[d]=820+Math.floor(r()*65); if(i<b.g[2])fx.auto.push(d); if(i<b.g[3])fx.semAlm.push(d)});
+    idx.slice(b.g[0],b.g[0]+b.g[1]).forEach(function(d){fx.atraso[d]=440+Math.floor(r()*50)});
+  }
+  var days=PREV.map(function(d,i){
+    var falta=fx.falta.indexOf(d)>=0, o={d:d,dow:DOW[new Date(2026,8,d).getDay()],falta:falta,h:falta?"-":b.h[i]};
+    if(falta) return o;
+    o.cin=fx.atraso[d]||(412+Math.floor(r()*14)); o.cout=fx.saida[d]||(920+Math.floor(r()*14));
+    o.atraso=o.cin-PAR.ini>PAR.tol?o.cin-PAR.ini:0; o.saida=PAR.fim-o.cout>PAR.tol?PAR.fim-o.cout:0;
+    o.auto=fx.auto.indexOf(d)>=0; o.semAlm=fx.semAlm.indexOf(d)>=0; o.desvio=!!(o.atraso||o.saida||o.auto||o.semAlm);
+    return o;
+  });
+  var w=days.filter(function(x){return !x.falta});
+  var rec=w.filter(function(x){return x.h!=="-"});
+  var pts=rec.map(function(x){return HUM[x.h][1]});
+  var idxH=pts.reduce(function(a,c){return a+c},0)/(pts.length||1);
+  var seq=0; for(var i=w.length-1;i>=0;i--){ if(w[i].h!=="-"&&HUM[w[i].h][2])seq++; else break; }
+  var l7=pts.slice(-7), last7=l7.reduce(function(a,c){return a+c},0)/(l7.length||1);
+  var resp=b.resp||SEM.map(function(s){return Math.round(s[2]*b.pct)});
+  var prog=SEM.reduce(function(a,s){return a+s[2]},0), rs=resp.reduce(function(a,c){return a+c},0);
+  var lp=b.lojas.reduce(function(a,l){return a+l[1]},0), lr=b.lojas.reduce(function(a,l){return a+l[2]},0);
+  var c={m:b.m,nome:b.nome,sup:b.sup,vinc:b.vinc,lojas:b.lojas,days:days,resp:resp,relato:b.relato||"",ruptura:b.ruptura||null,
+    etapa:b.etapa||"",dias:b.dias||0,conversa:b.conversa||null,m60:b.m60,
+    prev:days.length,trab:w.length,faltas:days.length-w.length,
+    humor:idxH,adesao:rec.length/w.length,negPct:rec.filter(function(x){return HUM[x.h][2]}).length/(rec.length||1),seq:seq,queda:b.m60-last7,recs:rec.length,
+    prog:prog,respT:rs,pesq:rs/prog,exp:prog-rs,ader:lr/lp,
+    nSaida:w.filter(function(x){return x.saida}).length,nAtraso:w.filter(function(x){return x.atraso}).length,nAuto:w.filter(function(x){return x.auto}).length,nSemAlm:w.filter(function(x){return x.semAlm}).length,
+    conf:w.filter(function(x){return !x.desvio}).length/w.length};
+  c.fotos=b.fotos||Array.from({length:b.g?b.g[4]:0},function(_,i){var d=PREV[Math.floor(r()*PREV.length)];return [d,"10:"+(10+i*7),b.lojas[0][0],"Abastecimento – Marca A",i%2?"Captura fora do intervalo da visita":"Captura a "+(350+Math.floor(r()*400))+" m da loja","FT-"+b.m+"0"+(i+1)]});
+  c.desemp=100*(PAR.pesos[0]*c.ader+PAR.pesos[1]*c.pesq+PAR.pesos[2]*c.conf);
+  c.alertaH=c.humor<PAR.humorAlerta||c.seq>=PAR.seqNeg||c.queda>=PAR.queda;
+  c.quad=c.adesao*100<PAR.adesaoMin?"CINZA":c.alertaH?(c.desemp<PAR.corteDesemp?"VERMELHO":"AMARELO"):(c.desemp<PAR.corteDesemp?"AZUL":"VERDE");
+  return c;
+}
+var COL=BASE.map(build);
+function byM(m){return COL.filter(function(c){return c.m===m})[0]}
+
+/* ---------- estado ---------- */
+var S={perfil:"pp",visao:"ambos",fSup:"",fReg:"",fQuad:"",rank:"sup",colab:"900001",aba:"resumo",em:null};
+function P(){return PERFIS[S.perfil]}
+function novaEm(){var c=byM(S.colab);return {step:1,tipo:"conduta",relato:c?c.relato:"",pontos:[],outras:[],status:0,num:"",hash:"",hist:[]}}
+function travado(c){return c.quad==="VERMELHO"&&!c.conversa}
+function escopo(){var p=P();return COL.filter(function(c){
+  if(p.escopo&&c.sup!==p.escopo)return false;
+  if(S.fSup&&c.sup!==S.fSup)return false;
+  if(S.fReg&&SUPS[c.sup].reg!==S.fReg)return false;
+  return true})}
+function avg(a,f){return a.length?a.reduce(function(s,x){return s+f(x)},0)/a.length:0}
+function pill(q){return '<span class="pill c-'+q+'">'+q+'</span>'}
+function fita(c){var p=P();if(!p.humorInd)return '<span class="muted small">restrito</span>';
+  var w=c.days.filter(function(x){return !x.falta}).slice(-10);
+  return '<span class="fita" role="img" aria-label="Humor dos últimos 10 dias">'+w.map(function(x){
+    if(x.h==="-")return '<i class="none" title="'+dd(x.d)+': sem registro"></i>';
+    var neg=HUM[x.h][2], t=(x.h==="D"&&!p.doente)?"alerta de cuidado":HUM[x.h][0];
+    return '<i class="'+(neg?"neg":"")+'" title="'+dd(x.d)+": "+t+'"></i>'}).join("")+'</span>'}
+
+function alertas(lista){var p=P(),out=[];
+  lista.forEach(function(c){
+    if(S.visao!=="corrigir"&&p.humorAgr){
+      if(c.quad==="CINZA")out.push({c:c,tipo:"Adesão",etapa:"Aberto",dias:c.dias||3,det:"Adesão de "+pc(c.adesao,0)+" ao registro de humor"});
+      else if(c.alertaH)out.push({c:c,tipo:"Cuidado",etapa:c.etapa||"Aberto",dias:c.dias||1,det:p.humorInd?(c.seq>=3?c.seq+" dias negativos seguidos":c.queda>=20?"Queda de "+Math.round(c.queda)+" pts vs. 60 dias":"Índice de Humor "+Math.round(c.humor)):"Alerta de cuidado"});
+    }
+    if(S.visao!=="cuidar"&&p.oper){
+      if(c.conf<.75)out.push({c:c,tipo:"Jornada",etapa:"Aberto",dias:2,det:(c.nSaida+c.nAtraso)+" dias com atraso ou saída antecipada"});
+      if(p.oper===true&&c.pesq<.85)out.push({c:c,tipo:"Pesquisas",etapa:"Aberto",dias:2,det:c.exp+" pesquisas expiradas ("+pc(c.pesq)+" respondidas)"});
+    }});
+  return out}
+
+/* ---------- painel ---------- */
+function vPainel(){var p=P(),L=escopo(),h="";
+  var visoes=[["cuidar","CUIDAR",p.humorAgr],["ambos","AMBOS",p.humorAgr&&p.oper],["corrigir","CORRIGIR",!!p.oper]].filter(function(v){return v[2]});
+  if(!visoes.some(function(v){return v[0]===S.visao}))S.visao=visoes[visoes.length-1][0];
+  h+='<section class="panel"><div class="row"><div class="field"><span class="lbl">Visão</span><div class="seg">'+visoes.map(function(v){return '<button data-a="visao" data-v="'+v[0]+'" class="'+(S.visao===v[0]?"on":"")+'">'+v[1]+'</button>'}).join("")+'</div></div>';
+  if(!p.escopo){
+    h+='<label class="field" for="fReg"><span class="lbl">Regional</span><select id="fReg" data-f="fReg"><option value="">Todas</option>'+["Nordeste 1","Sudeste 2"].map(function(r){return '<option'+(S.fReg===r?" selected":"")+'>'+r+'</option>'}).join("")+'</select></label>';
+    h+='<label class="field" for="fSup"><span class="lbl">Supervisor</span><select id="fSup" data-f="fSup"><option value="">Todos</option>'+Object.keys(SUPS).map(function(k){return '<option value="'+k+'"'+(S.fSup===k?" selected":"")+'>'+SUPS[k].nome+'</option>'}).join("")+'</select></label>';
+  } else h+='<div class="field"><span class="lbl">Escopo</span><span>Equipe de '+SUPS[p.escopo].nome+'</span></div>';
+  h+='<div class="field"><span class="lbl">Período</span><span class="num">01/09/2026 a 30/09/2026</span></div></div></section>';
+
+  var cu=S.visao!=="corrigir"&&p.humorAgr, co=S.visao!=="cuidar"&&p.oper, cards=[];
+  var val=L.filter(function(c){return c.quad!=="CINZA"});
+  if(cu){cards.push(["Índice de Humor",n1(avg(val,function(c){return c.humor})),"média dos colaboradores com adesão válida"],["Adesão",pc(avg(L,function(c){return c.adesao})),"meta: 85%"],["Dias negativos",pc(avg(val,function(c){return c.negPct})),"dos dias com registro"],["Alertas de cuidado",String(L.filter(function(c){return c.quad!=="CINZA"&&c.alertaH&&c.etapa!=="Ação registrada"}).length),"sem ação registrada"],["SLA do supervisor","1,6 dia útil","meta: até 2 dias úteis"])}
+  if(co){ if(p.oper===true)cards.push(["Aderência",pc(avg(L,function(c){return c.ader})),"meta: 93%"],["Fotos suspeitas",String(L.reduce(function(a,c){return a+c.fotos.length},0)),"indícios a conferir"],["Pesquisas expiradas",String(L.reduce(function(a,c){return a+c.exp},0)),"no período"]);
+    else cards.push(["Conformidade de jornada",pc(avg(L,function(c){return c.conf})),"dias sem desvio"],["Saídas antecipadas",String(L.reduce(function(a,c){return a+c.nSaida},0)),"dias no período"],["Atrasos",String(L.reduce(function(a,c){return a+c.nAtraso},0)),"dias no período"],["Faltas",String(L.reduce(function(a,c){return a+c.faltas},0)),"no período"])}
+  h+='<section class="cards">'+cards.map(function(c){return '<div class="card"><span class="lbl">'+c[0]+'</span><b>'+c[1]+'</b><span>'+c[2]+'</span></div>'}).join("")+'</section>';
+
+  var cnt={};["VERMELHO","AMARELO","AZUL","VERDE","CINZA"].forEach(function(q){cnt[q]=L.filter(function(c){return c.quad===q}).length});
+  function qb(q,t){return '<button class="q c-'+q+(S.fQuad===q?" sel":"")+'" data-a="quad" data-v="'+q+'"><small>'+q+'</small><b class="num">'+cnt[q]+'</b><small>'+t+'</small></button>'}
+  var mat=p.quad?'<section class="panel"><h2>Matriz Humor × Desempenho</h2><div class="matrix"><span class="ax">Humor<br>ok</span>'+qb("AZUL","orientação e treinamento")+qb("VERDE","destaque operacional")+'<span class="ax">Humor em<br>alerta</span>'+qb("VERMELHO","conversa de cuidado obrigatória")+qb("AMARELO","risco de esgotamento")+'<span class="ax"></span><span class="ax">Desempenho baixo</span><span class="ax">Desempenho alto</span></div><div style="margin-top:6px">'+qb("CINZA","adesão abaixo de 85%").replace('class="q','style="width:100%;min-height:0" class="q')+'</div><p class="muted small" style="margin:8px 0 0">Clique num quadrante para filtrar a lista. Clique de novo para limpar.</p></section>':"";
+
+  var lst="";
+  if(p.ind){var A=alertas(L).filter(function(a){return !S.fQuad||a.c.quad===S.fQuad});
+    lst='<section class="panel"><h2>Alertas'+(S.fQuad?" · "+S.fQuad:"")+'</h2>'+(A.length?'<div class="scroll"><table><thead><tr><th>Colaborador</th><th>Tipo</th><th>Motivo</th>'+(p.humorAgr?'<th>Humor (10 dias)</th>':"")+'<th>Etapa</th><th class="r">Dias</th></tr></thead><tbody>'+A.map(function(a){return '<tr><td><button class="link" data-a="abrir" data-v="'+a.c.m+'">'+a.c.nome+'</button></td><td>'+a.tipo+'</td><td>'+a.det+'</td>'+(p.humorAgr?'<td>'+fita(a.c)+'</td>':"")+'<td>'+a.etapa+'</td><td class="r">'+a.dias+'</td></tr>'}).join("")+'</tbody></table></div>':'<p class="note">Nenhum alerta para este filtro.</p>')+'</section>';
+  } else lst='<section class="panel"><h2>Alertas</h2><p class="note">O perfil Diretoria vê só dados agregados. A lista individual de alertas não é exibida.</p></section>';
+  h+=mat?'<div class="two">'+mat+lst+'</div>':lst;
+
+  if(p.oper===true){
+    var grupos={};
+    L.forEach(function(c){var ks=S.rank==="sup"?[SUPS[c.sup].nome]:S.rank==="reg"?[SUPS[c.sup].reg]:c.lojas.map(function(l){return l[0]});
+      ks.forEach(function(k,i){(grupos[k]=grupos[k]||{n:0,cs:[],lp:0,lr:0});grupos[k].n++;grupos[k].cs.push(c);var l=S.rank==="loja"?c.lojas[i]:null;grupos[k].lp+=l?l[1]:c.lojas.reduce(function(a,x){return a+x[1]},0);grupos[k].lr+=l?l[2]:c.lojas.reduce(function(a,x){return a+x[2]},0)})});
+    var rows=Object.keys(grupos).map(function(k){var g=grupos[k];return {k:k,n:g.n,ader:g.lr/g.lp,pesq:avg(g.cs,function(c){return c.pesq}),hum:avg(g.cs.filter(function(c){return c.quad!=="CINZA"}),function(c){return c.humor}),ades:avg(g.cs,function(c){return c.adesao}),al:alertas(g.cs).length}}).sort(function(a,b){return a.ader-b.ader});
+    var loja=S.rank==="loja";
+    h+='<section class="panel"><div class="row" style="justify-content:space-between;margin-bottom:10px"><h2>Ranking</h2><div class="seg">'+[["sup","Supervisor"],["loja","Loja"],["reg","Regional"]].map(function(v){return '<button data-a="rank" data-v="'+v[0]+'" class="'+(S.rank===v[0]?"on":"")+'">'+v[1]+'</button>'}).join("")+'</div></div><div class="scroll"><table><thead><tr><th>'+(loja?"Loja":S.rank==="sup"?"Supervisor":"Regional")+'</th><th class="r">'+(loja?"Promotores":"Equipe")+'</th>'+(p.humorAgr&&!loja?'<th class="r">Humor</th><th class="r">Adesão</th>':"")+'<th class="r">Aderência</th>'+(loja?"":'<th class="r">Pesq. respondidas</th><th class="r">Alertas</th>')+'</tr></thead><tbody>'+rows.map(function(r){return '<tr><td>'+r.k+'</td><td class="r">'+r.n+'</td>'+(p.humorAgr&&!loja?'<td class="r">'+n1(r.hum)+'</td><td class="r">'+pc(r.ades)+'</td>':"")+'<td class="r">'+pc(r.ader)+(r.ader*100<PAR.corteAder?' <span class="pill c-AMARELO">abaixo da meta</span>':"")+'</td>'+(loja?"":'<td class="r">'+pc(r.pesq)+'</td><td class="r">'+r.al+'</td>')+'</tr>'}).join("")+'</tbody></table></div><p class="muted small" style="margin:8px 0 0">Ordenado da menor para a maior aderência. Não existe ranking individual de humor.</p></section>';
+  }
+  if(p.ind){
+    h+='<section class="panel"><h2>Colaboradores</h2><div class="scroll"><table><thead><tr><th>Colaborador</th><th>Matrícula</th><th>Supervisor</th>'+(p.quad?'<th>Quadrante</th>':"")+(p.oper===true?'<th class="r">Desempenho</th>':"")+'<th class="r">Conf. jornada</th></tr></thead><tbody>'+L.filter(function(c){return !S.fQuad||c.quad===S.fQuad}).map(function(c){return '<tr><td><button class="link" data-a="abrir" data-v="'+c.m+'">'+c.nome+'</button></td><td class="num">'+c.m+'</td><td>'+SUPS[c.sup].nome+'</td>'+(p.quad?'<td>'+pill(c.quad)+'</td>':"")+(p.oper===true?'<td class="r">'+n1(c.desemp)+'</td>':"")+'<td class="r">'+pc(c.conf)+'</td></tr>'}).join("")+'</tbody></table></div></section>';
+  }
+  return h}
+
+/* ---------- ficha ---------- */
+var ABAS={resumo:"Resumo",jornada:"Jornada",pesquisas:"Pesquisas",aderencia:"Aderência",humor:"Humor",faltas:"Faltas",fotos:"Fotos"};
+function vFicha(){var p=P(),c=byM(S.colab);
+  if(!p.ind)return '<section class="panel"><p class="note">O perfil Diretoria não acessa a ficha individual. A visão é só agregada, no Painel.</p></section>';
+  if(p.escopo&&c.sup!==p.escopo){c=escopo()[0];S.colab=c.m}
+  if(p.abas.indexOf(S.aba)<0)S.aba=p.abas[0];
+  var s=SUPS[c.sup],h='<section class="panel head"><div class="row" style="justify-content:space-between"><h1>'+c.nome+' <span class="muted small">(fictício)</span></h1><div class="row"><label class="small muted" for="selColab">Trocar</label><select id="selColab" data-f="colab">'+escopo().map(function(x){return '<option value="'+x.m+'"'+(x.m===c.m?" selected":"")+'>'+x.nome+'</option>'}).join("")+'</select>'+(p.gera?'<button class="btn pri" data-a="emitir">Emitir relatório</button>':"")+'</div></div><div class="kv"><span>Matrícula <b class="num">'+c.m+'</b></span><span>'+c.vinc+' · Promotor(a) de Vendas</span><span>Regional '+s.reg+' · '+s.uf+'</span><span>Supervisor: '+s.nome+'</span></div><div class="kv"><span>Escala: seg a sáb, 07:00–15:20, intervalo 12:00–13:00</span><span>Lojas: '+c.lojas.map(function(l){return l[0]}).join(" · ")+'</span><span>Período: 01/09/2026 a 30/09/2026</span>'+(p.quad?'<span>Quadrante: '+pill(c.quad)+'</span>':"")+'</div></section>';
+  if(p.quad&&travado(c))h+='<div class="block"><strong>Emissão do Dossiê de Conduta bloqueada.</strong><span>Colaborador no quadrante VERMELHO sem Conversa de Cuidado registrada.</span>'+(p.conversa?'<div><button class="btn" data-a="conversa">Registrar Conversa de Cuidado</button></div>':'<span class="small">O registro é feito pelo supervisor ou pelo RH.</span>')+'</div>';
+  if(c.conversa&&(p.conversa||p.contexto))h+='<div class="ok"><strong>Conversa de Cuidado registrada</strong> em '+c.conversa.data+' por '+esc(c.conversa.resp)+'. Plano de ação: '+esc(c.conversa.plano)+'</div>';
+  h+='<section class="panel"><div class="tabs" role="tablist">'+p.abas.map(function(a){return '<button role="tab" aria-selected="'+(S.aba===a)+'" data-a="aba" data-v="'+a+'" class="'+(S.aba===a?"on":"")+'">'+ABAS[a]+'</button>'}).join("")+'</div><div style="padding-top:14px;display:grid;gap:14px">'+abaHtml(c)+'</div></section>';
+  return h}
+
+function fotosHtml(c){return c.fotos.length?'<div class="gal">'+c.fotos.map(function(f,i){return '<div class="ph"><div class="img">foto '+(i+1)+' (ilustrativa)</div><div class="cap"><b>'+dd(f[0])+'/2026 · '+f[1]+'</b><span>'+f[2]+'</span><span>'+f[3]+'</span><span class="muted">Indício: '+f[4]+'</span><span class="muted num">ID '+f[5]+'</span></div></div>'}).join("")+'</div>':'<p class="note">Nenhum indício de foto no período.</p>'}
+function abaHtml(c){var p=P(),w=c.days;
+  if(S.aba==="resumo"){
+    var tl=w.filter(function(x){return x.falta||x.desvio||(p.humorInd&&x.h!=="-"&&HUM[x.h][2])}).concat(c.fotos.map(function(f){return {d:f[0],foto:f}})).sort(function(a,b){return a.d-b.d});
+    return '<div class="cards">'+[["Dias trabalhados",c.trab+" de "+c.prev],["Pesq. respondidas",pc(c.pesq)],["Aderência",pc(c.ader)],["Conf. de jornada",pc(c.conf)],["Desempenho",n1(c.desemp)]].map(function(k){return '<div class="card"><span class="lbl">'+k[0]+'</span><b>'+k[1]+'</b></div>'}).join("")+'</div><h2>Linha do tempo</h2><div class="tl">'+(tl.length?tl.map(function(x){
+      if(x.foto)return '<div><span class="num">'+dd(x.d)+'</span><span></span><span>Foto com indício: '+x.foto[4].toLowerCase()+' ('+x.foto[2]+')</span></div>';
+      var ev=[];if(x.falta)ev.push("Falta justificada");if(x.atraso)ev.push("Atraso: check-in às "+hm(x.cin));if(x.saida)ev.push("Saída antecipada: "+(x.auto?"último registro":"check-out")+" às "+hm(x.cout));if(x.auto)ev.push("check-out automático");if(x.semAlm)ev.push("intervalo sem registro");
+      var hu=p.humorInd&&x.h&&x.h!=="-"?((x.h==="D"&&!p.doente)?"Alerta de cuidado":HUM[x.h][0]):"";
+      return '<div><span class="num">'+dd(x.d)+' '+x.dow+'</span><span class="muted">'+hu+'</span><span>'+ev.join(" · ")+'</span></div>'}).join(""):'<p class="note">Sem ocorrências no período.</p>')+'</div><h2>Fotos com indício</h2>'+fotosHtml(c)}
+  if(S.aba==="jornada")return '<div class="scroll"><table><thead><tr><th>Data</th><th>Dia</th><th>Escala</th><th>Check-in</th><th>Check-out</th><th class="r">Atraso</th><th class="r">Saída antec.</th><th>Check-out</th><th>Intervalo</th></tr></thead><tbody>'+w.map(function(x){return x.falta?'<tr class="hl"><td class="num">'+dd(x.d)+'</td><td>'+x.dow+'</td><td colspan="7">Falta justificada</td></tr>':'<tr'+(x.desvio?' class="hl"':"")+'><td class="num">'+dd(x.d)+'</td><td>'+x.dow+'</td><td class="num">07:00–15:20</td><td class="num">'+hm(x.cin)+'</td><td class="num">'+hm(x.cout)+'</td><td class="r">'+(x.atraso?x.atraso+" min":"")+'</td><td class="r">'+(x.saida?x.saida+" min":"")+'</td><td>'+(x.auto?"Automático":"Manual")+'</td><td>'+(x.semAlm?"Sem registro":"Registrado")+'</td></tr>'}).join("")+'</tbody></table></div><p class="muted small">Tolerância de '+PAR.tol+' min. Linhas destacadas têm algum desvio. Em check-out automático, o horário é o do último registro de atividade.</p>';
+  if(S.aba==="pesquisas")return '<div class="scroll"><table><thead><tr><th>Semana</th><th>Período</th><th class="r">Programadas</th><th class="r">Respondidas</th><th class="r">Expiradas</th><th class="r">% respondidas</th></tr></thead><tbody>'+SEM.map(function(s,i){return '<tr><td>'+s[0]+'</td><td class="num">'+s[1]+'</td><td class="r">'+s[2]+'</td><td class="r">'+c.resp[i]+'</td><td class="r">'+(s[2]-c.resp[i])+'</td><td class="r">'+pc(c.resp[i]/s[2])+'</td></tr>'}).join("")+'<tr class="hl"><td colspan="2"><b>Total</b></td><td class="r"><b>'+c.prog+'</b></td><td class="r"><b>'+c.respT+'</b></td><td class="r"><b>'+c.exp+'</b></td><td class="r"><b>'+pc(c.pesq)+'</b></td></tr></tbody></table></div>';
+  if(S.aba==="aderencia")return '<div class="scroll"><table><thead><tr><th>Loja</th><th class="r">Visitas previstas</th><th class="r">Realizadas</th><th class="r">Aderência</th><th class="r">Meta</th><th>Entra no Dossiê de Conduta?</th></tr></thead><tbody>'+c.lojas.map(function(l){var a=l[2]/l[1];return '<tr><td>'+l[0]+'</td><td class="r">'+l[1]+'</td><td class="r">'+l[2]+'</td><td class="r">'+pc(a)+'</td><td class="r">93%</td><td>'+(a*100>=PAR.corteAder?"Não (meta atingida)":"Sim")+'</td></tr>'}).join("")+'</tbody></table></div>';
+  if(S.aba==="humor"){var rec=w.filter(function(x){return !x.falta});
+    return '<div class="cards">'+[["Índice de Humor",n1(c.humor)],["Adesão",pc(c.adesao)+" ("+c.recs+" de "+c.trab+")"],["Dias negativos",pc(c.negPct)],["Sequência negativa atual",c.seq+(c.seq===1?" dia":" dias")],["Variação vs. 60 dias",(c.queda>0?"−":"+")+n1(Math.abs(c.queda))+" pts"]].map(function(k){return '<div class="card"><span class="lbl">'+k[0]+'</span><b style="font-size:19px">'+k[1]+'</b></div>'}).join("")+'</div><p class="note">O humor é contexto de acompanhamento. Não gera ocorrência de conduta e não fundamenta penalidade.</p><div class="scroll"><table><thead><tr><th>Data</th><th>Dia</th><th>Registro</th><th class="r">Pontos</th></tr></thead><tbody>'+rec.map(function(x){if(x.h==="-")return '<tr><td class="num">'+dd(x.d)+'</td><td>'+x.dow+'</td><td class="muted">Sem registro</td><td></td></tr>';var m=x.h==="D"&&!p.doente;return '<tr'+(HUM[x.h][2]?' class="hl"':"")+'><td class="num">'+dd(x.d)+'</td><td>'+x.dow+'</td><td>'+(m?"Alerta de cuidado":HUM[x.h][0])+'</td><td class="r">'+(m?"":HUM[x.h][1])+'</td></tr>'}).join("")+'</tbody></table></div>'}
+  if(S.aba==="faltas"){var f=w.filter(function(x){return x.falta});return f.length?'<div class="scroll"><table><thead><tr><th>Data</th><th>Tipo</th><th>Justificada</th><th>Motivo</th></tr></thead><tbody>'+f.map(function(x){return '<tr><td class="num">'+dd(x.d)+'/2026</td><td>Falta</td><td>Sim</td><td>'+(p.motivo?"Atestado apresentado ao DP (documento não exibido)":'<span class="muted">restrito a DP e RH</span>')+'</td></tr>'}).join("")+'</tbody></table></div>':'<p class="note">Nenhuma falta, atestado ou afastamento no período.</p>'}
+  return fotosHtml(c)+'<p class="muted small">Todo indício de foto precisa de conferência humana antes de entrar em um documento.</p>'}
+
+/* ---------- emissão ---------- */
+var CONC=["CONFIRMADO PELOS REGISTROS","PARCIALMENTE CONFIRMADO","NÃO CONFIRMADO","SEM DADOS SUFICIENTES"];
+var FLUXO=["Rascunho","Em revisão","Aprovado","Emitido","Ciência registrada","Arquivado"];
+function analisar(c,relato){var t=relato.toLowerCase(),pts=[];
+  if(/sa[ií]da|hor[áa]rio|jornada|atras|cedo/.test(t)){var n=c.nSaida,sa=c.days.filter(function(x){return x.saida});var tot=sa.reduce(function(a,x){return a+x.saida},0);
+    pts.push({tit:"Saídas antes do horário previsto",conc:n>=3?0:n>=1?1:2,ind:"Check-out antes do horário em "+n+" de "+c.trab+" dias trabalhados",
+      txt:n?"Os registros operacionais indicam check-out anterior ao horário previsto na escala (15:20) em "+n+" dos "+c.trab+" dias trabalhados no período, considerada a tolerância de "+PAR.tol+" minutos. A antecipação média foi de "+dur(Math.round(tot/n))+" e o total acumulado foi de "+dur(tot)+"."+(c.nAuto?" Em "+c.nAuto+" desses dias o check-out foi registrado automaticamente pela plataforma de monitoramento, sem registro manual de encerramento.":""):"Os registros operacionais do período não indicam check-out anterior ao horário previsto na escala, considerada a tolerância de "+PAR.tol+" minutos.",
+      tab:{h:["Data","Último check-out","Antecipação","Tipo"],r:sa.map(function(x){return [dd(x.d)+"/2026",hm(x.cout),dur(x.saida),x.auto?"Automático":"Manual"]})}})}
+  if(/ruptura|estoque/.test(t)){ if(c.ruptura){var dv=c.ruptura.filter(function(r){return r[4]==="Divergente"}).length;
+      pts.push({tit:"Ruptura informada e estoque da loja",conc:1,ind:dv+" de "+c.ruptura.length+" itens informados como ruptura constavam com estoque positivo",
+        txt:"Na Loja Fictícia 01, "+c.ruptura.length+" itens foram informados como ruptura nas pesquisas do período. O confronto com o relatório de estoque fornecido pelo cliente indica que "+dv+" desses itens constavam com estoque positivo na mesma data, 2 constavam com estoque zerado e, para 2, não havia relatório de estoque da data. Os "+dv+" registros divergentes necessitam ser apurados junto à loja, uma vez que o estoque em sistema pode não corresponder ao estoque disponível para exposição.",
+        tab:{h:["Data","Marca","Item","Estoque no relatório do cliente","Situação"],r:c.ruptura.map(function(r){return [r[0]+"/2026",r[1],r[2],r[3],r[4]]})}})}
+    else pts.push({tit:"Ruptura informada e estoque da loja",conc:3,ind:"Sem relatório de estoque do cliente para o período",txt:"Não há relatório de estoque do cliente carregado para o período, o que impede o confronto entre as rupturas informadas e o estoque da loja.",tab:null})}
+  if(/pesquisa|respond|expirad/.test(t)){var pior=0;SEM.forEach(function(s,i){if(c.resp[i]/s[2]<c.resp[pior]/SEM[pior][2])pior=i});var ex=SEM[pior][2]-c.resp[pior];
+    pts.push({tit:"Pesquisas programadas e não respondidas",conc:c.pesq<.85?0:c.pesq<.93?1:2,ind:c.exp+" de "+c.prog+" pesquisas expiradas ("+pc(c.pesq)+" respondidas)",
+      txt:"No período, "+c.prog+" pesquisas foram programadas, "+c.respT+" foram respondidas ("+pc(c.pesq)+") e "+c.exp+" expiraram. A semana de "+SEM[pior][1]+" concentrou "+ex+" das "+c.exp+" pesquisas expiradas: das "+SEM[pior][2]+" programadas, "+c.resp[pior]+" foram respondidas ("+pc(c.resp[pior]/SEM[pior][2])+").",
+      tab:{h:["Semana","Período","Programadas","Respondidas","Expiradas","% respondidas"],r:SEM.map(function(s,i){return [s[0],s[1],s[2],c.resp[i],s[2]-c.resp[i],pc(c.resp[i]/s[2])]})},bars:SEM.map(function(s,i){return [s[0],c.resp[i]/s[2]]})})}
+  if(/foto|imagem/.test(t)){var nf=c.fotos.length;
+    pts.push({tit:"Fotos com indício de inconsistência",conc:nf?0:2,ind:nf+" foto(s) com indício no período",txt:nf?"Os registros indicam "+nf+" foto(s) com indício de inconsistência no período, detalhadas no Anexo A. Os indícios necessitam ser apurados mediante conferência das imagens.":"Os registros do período não indicam fotos com indício de inconsistência.",tab:nf?{h:["Data","Hora","Loja","Indício"],r:c.fotos.map(function(f){return [dd(f[0])+"/2026",f[1],f[2],f[4]]})}:null})}
+  return pts.slice(0,5)}
+function outras(c,pts){var tem=function(k){return pts.some(function(p){return p.tit.indexOf(k)>=0})},o=[];
+  if(c.nAtraso)o.push({on:true,txt:"Check-in após o horário previsto (tolerância de "+PAR.tol+" min) em "+c.nAtraso+" dia(s)"});
+  if(!tem("Saídas")&&c.nSaida)o.push({on:true,txt:"Check-out antes do horário previsto em "+c.nSaida+" dia(s)"});
+  if(c.nSemAlm)o.push({on:true,txt:"Intervalo sem registro no ponto não operacional em "+c.nSemAlm+" dia(s)"});
+  if(!tem("Fotos")&&c.fotos.length)o.push({on:true,txt:c.fotos.length+" foto(s) com indício de inconsistência (Anexo A)"});
+  if(!tem("Pesquisas")&&c.pesq<.85)o.push({on:true,txt:c.exp+" pesquisas expiradas no período ("+pc(c.pesq)+" respondidas)"});
+  c.lojas.forEach(function(l){if(l[2]/l[1]*100<PAR.corteAder)o.push({on:true,txt:"Aderência da "+l[0]+" abaixo da meta de 93%: "+pc(l[2]/l[1])+" ("+l[2]+" de "+l[1]+" visitas previstas)"})});
+  return o}
+function revisar(){var e=S.em,t=e.pontos.map(function(p){return p.txt}).join(" ").toLowerCase();
+  var ac=["detrator","preguiços","irresponsáve","fraud","mentiu","mentir","culpad","desonest","relapso","má-fé","má fé"].filter(function(w){return t.indexOf(w)>=0});
+  var si=["involves","status day","2p rt"].filter(function(w){return t.indexOf(w)>=0});
+  var sa=["bom dia","boa tarde","boa noite","prezad","olá"].filter(function(w){return t.indexOf(w)>=0});
+  return {ac:ac,si:si,sa:sa,ok:!ac.length&&!si.length&&!sa.length&&e.pontos.length>0}}
+function revHtml(){var r=revisar(),li=function(bad,ok,msg){return '<span class="'+(bad.length?"bad":"good")+'">'+(bad.length?"✖ "+msg+": “"+bad.join("”, “")+"”":"✔ "+ok)+'</span>'};
+  return '<div class="checks">'+li(r.ac,"Sem termos acusatórios","Termo acusatório encontrado")+li(r.si,"Sem nomes de sistemas no corpo","Nome de sistema encontrado")+li(r.sa,"Sem saudações","Saudação encontrada")+'<span class="good">✔ Números conferem com a base <span class="muted">(simulado)</span></span><span class="'+(S.em.pontos.length<=5?"good":"bad")+'">'+(S.em.pontos.length<=5?"✔":"✖")+' Blocos de achados: '+S.em.pontos.length+' de 5</span></div>'}
+function hashDe(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}var x=(h>>>0).toString(16).toUpperCase().padStart(8,"0"),y=(Math.imul(h,2654435761)>>>0).toString(16).toUpperCase().padStart(8,"0");return x.slice(0,4)+"-"+x.slice(4)+"-"+y.slice(0,4)+"-"+y.slice(4)}
+
+function vEmissao(){var p=P(),c=byM(S.colab);
+  if(!p.gera)return '<section class="panel"><h2>Emitir relatório</h2><p class="note">O perfil '+p.rot+' não gera o Dossiê de Conduta. Neste protótipo, a emissão está disponível para os perfis P&amp;P e RH.'+(S.perfil==="sup"?" O supervisor registra o relato e a Conversa de Cuidado; a geração cabe ao P&amp;P ou ao RH.":"")+'</p></section>';
+  if(!S.em)S.em=novaEm();var e=S.em,h="",tr=travado(c)&&e.tipo==="conduta";
+  h+='<section class="panel"><div class="row" style="justify-content:space-between"><h2>Emitir relatório</h2><div class="steps">'+["1. Parâmetros","2. Rascunho","3. Fluxo e documento"].map(function(s,i){return '<span class="'+(e.step===i+1?"cur":e.step>i+1?"done":"")+'">'+s+'</span>'}).join("")+'</div></div></section>';
+  if(e.step===1){
+    h+='<section class="panel" style="display:grid;gap:14px"><div class="field"><span class="lbl">a) Tipo de relatório</span><div class="row">'+[["conduta","Dossiê de Conduta"],["cuidado","Relatório de Acompanhamento (Cuidado)"],["jornada","Relatório de Jornada (DP/Compliance)"],["exec","Relatório Executivo (agregado)"]].map(function(t){return '<label><input type="radio" name="tipo" id="tipo-'+t[0]+'" value="'+t[0]+'" data-f="tipo"'+(e.tipo===t[0]?" checked":"")+'> '+t[1]+'</label>'}).join("")+'</div></div>'+
+    '<div class="row"><label class="field" for="emColab"><span class="lbl">b) Colaborador</span><select id="emColab" data-f="colab">'+escopo().map(function(x){return '<option value="'+x.m+'"'+(x.m===c.m?" selected":"")+'>'+x.m+' – '+x.nome+'</option>'}).join("")+'</select></label><div class="field"><span class="lbl">Período</span><span class="num">01/09/2026 a 30/09/2026</span></div>'+(p.quad?'<div class="field"><span class="lbl">Quadrante</span>'+pill(c.quad)+'</div>':"")+'</div>'+
+    '<label class="field" for="relato"><span class="lbl">c) Relato a apurar (obrigatório)</span><textarea id="relato" rows="3" placeholder="Ex.: supervisão relata ruptura informada sem fundamento na loja X e saídas antes do horário.">'+esc(e.relato)+'</textarea><span class="muted small">Neste protótipo, o relato é relacionado aos indicadores por palavras-chave: saída/horário, ruptura/estoque, pesquisa, foto.</span></label>';
+    if(e.tipo!=="conduta")h+='<p class="note">Neste protótipo, só o Dossiê de Conduta está simulado até o fim.</p>';
+    if(tr)h+='<div class="block"><strong>Emissão bloqueada.</strong><span>Colaborador no quadrante VERMELHO. É necessário registrar a Conversa de Cuidado (data, responsável e plano de ação) antes de aprovar o Dossiê de Conduta.</span>'+(p.conversa?'<div><button class="btn" data-a="conversa">Registrar Conversa de Cuidado</button></div>':'<span class="small">Troque para o perfil RH ou Supervisor para registrar a conversa.</span>')+'</div>';
+    h+='<div id="emErro" class="block" hidden></div><div class="row" style="justify-content:flex-end"><button class="btn pri" data-a="gerar"'+(e.tipo!=="conduta"?" disabled":"")+'>Gerar rascunho</button></div></section>';
+  }
+  if(e.step===2){
+    h+='<section class="panel"><div class="kv"><span><b>RP-2026-000124 · v1 · RASCUNHO</b></span><span>'+c.nome+' · '+c.m+'</span></div><p style="margin:8px 0 0"><span class="lbl">Relato</span><br>“'+esc(e.relato)+'”</p></section><div class="two"><section class="panel" style="display:grid;gap:12px;align-content:start"><h2>Pontos do relato</h2>'+e.pontos.map(function(pt,i){return '<div class="ponto"><b>'+(i+1)+'. '+pt.tit+'</b><label class="field" for="conc'+i+'"><span class="lbl">Conclusão</span><select id="conc'+i+'" data-conc="'+i+'">'+CONC.map(function(k,j){return '<option value="'+j+'"'+(pt.conc===j?" selected":"")+'>'+k+'</option>'}).join("")+'</select></label><span class="small muted">Indicador: '+pt.ind+'</span><label class="field" for="txt'+i+'"><span class="lbl">Texto (editável)</span><textarea id="txt'+i+'" rows="6" data-txt="'+i+'">'+esc(pt.txt)+'</textarea></label></div>'}).join("")+'</section><div style="display:grid;gap:16px;align-content:start"><section class="panel"><h2>Outras ocorrências identificadas</h2>'+(e.outras.length?e.outras.map(function(o,i){return '<label style="display:flex;gap:8px;padding:4px 0"><input type="checkbox" id="out'+i+'" data-out="'+i+'"'+(o.on?" checked":"")+'> <span>'+o.txt+'</span></label>'}).join(""):'<p class="note">Nenhuma ocorrência fora do relato.</p>')+'</section><section class="panel"><h2>Revisão automática</h2><div id="rev">'+revHtml()+'</div><p class="muted small" style="margin:8px 0 0">Teste: escreva “detrator” ou “bom dia” num dos textos. O envio para revisão é bloqueado.</p></section>'+(tr?'<div class="block"><strong>Trava ativa.</strong><span>O rascunho pode ser preparado, mas não será aprovado sem a Conversa de Cuidado.</span></div>':"")+'</div></div><div class="row" style="justify-content:space-between"><button class="btn" data-a="voltar">Voltar</button><button class="btn pri" id="btnRev" data-a="revisao"'+(revisar().ok?"":" disabled")+'>Enviar para revisão</button></div>';
+  }
+  if(e.step===3){var emit=e.status>=3;
+    h+='<section class="panel" style="display:grid;gap:12px"><div class="kv"><span><b>RP-2026-000124 · v1</b></span><span>'+c.nome+'</span>'+(emit?'<span>Código de verificação: <b class="num">'+e.hash+'</b></span>':"")+'</div><div class="steps">'+FLUXO.map(function(f,i){return '<span class="'+(i<e.status?"done":i===e.status?"cur":"")+'">'+f+'</span>'}).join("")+'</div><div class="scroll"><table><thead><tr><th>Etapa</th><th>Responsável</th><th>Data</th></tr></thead><tbody>'+e.hist.map(function(x){return '<tr><td>'+x[0]+'</td><td>'+x[1]+'</td><td class="num">'+x[2]+'</td></tr>'}).join("")+'</tbody></table></div>';
+    if(tr&&e.status===1)h+='<div class="block"><strong>Aprovação bloqueada.</strong><span>Colaborador no quadrante VERMELHO sem Conversa de Cuidado registrada.</span>'+(p.conversa?'<div><button class="btn" data-a="conversa">Registrar Conversa de Cuidado</button></div>':'<span class="small">Troque para o perfil RH ou Supervisor para registrar a conversa.</span>')+'</div>';
+    var prox=[null,["Aprovar","Quem gerou o rascunho não aprova o próprio documento. Aprovação simulada por outro usuário."],["Emitir PDF e Excel","A emissão gera o número, calcula o código de verificação e torna o documento imutável."],["Registrar ciência",""],["Arquivar",""],null][e.status];
+    h+='<div class="row" style="justify-content:space-between">'+(e.status===1?'<button class="btn" data-a="devolver">Devolver ao rascunho</button>':'<span></span>')+(prox?'<div class="row"><span class="muted small">'+prox[1]+'</span><button class="btn pri" data-a="avancar"'+(tr&&e.status===1?" disabled":"")+'>'+prox[0]+'</button></div>':'<span class="pill c-VERDE">Documento arquivado</span>')+'</div>'+(emit?'<p class="note">Documento emitido e imutável. Qualquer alteração gera a versão 2. <button class="link" data-a="novo">Iniciar nova emissão</button></p>':"")+'</section>'+docHtml(c);
+  }
+  return h}
+
+function tabHtml(t){return '<div class="scroll"><table><thead><tr>'+t.h.map(function(x){return '<th>'+x+'</th>'}).join("")+'</tr></thead><tbody>'+t.r.map(function(r){return '<tr>'+r.map(function(x){return '<td class="num">'+x+'</td>'}).join("")+'</tr>'}).join("")+'</tbody></table></div>'}
+function docHtml(c){var e=S.em,p=P(),s=SUPS[c.sup],emit=e.status>=3,out=e.outras.filter(function(o){return o.on});
+  var temas=e.pontos.filter(function(x){return x.conc<2}).map(function(x){return x.tit.toLowerCase()});
+  var fim="Sendo assim, os registros do período de 01/09/2026 a 30/09/2026 "+(temas.length?"apresentam indícios relativos a "+temas.join("; ")+", os quais necessitam ser apurados.":"não confirmam os pontos do relato apresentado.")+" Recomenda-se o acompanhamento da liderança direta, com apoio de Treinamento e Desenvolvimento e de Merchandising, conforme o caso.";
+  var n=0;
+  return '<section class="doc" aria-label="Pré-visualização do documento"><div class="cab"><div><div class="lbl">Radar Promotor</div><h1 style="font-size:20px">Dossiê de Conduta</h1></div><div class="small" style="text-align:right"><b>CONFIDENCIAL – USO INTERNO</b><br>Documento nº RP-2026-000124 · versão 1<br>'+(emit?"Emitido em 06/10/2026 por "+p.nome+" – "+p.rot:"PRÉ-VISUALIZAÇÃO · NÃO EMITIDO")+'</div></div>'+
+  '<h3>1. Identificação</h3><div class="scroll"><table><tbody><tr><th>Colaborador(a)</th><td>'+c.nome+'</td><th>Matrícula</th><td class="num">'+c.m+'</td></tr><tr><th>Vínculo / cargo</th><td>'+c.vinc+' · Promotor(a) de Vendas</td><th>Regional / UF</th><td>'+s.reg+' · '+s.uf+'</td></tr><tr><th>Supervisor</th><td>'+s.nome+'</td><th>Período</th><td class="num">01/09/2026 a 30/09/2026 ('+c.prev+' dias previstos, '+c.trab+' trabalhados)</td></tr></tbody></table></div>'+
+  '<h3>2. Objeto da apuração</h3><p>“'+esc(e.relato)+'”</p>'+
+  '<h3>3. Síntese dos achados</h3><div class="scroll"><table><thead><tr><th>Nº</th><th>Ponto do relato</th><th>Conclusão</th><th>Indicador-chave</th></tr></thead><tbody>'+e.pontos.map(function(x,i){return '<tr><td>'+(i+1)+'</td><td>'+x.tit+'</td><td><b>'+CONC[x.conc]+'</b></td><td>'+x.ind+'</td></tr>'}).join("")+'</tbody></table></div>'+
+  '<h3>4. Achados detalhados</h3>'+e.pontos.map(function(x,i){return '<p><b>4.'+(i+1)+' '+x.tit+'</b></p><p>'+esc(x.txt)+'</p>'+(x.tab&&x.tab.r.length?tabHtml(x.tab):"")+(x.bars?'<div class="bars" role="img" aria-label="Percentual de pesquisas respondidas por semana">'+x.bars.map(function(b){return '<div><span>'+b[0]+'</span><i><b style="width:'+(b[1]*100).toFixed(1)+'%"></b></i><span class="num">'+pc(b[1],0)+'</span></div>'}).join("")+'</div><p class="small muted">Gráfico: % de pesquisas respondidas por semana.</p>':"")}).join("")+
+  (out.length?'<h3>5. Outras ocorrências identificadas</h3><ul style="margin:0;padding-left:20px">'+out.map(function(o){return '<li>'+o.txt+'</li>'}).join("")+'</ul>':"")+
+  (p.contexto?'<h3>'+(out.length?6:5)+'. Contexto de acompanhamento <span class="muted small">(impresso só para perfis autorizados)</span></h3><div class="scroll"><table><tbody><tr><th>Quadrante</th><td>'+c.quad+'</td><th>Índice de Desempenho</th><td class="num">'+n1(c.desemp)+'</td></tr><tr><th>Índice de Humor</th><td class="num">'+n1(c.humor)+'</td><th>Adesão</th><td class="num">'+pc(c.adesao)+'</td></tr><tr><th>Conversa de cuidado</th><td colspan="3">'+(c.conversa?"Registrada em "+c.conversa.data+" por "+esc(c.conversa.resp):"Nenhuma no período")+'</td></tr></tbody></table></div><p class="small">As informações desta seção têm finalidade exclusiva de acompanhamento e não constituem fundamento para medida disciplinar.</p>':'<p class="note">Seção “Contexto de acompanhamento” omitida: o perfil '+p.rot+' não tem acesso.</p>')+
+  '<h3>Considerações finais</h3><p>'+fim+'</p>'+
+  '<h3>Anexos</h3><p class="small muted">A) Book de fotos ('+c.fotos.length+' foto(s)) · B) Tabelas completas · C) Rastreabilidade (IDs e fontes)</p>'+
+  '<div class="rod">RP-2026-000124 · v1 · Página 1 de 1 · Código de verificação: '+(emit?e.hash:"gerado na emissão")+'<br>Este relatório apresenta indícios baseados em registros operacionais; a apuração e a decisão cabem às áreas responsáveis.'+(emit?'<br>Marca d’água do download: '+p.nome+' · 06/10/2026':"")+'</div></section>'}
+
+/* ---------- roteamento e eventos ---------- */
+var ROTAS=[["painel","Painel"],["ficha","Ficha do colaborador"],["emissao","Emissão"]];
+function rota(){var r=location.hash.replace("#","");return ROTAS.some(function(x){return x[0]===r})?r:"painel"}
+function render(){var r=rota();
+  document.getElementById("nav").innerHTML=ROTAS.map(function(x){return '<a href="#'+x[0]+'" class="'+(r===x[0]?"on":"")+'"'+(r===x[0]?' aria-current="page"':"")+'>'+x[1]+'</a>'}).join("");
+  document.getElementById("app").innerHTML=r==="painel"?vPainel():r==="ficha"?vFicha():vEmissao()}
+function go(r){if(rota()===r)render();else location.hash=r;window.scrollTo(0,0)}
+window.addEventListener("hashchange",render);
+
+document.getElementById("perfil").addEventListener("change",function(ev){S.perfil=ev.target.value;S.fSup="";S.fReg="";S.fQuad="";var p=P();if(p.escopo&&byM(S.colab).sup!==p.escopo)S.colab=escopo()[0].m;render()});
+document.addEventListener("change",function(ev){var t=ev.target,f=t.getAttribute("data-f");
+  if(f==="fSup"||f==="fReg"){S[f]=t.value;render()}
+  else if(f==="colab"){S.colab=t.value;S.em=null;render()}
+  else if(f==="tipo"){S.em.relato=document.getElementById("relato").value;S.em.tipo=t.value;render()}
+  else if(t.hasAttribute("data-conc")){S.em.pontos[+t.getAttribute("data-conc")].conc=+t.value}
+  else if(t.hasAttribute("data-out")){S.em.outras[+t.getAttribute("data-out")].on=t.checked}});
+document.addEventListener("input",function(ev){var t=ev.target;
+  if(t.hasAttribute("data-txt")){S.em.pontos[+t.getAttribute("data-txt")].txt=t.value;document.getElementById("rev").innerHTML=revHtml();document.getElementById("btnRev").disabled=!revisar().ok}
+  else if(t.id==="relato"){S.em.relato=t.value}});
+document.addEventListener("click",function(ev){var b=ev.target.closest("[data-a]");if(!b)return;var a=b.getAttribute("data-a"),v=b.getAttribute("data-v"),e=S.em,c=byM(S.colab),p=P();
+  if(a==="visao"){S.visao=v;render()}
+  else if(a==="quad"){S.fQuad=S.fQuad===v?"":v;render()}
+  else if(a==="rank"){S.rank=v;render()}
+  else if(a==="aba"){S.aba=v;render()}
+  else if(a==="abrir"){S.colab=v;S.em=null;S.aba=p.abas[0];go("ficha")}
+  else if(a==="emitir"){S.em=novaEm();go("emissao")}
+  else if(a==="conversa"){c.conversa={data:"06/10/2026",resp:p.nome,plano:"Conversa realizada com o colaborador; revisão de rota e carga com Merchandising; reavaliação em 14 dias."};c.etapa="Ação registrada";render()}
+  else if(a==="gerar"){var er=document.getElementById("emErro");
+    if(!e.relato.trim()){er.textContent="Informe o relato a apurar. O campo é obrigatório.";er.hidden=false;return}
+    var pts=analisar(c,e.relato);
+    if(!pts.length){er.textContent="Não foi possível relacionar o relato a nenhum indicador. Descreva o fato relatado (ex.: saídas antes do horário, ruptura, pesquisas, fotos).";er.hidden=false;return}
+    e.pontos=pts;e.outras=outras(c,pts);e.step=2;render();window.scrollTo(0,0)}
+  else if(a==="voltar"){e.step=1;render()}
+  else if(a==="revisao"){if(!revisar().ok)return;e.step=3;e.status=1;e.hist=[["Rascunho",p.nome+" – "+p.rot,"06/10/2026 09:12"],["Em revisão","Bruno Exemplo – P&P","06/10/2026 09:40"]];render();window.scrollTo(0,0)}
+  else if(a==="devolver"){e.step=2;e.status=0;render()}
+  else if(a==="avancar"){if(travado(c)&&e.status===1)return;e.status++;
+    var quem=[null,null,"Bruno Exemplo – P&P",p.nome+" – "+p.rot,SUPS[c.sup].nome+" – Supervisor","Sistema"][e.status],hr=["","","10:15","10:42","14:05","14:06"][e.status];
+    if(e.status===3)e.hash=hashDe(e.relato+e.pontos.map(function(x){return x.txt+x.conc}).join("|")+c.m);
+    e.hist.push([FLUXO[e.status],quem,"06/10/2026 "+hr]);render()}
+  else if(a==="novo"){S.em=novaEm();render();window.scrollTo(0,0)}});
+render();
+})();
+</script>
