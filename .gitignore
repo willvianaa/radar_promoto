@@ -1,0 +1,31 @@
+# Dados reais nunca entram no repositório
+dados/
+uploads/
+exports/
+*.xlsx
+*.xls
+*.csv
+*.pdf
+*.pptx
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# Credenciais
+.env
+.env.*
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Sistema e editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
