@@ -148,11 +148,11 @@ const BASES={oper:"Relatório de operação",pesq:"Atividades / pesquisas",humor
 const FIELDS={
   oper:["k","nome","mat","sup","uf","vinc","d","pdv","cin","cout","auto","pdoh","bat"],
   pesq:["k","nome","mat","sup","uf","d","loja","cli","tipo","st"],
-  humor:["k","nome","d","op"],
+  humor:["k","nome","mat","d","op"],
   ader:["k","nome","sup","uf","d","loja","marca","ct","rz"],
-  fotos:["k","nome","d","h","loja","pesq","lat","lon","llat","llon","hash","url"],
-  faltas:["k","nome","d","tipo","motivo"],
-  estoque:["k","nome","d","loja","prod","rupt","est"]};
+  fotos:["k","nome","mat","d","h","loja","pesq","lat","lon","llat","llon","hash","url"],
+  faltas:["k","nome","mat","d","tipo","motivo"],
+  estoque:["k","nome","mat","d","loja","prod","rupt","est"]};
 const VIEWS=[["geral","Visão Geral"],["promotor","Promotor"],["fotos","Fotos"],["config","Configurações"]];
 const CLS={D:["POSSÍVEL MEDIDA DISCIPLINAR","p-bad"],S:["VERIFICAR SOBRECARGA","p-m2"],M:["PONTO DE MELHORIA","p-warn"],N:["SEM PONTOS DE ATENÇÃO","p-good"]};
 
@@ -186,6 +186,8 @@ function pTime(v){
   if(typeof v==="number"){const f=v-Math.floor(v);return Math.round(f*1440)}
   const m=String(v).match(/(\d{1,2}):(\d{2})/);return m?+m[1]*60+ +m[2]:null}
 function pNum(v){if(v==null||v==="")return null;if(typeof v==="number")return v;const n=parseFloat(String(v).replace(/[%\s]/g,"").replace(/\.(?=\d{3}(\D|$))/g,"").replace(",","."));return isNaN(n)?null:n}
+const cpfD=v=>{if(v==null||v==="")return"";const d=String(typeof v==="number"?Math.round(v):v).replace(/\D/g,"");return d?(d.length<11?d.padStart(11,"0"):d):""};
+const fCpf=c=>c&&c.length===11?c.slice(0,3)+"."+c.slice(3,6)+"."+c.slice(6,9)+"-"+c.slice(9):(c||"");
 function tIn(m){return m==null?"":fH(m)}
 function tOut(s){const m=String(s||"").match(/^(\d{1,2}):(\d{2})$/);return m?+m[1]*60+ +m[2]:null}
 function dist(a,b,c,d){const R=6371000,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,h=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
@@ -198,13 +200,13 @@ const plural=(n,s,p)=>n+" "+(n===1?s:p);
    ===================================================================== */
 const AL={
   nome:[/^(NOME )?(DO |DA )?(COLABORADOR|PROMOTOR|FUNCIONARIO|USUARIO)(A)?( NOME)?$/,/^NOME$/,/COLABORADOR|PROMOTOR/],
-  mat:[/^MATRICULA/,/^ID (DO )?(COLABORADOR|USUARIO)/],sup:[/SUPERVISOR/,/GESTOR|LIDER/],uf:[/^UF$/,/^ESTADO$/],vinc:[/VINCULO/,/TIPO DE CONTRAT/],
+  mat:[/^CPF/,/CPF/,/^DOCUMENTO/],sup:[/SUPERVISOR/,/SUPERIOR/,/GESTOR|LIDER/],uf:[/^UF$/,/^ESTADO$/],vinc:[/VINCULO/,/TIPO DE CONTRAT/],
   d:[/^DATA$/,/^DATA /,/^DIA$/],pdv:[/^PDV$/,/^LOJA$/,/PONTO DE VENDA/,/^LOCAL$/,/PDV|LOJA/],
   cin:[/CHECK ?-?IN/,/^ENTRADA/,/^INICIO/],cout:[/CHECK ?-?OUT/,/^SAIDA/,/^FIM$/,/TERMINO/],
   auto:[/TIPO (DE |DO )?CHECK ?-?OUT/,/REALIZADO PEL/,/AUTOMATIC/,/OBSERVA/],pdoh:[/PDOH/,/HORAS? NAO REGISTRAD/],bat:[/BATERIA/],
   st:[/^STATUS/,/^SITUACAO/],cli:[/^CLIENTE$/,/^MARCA$/,/CLIENTE|MARCA/],
   tipo:[/TIPO (DE |DO )?(SERVICO|PESQUISA|ATIVIDADE)/,/^PESQUISA$/,/^FORMULARIO$/,/^ATIVIDADE$/,/PESQUISA|FORMULARIO|ATIVIDADE/],
-  op:[/HUMOR/,/COMO VOCE ESTA/,/SENTIMENTO/],ct:[/CONTRATAD/,/PREVIST/,/PLANEJAD/],rz:[/REALIZAD/,/EXECUTAD/],sem:[/^SEMANA/],ano:[/^ANO$/],
+  op:[/HUMOR/,/COMO VOCE ESTA/,/SENTIMENTO/,/^RESPOSTA$/],ct:[/CONTRATAD/,/PREVIST/,/PLANEJAD/],rz:[/REALIZAD/,/EXECUTAD/],sem:[/^SEMANA/],ano:[/^ANO$/],
   h:[/^HORA/,/HORARIO/],lat:[/^LAT(ITUDE)?( DA| DO)?( FOTO| CAPTURA)?$/],lon:[/^LON(G|GITUDE)?( DA| DO)?( FOTO| CAPTURA)?$/],
   llat:[/LAT(ITUDE)? (DA |DO )?(LOJA|PDV)/],llon:[/LON(G|GITUDE)? (DA |DO )?(LOJA|PDV)/],hash:[/HASH/],url:[/URL|LINK|IMAGEM|ARQUIVO|^FOTO$/],
   ftipo:[/^TIPO/,/JUSTIFICAD/,/^FALTA/],motivo:[/MOTIVO/,/JUSTIFICATIVA/,/OBSERVA/],prod:[/PRODUTO|ITEM|SKU/],rupt:[/RUPTURA/],est:[/ESTOQUE|SALDO/]};
@@ -213,18 +215,18 @@ function tipoDe(c,hdr){const H=hdr.map(norm).join(" | ");
   if(c.est!=null&&c.prod!=null)return"estoque";
   if(c.ct!=null&&c.rz!=null)return"ader";
   if(c.cin!=null&&c.cout!=null)return"oper";
-  if(c.op!=null)return"humor";
+  if(c.op!=null&&c.st==null)return"humor";
   if(/FALTA|ATESTADO|AUSENCIA|JUSTIFICATIVA/.test(H))return"faltas";
   if(c.st!=null&&(c.tipo!=null||c.cli!=null))return"pesq";
   if(c.nome!=null&&(c.hash!=null||c.url!=null||(c.lat!=null&&c.lon!=null)))return"fotos";
   return null}
 function linha(base,c,r,anoPad){const g=f=>c[f]==null?null:r[c[f]],s=f=>{const v=g(f);return v==null?"":String(v).trim()};
-  const nome=s("nome"),k=norm(nome),o={k,nome};
+  const nome=s("nome"),k=norm(nome),o={k,nome,mat:cpfD(g("mat"))};
   if(base==="oper"){o.d=pDate(g("d"))||pDate(g("cin"));o.cin=pTime(g("cin"));o.cout=pTime(g("cout"));if(!k||!o.d||o.cin==null)return null;
-    o.mat=s("mat");o.sup=s("sup");o.uf=norm(s("uf")).slice(0,2);o.vinc=s("vinc");o.pdv=s("pdv");o.auto=/SISTEMA|AUTOM/.test(norm(s("auto")))?1:0;
+    o.sup=s("sup");o.uf=norm(s("uf")).slice(0,2);o.vinc=s("vinc");o.pdv=s("pdv");o.auto=/SISTEMA|AUTOM/.test(norm(s("auto")))?1:0;
     let p=pNum(g("pdoh"));if(p!=null&&p<=1&&/[.,]/.test(String(g("pdoh"))))p*=100;o.pdoh=p;o.bat=pNum(g("bat"));return o}
-  if(base==="pesq"){o.d=pDate(g("d"));if(!k||!o.d)return null;o.mat=s("mat");o.sup=s("sup");o.uf=norm(s("uf")).slice(0,2);o.loja=s("pdv");o.cli=s("cli");o.tipo=s("tipo");
-    const t=norm(s("st"));o.st=/EXPIR|NAO REALIZ|NAO RESPOND|PERDID|NAO EXECUT/.test(t)?"E":/RESPOND|REALIZ|CONCLU|FINALIZ|EXECUT/.test(t)?"R":"P";return o}
+  if(base==="pesq"){o.d=pDate(g("d"));if(!k||!o.d)return null;o.sup=s("sup");o.uf=norm(s("uf")).slice(0,2);o.loja=s("pdv");o.cli=s("cli");o.tipo=s("tipo");
+    const t=norm(s("st"));o.st=/EXPIR|NAO REALIZ|NAO RESPOND|PERDID|NAO EXECUT/.test(t)?"E":/RESPOND|REALIZ|CONCLU|FINALIZ|EXECUT|CRITIC/.test(t)?"R":"P";return o}
   if(base==="humor"){o.d=pDate(g("d"));o.op=s("op");return k&&o.d&&o.op?o:null}
   if(base==="ader"){o.ct=pNum(g("ct"));o.rz=pNum(g("rz"));o.loja=s("pdv");if(!o.loja||o.ct==null)return null;o.rz=o.rz||0;
     o.d=pDate(g("d"));if(!o.d){const sv=s("sem"),m=sv.match(/(\d{4})\D+(\d{1,2})/),w=m?+m[2]:parseInt(sv,10),y=m?+m[1]:(pNum(g("ano"))||anoPad);if(w)o.d=weekMonday(y,w)}
@@ -307,7 +309,7 @@ function demo(){
    ["Caio Exemplo Pinto","900010","Marta Fictícia Rocha","CE","CLT",{sai:2,exp:.08,ad:[.93,.95],neg:.1}]];
   const W=[];for(let d=1;d<=30;d++){const s="2026-09-"+p2(d),w=new Date(s+"T12:00:00").getDay();if(w!==0&&d!==7)W.push(s)}
   const D={oper:[],pesq:[],humor:[],ader:[],fotos:[],faltas:[],estoque:[]},POS=["Feliz","Bem","Neutro"],NEG=["Cansado","Sobrecarregado","Triste","Doente"],MAR=["MARCA A","MARCA B","MARCA C"];
-  P.forEach((p,pi)=>{const [nome,mat,sup,uf,vinc,f]=p,k=norm(nome),r=rng(1000+pi*77),L=[uf+" / LOJA FICTICIA "+p2(pi*2+1),uf+" / LOJA FICTICIA "+p2(pi*2+2)],M=[MAR[pi%3],MAR[(pi+1)%3]];
+  P.forEach((p,pi)=>{const [nome,mat0,sup,uf,vinc,f]=p,mat="000000"+mat0.slice(-3)+"00",k=norm(nome),r=rng(1000+pi*77),L=[uf+" / LOJA FICTICIA "+p2(pi*2+1),uf+" / LOJA FICTICIA "+p2(pi*2+2)],M=[MAR[pi%3],MAR[(pi+1)%3]];
     const ix=W.map((_,i)=>i).sort(()=>r()-.5);let c=0;const take=n=>{const a=ix.slice(c,c+(n||0));c+=n||0;return new Set(a)};
     const fal=take((f.fi||0)+(f.fj||0)),atr=take(f.atr),sai=take(f.sai),aut=take(f.auto),seg=take(f.seg),oc=take(f.oc),alm=new Set([...sai,...aut].slice(0,f.alm||0));let fn=0;
     W.forEach((d,i)=>{const wk=isoWeek(d),base={k,nome,mat,sup,uf,vinc,d};
@@ -337,6 +339,9 @@ function demo(){
    ===================================================================== */
 function calcular(){
   const cfg=S.cfg,D=S.all[S.f.ym]||{},has={};for(const b in BASES)has[b]=!!(D[b]&&D[b].length);
+  /* a chave do promotor é o CPF; linhas sem CPF herdam o CPF do mesmo nome em outra base */
+  const n2c=new Map();for(const b in D)for(const r of D[b])if(r.mat&&r.nome)n2c.set(norm(r.nome),r.mat);
+  for(const b in D)for(const r of D[b]){const c=r.mat||n2c.get(norm(r.nome))||"";if(c){r.mat=c;r.k="C"+c}else if(r.nome)r.k=norm(r.nome)}
   const sem=S.f.sem?+S.f.sem:0,mar=norm(S.f.marca),fs=r=>!sem||isoWeek(r.d)===sem;
   const R={oper:(D.oper||[]).filter(fs),pesq:(D.pesq||[]).filter(r=>fs(r)&&(!mar||norm(r.cli)===mar)),humor:(D.humor||[]).filter(fs),
     ader:(D.ader||[]).filter(r=>fs(r)&&(!mar||norm(r.marca)===mar)),fotos:(D.fotos||[]).filter(fs),faltas:(D.faltas||[]).filter(fs),estoque:(D.estoque||[]).filter(fs)};
@@ -416,8 +421,8 @@ function calcular(){
     const hNeg=o.hum.dias>0&&(o.hum.pct*100>=c.humPct||o.hum.seq>=c.humSeq),queda=(o.pes.pct!=null&&o.pes.pct*100>c.exp)||o.ad.baixo.length>0||o.jor.nAtr>=c.atr;
     o.mD=mD;o.mM=mM;o.sobre=hNeg&&queda;o.cls=o.sobre?"S":mD.length?"D":mM.length?"M":"N";o.pts=mD.length*3+mM.length+(o.sobre?2:0);
     list.push(o)}
-  const reg=S.f.reg?cfg.reg[S.f.reg]||[]:null,q=norm(S.f.q),ord={D:0,S:1,M:2,N:3};
-  const vis=list.filter(p=>(!reg||!p.uf||reg.includes(p.uf))&&(!S.f.uf||p.uf===S.f.uf)&&(!S.f.sup||p.sup===S.f.sup)&&(!q||p.k.includes(q)||norm(p.mat).includes(q))).sort((a,b)=>ord[a.cls]-ord[b.cls]||b.pts-a.pts||a.nome.localeCompare(b.nome));
+  const reg=S.f.reg?cfg.reg[S.f.reg]||[]:null,q=norm(S.f.q),qd=S.f.q.replace(/\D/g,""),ord={D:0,S:1,M:2,N:3};
+  const vis=list.filter(p=>(!reg||!p.uf||reg.includes(p.uf))&&(!S.f.uf||p.uf===S.f.uf)&&(!S.f.sup||p.sup===S.f.sup)&&(!q||norm(p.nome).includes(q)||(qd&&(p.mat||"").includes(qd)))).sort((a,b)=>ord[a.cls]-ord[b.cls]||b.pts-a.pts||a.nome.localeCompare(b.nome));
   S.R={has,list:vis,todos:list,semanas,marcas,ufs:[...new Set(list.map(p=>p.uf).filter(Boolean))].sort(),sups:[...new Set(list.map(p=>p.sup).filter(Boolean))].sort()}}
 const R=()=>{if(!S.R)calcular();return S.R};
 const pessoa=()=>{const r=R();return r.todos.find(p=>p.k===S.pk)||r.list[0]||null};
@@ -430,7 +435,7 @@ function renderFiltros(){const r=R(),f=S.f,yms=Object.keys(S.meses).sort(),anos=
   const sel=(id,lab,opts,val,all)=>'<label class="f" for="f-'+id+'"><span>'+lab+'</span><select id="f-'+id+'" data-f="'+id+'">'+(all?'<option value="">'+all+'</option>':"")+opts.map(o=>{const v=Array.isArray(o)?o[0]:o,t=Array.isArray(o)?o[1]:o;return'<option value="'+esc(v)+'"'+(String(v)===String(val)?" selected":"")+'>'+esc(t)+'</option>'}).join("")+'</select></label>';
   $("filters").innerHTML=sel("reg","Regional",Object.keys(S.cfg.reg),f.reg,"Todas")+sel("uf","UF",r.ufs,f.uf,"Todas")+sel("sup","Supervisor",r.sups,f.sup,"Todos")+sel("marca","Marcas",r.marcas,f.marca,"Todas")+
     sel("sem","Semana",r.semanas.map(s=>[s,"S"+s]),f.sem,"Todas")+sel("mes","Mês",yms.filter(y=>y.slice(0,4)===ano).map(y=>[y,MES[+y.slice(5)]]),f.ym)+sel("ano","Ano",anos,ano)+
-    '<label class="f wide" for="f-q"><span>Promotor</span><input id="f-q" data-f="q" placeholder="Nome ou matrícula" value="'+esc(f.q)+'" autocomplete="off"></label><span class="sp"></span>'+
+    '<label class="f wide" for="f-q"><span>Promotor</span><input id="f-q" data-f="q" placeholder="Nome ou CPF" value="'+esc(f.q)+'" autocomplete="off"></label><span class="sp"></span>'+
     '<span class="pill p-n wide" style="height:34px;border-radius:9px;padding:0 12px">Meta 1: '+S.cfg.m1+'% · Meta 2: '+S.cfg.m2+'%</span><button class="btn wide" data-a="dados">Atualizar dados</button>'}
 function renderBanner(){$("banner").innerHTML=(S.demo?'<div class="banner"><b>Dados fictícios de demonstração.</b> Eles somem quando você carregar os arquivos reais em “Atualizar dados”.</div>':"")+(S.load?'<div class="banner" style="margin-top:8px">Carregando a base salva…</div>':"")+(S.msg?'<div class="banner" style="margin-top:8px">'+esc(S.msg)+' <button class="btn sec" style="height:26px;padding:0 10px" data-a="fecharMsg">Fechar</button></div>':"")}
 function render(){
@@ -455,7 +460,7 @@ function vGeral(){const r=R(),L=r.list,h=r.has,sum=f=>L.reduce((a,p)=>a+f(p),0);
   const td=(ok,v,cl)=>'<td class="num'+(cl?" "+cl:"")+'">'+(ok?v:"—")+'</td>';
   return'<section class="kpis">'+K.map(k=>'<div class="kpi"><div class="kpi-l">'+k[0]+'</div><div class="kpi-v">'+k[1]+'</div><div class="kpi-s">'+k[2]+'</div></div>').join("")+'</section>'+
   '<section class="card"><h2>Promotores <small>ordenados pelos pontos de atenção · clique para abrir a ficha</small></h2>'+(L.length?'<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Promotor</th><th>Supervisor</th><th>UF</th><th class="num">Lojas</th><th class="num">Aderência</th><th class="num">% expiradas</th><th class="num">Atrasos</th><th class="num">Saídas</th><th class="num">Checkout aut.</th><th class="num">Fotos susp.</th><th class="num">Humor neg.</th><th>Classificação</th></tr></thead><tbody>'+
-    L.map(p=>'<tr class="click" data-a="abrir" data-v="'+esc(p.k)+'" tabindex="0"><td><b>'+esc(p.nome)+'</b>'+(p.mat?'<div class="muted small">'+esc(p.mat)+'</div>':"")+'</td><td>'+esc(p.sup||"—")+'</td><td>'+esc(p.uf||"—")+'</td><td class="num">'+p.lojas.length+'</td>'+
+    L.map(p=>'<tr class="click" data-a="abrir" data-v="'+esc(p.k)+'" tabindex="0"><td><b>'+esc(p.nome)+'</b>'+(p.mat?'<div class="muted small">'+esc(fCpf(p.mat))+'</div>':"")+'</td><td>'+esc(p.sup||"—")+'</td><td>'+esc(p.uf||"—")+'</td><td class="num">'+p.lojas.length+'</td>'+
       td(h.ader&&p.ad.pct!=null,pc(p.ad.pct),p.ad.pct!=null&&p.ad.pct*100<S.cfg.m1?"t-bad":p.ad.pct!=null&&p.ad.pct*100<S.cfg.m2?"t-warn":"")+td(h.pesq&&p.pes.prog,pc(p.pes.pct),p.pes.pct*100>S.cfg.c.exp?"t-bad":"")+
       td(h.oper,p.jor.nAtr,p.jor.nAtr?"t-warn":"")+td(h.oper,p.jor.nSai,p.jor.nSai?"t-warn":"")+td(h.oper,p.jor.nAuto,p.jor.nAuto>=S.cfg.c.auto?"t-bad":p.jor.nAuto?"t-warn":"")+td(h.fotos,p.fot.length,p.fot.length?"t-bad":"")+td(h.humor&&p.hum.dias,pc(p.hum.pct,0))+'<td>'+clsPill(p)+'</td></tr>').join("")+'</tbody></table></div>':'<div class="nobase">Nenhum promotor para os filtros escolhidos.</div>')+'</section>'}
 
@@ -464,7 +469,7 @@ function vFicha(){const p=pessoa(),r=R(),h=r.has,c=S.cfg;if(!p)return'<div class
   const per=S.f.sem?"Semana "+S.f.sem+" de "+MES[+S.f.ym.slice(5)]+"/"+S.f.ym.slice(0,4):MES[+S.f.ym.slice(5)]+"/"+S.f.ym.slice(0,4),cz=t=>t?'<div class="cross"><b>Leitura cruzada com humor:</b> '+esc(t)+'.</div>':"";
   const tb=(hd,rows)=>'<div class="tbl-wrap" style="max-height:320px"><table class="tbl"><thead><tr>'+hd.map(x=>'<th'+(x[1]?' class="num"':"")+'>'+x[0]+'</th>').join("")+'</tr></thead><tbody>'+rows.join("")+'</tbody></table></div>';
   let o='<section class="card"><div class="row" style="justify-content:space-between"><div><h2 style="font-size:19px">'+esc(p.nome)+'</h2><div style="margin-top:6px">'+clsPill(p)+(/PJ/i.test(p.vinc)?' <span class="pill p-warn">Vínculo PJ – avaliar com Jurídico</span>':"")+'</div></div><div class="row"><label class="f" for="selP"><span>Trocar promotor</span><select id="selP" data-f="pk">'+r.list.map(x=>'<option value="'+esc(x.k)+'"'+(x.k===p.k?" selected":"")+'>'+esc(x.nome)+'</option>').join("")+'</select></label><button class="btn" data-a="dossie">Gerar dossiê</button></div></div>'+
-    '<div class="kv"><span>Matrícula <b>'+esc(p.mat||"não informada")+'</b></span><span>Vínculo <b>'+esc(p.vinc||"não informado")+'</b></span><span>UF <b>'+esc(p.uf||"—")+'</b></span><span>Supervisor <b>'+esc(p.sup||"—")+'</b></span><span>Escala <b>'+fH(p.esc.ini)+'–'+fH(p.esc.fim)+'</b></span><span>Período <b>'+per+'</b></span></div>'+
+    '<div class="kv"><span>CPF <b>'+esc(p.mat?fCpf(p.mat):"não informado")+'</b></span><span>Vínculo <b>'+esc(p.vinc||"não informado")+'</b></span><span>UF <b>'+esc(p.uf||"—")+'</b></span><span>Supervisor <b>'+esc(p.sup||"—")+'</b></span><span>Escala <b>'+fH(p.esc.ini)+'–'+fH(p.esc.fim)+'</b></span><span>Período <b>'+per+'</b></span></div>'+
     '<div class="kv"><span>Lojas ('+p.lojas.length+'): '+esc(p.lojas.join(" · ")||"—")+'</span></div>'+(p.mD.length||p.mM.length||p.sobre?'<div class="small muted">Indícios: '+esc([].concat(p.sobre?["humor negativo recorrente com queda de desempenho"]:[],p.mD,p.mM).join("; "))+'.</div>':"")+'</section>';
   /* pesquisas + aderência */
   o+='<div class="grid2"><section class="card"><h2>Pesquisas</h2>'+(!h.pesq?nb("pesq"):!p.pes.prog?'<div class="nobase">Sem pesquisas no período.</div>':
@@ -622,7 +627,7 @@ async function gerarPDF(){const p=pessoa(),d=S.dos,num=await numero(),{jsPDF}=wi
   doc.setFontSize(9);doc.text(lat1("Documento nº "+num),W-M,y+3,{align:"right"});doc.text(lat1("Emissão: "+emis),W-M,y+7.5,{align:"right"});doc.setFont("helvetica","bold");doc.text(lat1("Confidencial - uso interno"),W-M,y+12,{align:"right"});
   y+=18;doc.setDrawColor(20);doc.setLineWidth(.4);doc.line(M,y,W-M,y);y+=6;
   tit("1. Identificação");
-  tab(["Campo","Informação"],[["Nome",p.nome],["Matrícula",p.mat||"não informada"],["Vínculo",p.vinc||"não informado"],["UF",p.uf||"-"],["Supervisor",p.sup||"-"],["Escala",fH(p.esc.ini)+" às "+fH(p.esc.fim)],["Lojas",p.lojas.join("; ")||"-"],["Período",periodoTxt()]],{columnStyles:{0:{cellWidth:34,fontStyle:"bold"}},showHead:false});
+  tab(["Campo","Informação"],[["Nome",p.nome],["CPF",p.mat?fCpf(p.mat):"não informado"],["Vínculo",p.vinc||"não informado"],["UF",p.uf||"-"],["Supervisor",p.sup||"-"],["Escala",fH(p.esc.ini)+" às "+fH(p.esc.fim)],["Lojas",p.lojas.join("; ")||"-"],["Período",periodoTxt()]],{columnStyles:{0:{cellWidth:34,fontStyle:"bold"}},showHead:false});
   tit("2. Objeto");par(d.objeto);
   tit("3. Síntese dos achados");d.sint.split("\n").filter(x=>x.trim()).forEach(l=>par(l.replace(/^[-•]\s*/,"- "),{gap:.8,in:1}));y+=1.5;
   if(d.blocos.length){tit("4. Achados");d.blocos.forEach((b,i)=>{need(18);par("4."+(i+1)+" "+b.tit+(b.rel?" - "+CONC[b.conc]:""),{b:true,gap:1});par(b.txt);
@@ -644,7 +649,7 @@ async function gerarExcel(){const p=pessoa(),d=S.dos,num=await numero(),c=S.cfg,
   const dt=s=>s?new Date(Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10))):null;
   const aba=(nome,cols,rows)=>{const ws=wb.addWorksheet(nome,{views:[{state:"frozen",ySplit:1}]});ws.columns=cols.map(x=>({header:x[0],key:x[0],width:x[1]||16,style:x[2]?{numFmt:x[2]}:{}}));rows.forEach(r=>ws.addRow(r));ws.getRow(1).font={bold:true};ws.getRow(1).fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFE6E6E6"}};ws.autoFilter={from:{row:1,column:1},to:{row:1,column:cols.length}};return ws};
   const DF="dd/mm/yyyy",PF="0.0%";
-  aba("Resumo",[["Campo",34],["Valor",80]],[["Documento nº",num],["Emissão",new Date().toLocaleDateString("pt-BR")],["Classificação do documento","Confidencial – uso interno"],["Nome",p.nome],["Matrícula",p.mat||"não informada"],["Vínculo",p.vinc||"não informado"],["UF",p.uf],["Supervisor",p.sup],["Escala",fH(p.esc.ini)+" às "+fH(p.esc.fim)],["Lojas",p.lojas.join("; ")],["Período",periodoTxt()],["Objeto",d.objeto],["Classificação",CLS[p.cls][0]]]
+  aba("Resumo",[["Campo",34],["Valor",80]],[["Documento nº",num],["Emissão",new Date().toLocaleDateString("pt-BR")],["Classificação do documento","Confidencial – uso interno"],["Nome",p.nome],["CPF",p.mat?fCpf(p.mat):"não informado"],["Vínculo",p.vinc||"não informado"],["UF",p.uf],["Supervisor",p.sup],["Escala",fH(p.esc.ini)+" às "+fH(p.esc.fim)],["Lojas",p.lojas.join("; ")],["Período",periodoTxt()],["Objeto",d.objeto],["Classificação",CLS[p.cls][0]]]
     .concat(d.sint.split("\n").filter(x=>x.trim()).map((l,i)=>["Síntese "+(i+1),l.replace(/^[-•]\s*/,"")])).concat(d.blocos.map((b,i)=>["Bloco "+(i+1)+" – "+b.tit,b.txt])).concat([["Considerações finais",d.fim],["Observação","Este relatório apresenta indícios baseados em registros operacionais."]]));
   aba("Pesquisas",[["Data",12,DF],["Semana",9],["Loja",34],["Cliente",22],["Tipo",24],["Status",14]],(D.pesq||[]).filter(fs).sort((a,b)=>a.d<b.d?-1:1).map(r=>[dt(r.d),isoWeek(r.d),r.loja,r.cli,r.tipo,{R:"Respondida",E:"Expirada",P:"Pendente"}[r.st]]));
   aba("Aderência",[["Semana",9],["Loja",34],["Marca",22],["Contratado",12],["Realizado",12],["Aderência",12,PF],["Meta 1",9,PF],["Meta 2",9,PF]],(D.ader||[]).filter(fs).sort((a,b)=>a.d<b.d?-1:1).map(r=>[isoWeek(r.d),r.loja,r.marca,r.ct,r.rz,r.ct?r.rz/r.ct:null,c.m1/100,c.m2/100]));
