@@ -61,6 +61,9 @@ def hora(v):
     return "%02d:%s" % (int(m.group(1)), m.group(2)) if m else ""
 
 
+JORNADA = {}
+
+
 def carregar_cpf():
     caminho = os.path.join(ENTRADA, "colaboradores_cpf.csv")
     mapa = {}
@@ -71,6 +74,7 @@ def carregar_cpf():
         for r in csv.DictReader(f, delimiter=";"):
             if r.get("CPF"):
                 mapa[norm(r["NOME DO COLABORADOR"])] = r["CPF"]
+            JORNADA[norm(r["NOME DO COLABORADOR"])] = r.get("JORNADA", "")
     return mapa
 
 
@@ -135,9 +139,9 @@ def operacao(cpf):
             linhas.append([nome, c, str(r[ix["COLABORADOR SUPERIOR"]] or "").strip(),
                            str(r[ix["ESTADO"]] or "").strip(), data_br(r[ix["DATA DO ROTEIRO"]]),
                            str(r[ix["PONTO DE VENDA"]] or "").strip(), hora(ent), hora(sai),
-                           "Realizado pelo sistema" if sistema else "Manual"])
+                           "Realizado pelo sistema" if sistema else "Manual", JORNADA.get(norm(nome), "")])
     escrever("operacao_radar.csv",
-             ["Colaborador", "CPF", "Supervisor", "UF", "Data", "PDV", "Check-in", "Check-out", "Tipo de check-out"],
+             ["Colaborador", "CPF", "Supervisor", "UF", "Data", "PDV", "Check-in", "Check-out", "Tipo de check-out", "Jornada"],
              linhas)
     return len(linhas), len(sem_cpf), sem_checkin
 

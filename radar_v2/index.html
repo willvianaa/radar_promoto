@@ -1,0 +1,36 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Radar Promotor</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="radar.css">
+<div class="app">
+  <aside class="side" id="side">
+    <div class="brand"><img class="logo-img" src="assets/rt-icon.png" alt="RT"><div class="brand-name">Radar <b>Promotor</b></div><div class="brand-sub">RT Intelligence</div></div>
+    <nav class="nav" id="nav" aria-label="Telas"></nav>
+    <div class="nav-sec">Sistema</div>
+    <nav class="nav" id="nav2" aria-label="Sistema"></nav>
+    <div class="side-foot">Feito por: Willams Viana</div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <div class="main">
+    <header class="top">
+      <button class="burger" id="burger" aria-label="Abrir menu">☰</button>
+      <h1><span class="crumb">Radar Promotor › </span><span id="crumb"></span></h1>
+      <button class="tbtn" id="theme">Tema</button>
+    </header>
+    <div class="content">
+      <div id="banner"></div>
+      <div class="filters" id="filters"></div>
+      <div id="view" style="display:grid;gap:18px"></div>
+    </div>
+  </div>
+</div>
+<div id="modal"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="engine.js"></script>
+<script src="dossie.js"></script>
+<script src="ui.js"></script>
