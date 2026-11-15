@@ -29,3 +29,6 @@ venv/
 Thumbs.db
 .vscode/
 .idea/
+
+# Logos da marca (nao sao dados)
+!radar_v2/assets/*.png
