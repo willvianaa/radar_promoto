@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radar-promotor/schemas/fotos",
+  "title": "Fotos das pesquisas — manifesto",
+  "x-status": "provisório",
+  "x-origem": "Plataforma de monitoramento — fotos das pesquisas (ZIP por lote) + manifesto gerado pelo ingestor",
+  "x-formato": {"tipo": "zip+csv", "manifesto": "manifesto.csv separador ';'", "imagens": "jpg/png dentro do ZIP"},
+  "x-colunas-obrigatorias": ["Colaborador", "Data", "PDV", "ID da pesquisa", "Arquivo"],
+  "x-chave-unica": ["ID da pesquisa", "Arquivo"],
+  "x-fatiamento": "por colaborador e período",
+  "x-armazenamento": "Imagens vão para o storage de objetos (nunca para o git nem para o banco). O banco guarda caminho, SHA-256 e pHash.",
+  "type": "object",
+  "properties": {
+    "Colaborador": {"type": "string"},
+    "Data": {"type": "string", "description": "dd/mm/aaaa"},
+    "Hora": {"type": "string", "description": "hh:mm da captura, se disponível"},
+    "PDV": {"type": "string"},
+    "ID da pesquisa": {"type": "string"},
+    "Formulário": {"type": "string"},
+    "Arquivo": {"type": "string", "description": "Caminho da imagem dentro do ZIP"},
+    "Latitude": {"type": ["number", "string"]},
+    "Longitude": {"type": ["number", "string"]},
+    "Latitude da loja": {"type": ["number", "string"]},
+    "Longitude da loja": {"type": ["number", "string"]}
+  },
+  "required": ["Colaborador", "Data", "PDV", "Arquivo"]
+}

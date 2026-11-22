@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radar-promotor/schemas/humor",
+  "title": "Humor na abertura da jornada",
+  "x-origem": "Plataforma de monitoramento — relatório de humor",
+  "x-formato": {"tipo": "xlsx", "aba": 0, "linha_cabecalho": "procurar a linha com 'NOME DO COLABORADOR'"},
+  "x-colunas-obrigatorias": ["NOME DO COLABORADOR", "DATA", "HUMOR"],
+  "x-chave-unica": ["NOME DO COLABORADOR", "DATA"],
+  "x-fatiamento": "por período de até 14 dias",
+  "x-sensivel": "Dado de acompanhamento. 'Doente' é dado de saúde (LGPD). Nunca usar como motivo de medida.",
+  "type": "object",
+  "properties": {
+    "NOME DO COLABORADOR": {"type": "string"},
+    "DATA": {"description": "dd/mm/aaaa ou data do Excel"},
+    "HUMOR": {"type": "string", "description": "Positivas: Feliz, Motivado, Bem. Negativas: Cansado, Sobrecarregado, Triste, Doente. Pendentes de decisão: Luto, Incomodado, Não Valorizado, Estressado"}
+  },
+  "required": ["NOME DO COLABORADOR", "DATA", "HUMOR"]
+}

@@ -1,0 +1,347 @@
+openapi: 3.0.3
+info:
+  title: Radar Promotor API
+  version: 0.1.0
+  description: |
+    API do Radar Promotor (RT Intelligence). Todas as rotas exigem sessão autenticada, exceto /auth/login e /saude.
+    O escopo de dados (nacional, regional, equipe) e o mascaramento de CPF são aplicados no servidor pelo perfil
+    do usuário (docs/05-matriz-permissoes.md). Toda leitura de dado individual e toda emissão gera registro em auditoria.
+    Datas em ISO (AAAA-MM-DD), fuso America/Sao_Paulo.
+servers:
+  - url: /api/v1
+security:
+  - sessao: []
+tags:
+  - {name: auth}
+  - {name: painel, description: Visão Geral e Radar da operação}
+  - {name: alertas}
+  - {name: colaboradores, description: Raio-X}
+  - {name: dossies}
+  - {name: parametros}
+  - {name: ingestao}
+  - {name: auditoria}
+
+paths:
+  /saude:
+    get:
+      tags: [auth]
+      security: []
+      summary: Verificação de saúde
+      responses: {'200': {description: OK}}
+
+  /auth/login:
+    post:
+      tags: [auth]
+      security: []
+      summary: Login (SSO corporativo quando definido — Q-06; até lá e-mail e senha com hash)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, required: [email, senha], properties: {email: {type: string, format: email}, senha: {type: string, format: password}}}
+      responses:
+        '200': {description: Sessão criada (cookie httpOnly, Secure, SameSite=Strict), content: {application/json: {schema: {$ref: '#/components/schemas/Usuario'}}}}
+        '401': {$ref: '#/components/responses/NaoAutenticado'}
+  /auth/logout:
+    post: {tags: [auth], summary: Encerra a sessão, responses: {'204': {description: OK}}}
+  /auth/eu:
+    get:
+      tags: [auth]
+      summary: Usuário logado e escopo
+      responses: {'200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/Usuario'}}}}}
+
+  /filtros:
+    get:
+      tags: [painel]
+      summary: Opções de filtro dentro do escopo do usuário (UFs, supervisores, período com dados)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ufs: {type: array, items: {type: string}}
+                  supervisores: {type: array, items: {type: object, properties: {cpf_mascarado: {type: string}, nome: {type: string}}}}
+                  periodo_disponivel: {$ref: '#/components/schemas/Periodo'}
+                  bases: {type: array, items: {$ref: '#/components/schemas/BaseCarregada'}}
+
+  /painel:
+    get:
+      tags: [painel]
+      summary: Visão Geral — KPIs, contagem por nível, séries semanais, leitura automática
+      parameters: [{$ref: '#/components/parameters/ini'}, {$ref: '#/components/parameters/fim'}, {$ref: '#/components/parameters/uf'}, {$ref: '#/components/parameters/supervisor'}, {$ref: '#/components/parameters/q'}]
+      responses:
+        '200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/Painel'}}}}
+  /painel/radar:
+    get:
+      tags: [painel]
+      summary: Pontos do Radar da operação (um por colaborador; fatias por UF ou por supervisor quando UF filtrada)
+      parameters: [{$ref: '#/components/parameters/ini'}, {$ref: '#/components/parameters/fim'}, {$ref: '#/components/parameters/uf'}, {$ref: '#/components/parameters/supervisor'}]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: '#/components/schemas/PontoRadar'}}
+  /painel/ranking:
+    get:
+      tags: [painel]
+      summary: Ranking de colaboradores por risco (paginado)
+      parameters: [{$ref: '#/components/parameters/ini'}, {$ref: '#/components/parameters/fim'}, {$ref: '#/components/parameters/uf'}, {$ref: '#/components/parameters/supervisor'}, {$ref: '#/components/parameters/limite'}, {$ref: '#/components/parameters/cursor'}]
+      responses:
+        '200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/PaginaColaboradores'}}}}
+
+  /alertas:
+    get:
+      tags: [alertas]
+      summary: Feed de alertas e eventos, ordenado por severidade e data
+      parameters:
+        - {$ref: '#/components/parameters/ini'}
+        - {$ref: '#/components/parameters/fim'}
+        - {$ref: '#/components/parameters/uf'}
+        - {$ref: '#/components/parameters/supervisor'}
+        - {name: nivel, in: query, schema: {type: string, enum: [C, A, T]}}
+        - {name: tipo, in: query, schema: {$ref: '#/components/schemas/TipoAlerta'}}
+        - {$ref: '#/components/parameters/limite'}
+        - {$ref: '#/components/parameters/cursor'}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contagem: {$ref: '#/components/schemas/ContagemNiveis'}
+                  por_tipo: {type: object, additionalProperties: {type: integer}}
+                  por_dia: {type: array, items: {type: object, properties: {data: {type: string, format: date}, n: {type: integer}}}}
+                  itens: {type: array, items: {$ref: '#/components/schemas/Evento'}}
+                  proximo_cursor: {type: string, nullable: true}
+
+  /colaboradores:
+    get:
+      tags: [colaboradores]
+      summary: Busca por nome ou CPF (CPF sempre mascarado na lista)
+      parameters: [{$ref: '#/components/parameters/q'}, {$ref: '#/components/parameters/limite'}]
+      responses:
+        '200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/PaginaColaboradores'}}}}
+  /colaboradores/{id}/raio-x:
+    get:
+      tags: [colaboradores]
+      summary: Raio-X individual (registra leitura em auditoria)
+      parameters: [{$ref: '#/components/parameters/id'}, {$ref: '#/components/parameters/ini'}, {$ref: '#/components/parameters/fim'}]
+      responses:
+        '200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/RaioX'}}}}
+        '403': {$ref: '#/components/responses/SemPermissao'}
+        '404': {description: Fora do escopo ou inexistente}
+
+  /dossies:
+    post:
+      tags: [dossies]
+      summary: Cria rascunho de dossiê a partir dos dados do período (texto montado pelas regras)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {type: object, required: [colaborador_id, ini, fim], properties: {colaborador_id: {type: string}, ini: {type: string, format: date}, fim: {type: string, format: date}, relato: {type: string, maxLength: 2000}}}
+      responses:
+        '201': {description: Rascunho criado, content: {application/json: {schema: {$ref: '#/components/schemas/Dossie'}}}}
+    get:
+      tags: [dossies]
+      summary: Lista dossiês no escopo
+      parameters: [{$ref: '#/components/parameters/limite'}, {$ref: '#/components/parameters/cursor'}]
+      responses:
+        '200': {description: OK, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/DossieResumo'}}}}}
+  /dossies/{numero_ou_id}:
+    get:
+      tags: [dossies]
+      parameters: [{name: numero_ou_id, in: path, required: true, schema: {type: string}}]
+      responses: {'200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/Dossie'}}}}}
+    patch:
+      tags: [dossies]
+      summary: Edita o texto do rascunho (só status rascunho). O servidor roda a revisão de termos proibidos.
+      parameters: [{name: numero_ou_id, in: path, required: true, schema: {type: string}}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/ConteudoDossie'}}}}
+      responses:
+        '200': {description: OK, content: {application/json: {schema: {$ref: '#/components/schemas/Dossie'}}}}
+        '409': {description: Dossiê já emitido}
+  /dossies/{numero_ou_id}/emitir:
+    post:
+      tags: [dossies]
+      summary: Emite — atribui número RP-AAAA-NNNNNN, congela texto e parâmetros, gera PDF e Excel e grava hashes
+      parameters: [{name: numero_ou_id, in: path, required: true, schema: {type: string}}]
+      responses:
+        '200': {description: Emitido, content: {application/json: {schema: {$ref: '#/components/schemas/Dossie'}}}}
+        '422': {description: Revisão bloqueou (termo proibido ou divergência), content: {application/json: {schema: {$ref: '#/components/schemas/Erro'}}}}
+  /dossies/{numero}/arquivo:
+    get:
+      tags: [dossies]
+      summary: Baixa o PDF ou o Excel emitido ('Dossiê - NOME.pdf|.xlsx')
+      parameters:
+        - {name: numero, in: path, required: true, schema: {type: string, pattern: '^RP-\d{4}-\d{6}$'}}
+        - {name: formato, in: query, required: true, schema: {type: string, enum: [pdf, xlsx]}}
+      responses:
+        '200':
+          description: Arquivo
+          content:
+            application/pdf: {schema: {type: string, format: binary}}
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet: {schema: {type: string, format: binary}}
+
+  /parametros:
+    get:
+      tags: [parametros]
+      summary: Versão vigente e histórico
+      responses: {'200': {description: OK, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/ParametroVersao'}}}}}}
+    post:
+      tags: [parametros]
+      summary: Cria nova versão (só P&P/admin; justificativa obrigatória)
+      requestBody: {required: true, content: {application/json: {schema: {type: object, required: [valores, justificativa, vigente_desde], properties: {valores: {type: object}, justificativa: {type: string, minLength: 10}, vigente_desde: {type: string, format: date-time}}}}}}
+      responses: {'201': {description: Criada, content: {application/json: {schema: {$ref: '#/components/schemas/ParametroVersao'}}}}}
+
+  /ingestao/cargas:
+    get:
+      tags: [ingestao]
+      summary: Últimas cargas por origem, com status e "Gerado em"
+      responses:
+        '200': {description: OK, content: {application/json: {schema: {type: array, items: {$ref: '#/components/schemas/Carga'}}}}}
+  /ingestao/upload:
+    post:
+      tags: [ingestao]
+      summary: Upload controlado (faltas, estoque ou contingência). Valida contra schemas/ antes de aceitar.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: {type: object, required: [origem, arquivo], properties: {origem: {type: string, enum: [colaboradores, operacao, atividades, humor, fotos, faltas, aderencia, pdoh, estoque]}, arquivo: {type: string, format: binary}}}
+      responses:
+        '202': {description: Aceito para processamento, content: {application/json: {schema: {$ref: '#/components/schemas/Carga'}}}}
+        '422': {description: Formato diferente do schema, content: {application/json: {schema: {$ref: '#/components/schemas/Erro'}}}}
+  /ingestao/alertas:
+    get:
+      tags: [ingestao]
+      summary: Alertas de mudança de formato ou falha de carga
+      responses: {'200': {description: OK}}
+
+  /auditoria:
+    get:
+      tags: [auditoria]
+      summary: Trilha de auditoria (Compliance completa; demais, só os próprios documentos)
+      parameters: [{$ref: '#/components/parameters/ini'}, {$ref: '#/components/parameters/fim'}, {name: usuario, in: query, schema: {type: integer}}, {name: recurso, in: query, schema: {type: string}}, {$ref: '#/components/parameters/limite'}, {$ref: '#/components/parameters/cursor'}]
+      responses: {'200': {description: OK}}
+
+components:
+  securitySchemes:
+    sessao: {type: apiKey, in: cookie, name: rp_sessao}
+  parameters:
+    ini: {name: ini, in: query, schema: {type: string, format: date}}
+    fim: {name: fim, in: query, schema: {type: string, format: date}}
+    uf: {name: uf, in: query, schema: {type: string, pattern: '^[A-Z]{2}$'}}
+    supervisor: {name: supervisor, in: query, description: Nome do supervisor, schema: {type: string}}
+    q: {name: q, in: query, description: Nome ou parte do CPF, schema: {type: string, minLength: 2}}
+    id: {name: id, in: path, required: true, description: Identificador opaco do colaborador (nunca o CPF na URL), schema: {type: string}}
+    limite: {name: limite, in: query, schema: {type: integer, minimum: 1, maximum: 500, default: 60}}
+    cursor: {name: cursor, in: query, schema: {type: string}}
+  responses:
+    NaoAutenticado: {description: Não autenticado, content: {application/json: {schema: {$ref: '#/components/schemas/Erro'}}}}
+    SemPermissao: {description: Sem permissão, content: {application/json: {schema: {$ref: '#/components/schemas/Erro'}}}}
+  schemas:
+    Erro: {type: object, required: [codigo, mensagem], properties: {codigo: {type: string}, mensagem: {type: string}, detalhes: {type: array, items: {type: string}}}}
+    Periodo: {type: object, properties: {ini: {type: string, format: date}, fim: {type: string, format: date}}}
+    Nivel: {type: string, enum: [C, A, T, N], description: 'C Crítico · A Alto · T Atenção · N Estável'}
+    TipoAlerta: {type: string, enum: [jor, auto, pesq, exec, ader, falta, foto, rota, sobre, humor]}
+    Usuario:
+      type: object
+      properties:
+        id: {type: integer}
+        nome: {type: string}
+        email: {type: string}
+        perfil: {type: string, enum: [diretoria, rh, dp, compliance, pp, merch, gerencia_regional, supervisor, admin]}
+        escopo: {type: string, description: 'nacional | regional:<nome> | equipe:<supervisor>'}
+    BaseCarregada: {type: object, properties: {origem: {type: string}, periodo: {$ref: '#/components/schemas/Periodo'}, linhas: {type: integer}, atualizada_em: {type: string, format: date-time}}}
+    ContagemNiveis: {type: object, properties: {C: {type: integer}, A: {type: integer}, T: {type: integer}, N: {type: integer}}}
+    ColaboradorResumo:
+      type: object
+      properties:
+        id: {type: string}
+        nome: {type: string}
+        cpf_mascarado: {type: string, example: '***.456.789-**'}
+        uf: {type: string}
+        supervisor: {type: string}
+        nivel: {$ref: '#/components/schemas/Nivel'}
+        score: {type: integer}
+        risco: {type: integer, minimum: 0, maximum: 100}
+        sobrecarga: {type: boolean}
+    PaginaColaboradores: {type: object, properties: {itens: {type: array, items: {$ref: '#/components/schemas/ColaboradorResumo'}}, total: {type: integer}, proximo_cursor: {type: string, nullable: true}}}
+    PontoRadar:
+      allOf:
+        - $ref: '#/components/schemas/ColaboradorResumo'
+        - type: object
+          properties: {fatia: {type: string, description: UF ou supervisor}}
+    Painel:
+      type: object
+      properties:
+        periodo: {$ref: '#/components/schemas/Periodo'}
+        contagem: {$ref: '#/components/schemas/ContagemNiveis'}
+        kpis: {type: object, additionalProperties: {type: number}, description: 'aderencia, pesquisas_expiradas_pct, atrasos, checkout_auto, humor_negativo_pct (agregado), colaboradores'}
+        semanas: {type: array, items: {type: object, properties: {semana_ini: {type: string, format: date}, contratadas: {type: integer}, realizadas: {type: integer}, programadas: {type: integer}, respondidas: {type: integer}, expiradas: {type: integer}, ocorrencias_jornada: {type: integer}}}}
+        dia_semana: {type: array, items: {type: integer}, minItems: 7, maxItems: 7}
+        risco_por_supervisor: {type: array, items: {type: object, properties: {supervisor: {type: string}, C: {type: integer}, A: {type: integer}, T: {type: integer}}}}
+        leitura_automatica: {type: array, items: {type: string}}
+    Evento:
+      type: object
+      properties:
+        colaborador: {$ref: '#/components/schemas/ColaboradorResumo'}
+        tipo: {$ref: '#/components/schemas/TipoAlerta'}
+        severidade: {type: integer, minimum: 1, maximum: 3}
+        data: {type: string, format: date}
+        titulo: {type: string}
+        descricao: {type: string}
+    RaioX:
+      type: object
+      properties:
+        colaborador:
+          allOf:
+            - $ref: '#/components/schemas/ColaboradorResumo'
+            - type: object
+              properties:
+                cpf: {type: string, description: Completo só para perfis autorizados; senão mascarado}
+                jornada: {type: string}
+                lojas: {type: array, items: {type: string}}
+        dimensoes: {type: object, additionalProperties: {type: integer, nullable: true}, description: '0–100: Aderência, Pesquisas, Pontualidade, Registro de jornada, Fotos, Presença, Humor (Humor só para perfis autorizados)'}
+        media_filtro: {type: object, additionalProperties: {type: integer, nullable: true}}
+        alertas: {type: array, items: {type: object, properties: {tipo: {$ref: '#/components/schemas/TipoAlerta'}, severidade: {type: integer}, titulo: {type: string}, detalhe: {type: string}}}}
+        jornada_dias: {type: array, items: {type: object, properties: {data: {type: string, format: date}, checkin: {type: string}, checkout: {type: string, nullable: true}, checkout_auto: {type: boolean}, atraso_min: {type: integer}, visitas: {type: array, items: {type: object, properties: {pdv: {type: string}, ini: {type: string}, fim: {type: string, nullable: true}, tipo_pdv: {type: string}}}}}}}
+        pesquisas_semana: {type: array, items: {type: object, properties: {semana: {type: integer}, programadas: {type: integer}, respondidas: {type: integer}, expiradas: {type: integer}}}}
+        aderencia_lojas: {type: array, items: {type: object, properties: {loja: {type: string}, contratadas: {type: integer}, realizadas: {type: integer}, aderencia: {type: number}, situacao: {type: string}}}}
+        carga: {type: object, properties: {semanas: {type: array, items: {type: object, properties: {semana_ini: {type: string, format: date}, lojas: {type: integer}, contratadas: {type: integer}, realizadas: {type: integer}, aderencia: {type: number}}}}, media_contratadas: {type: number}, pdoh: {type: object, nullable: true, properties: {periodo: {$ref: '#/components/schemas/Periodo'}, dias: {type: integer}, produtivo_pct: {type: number}, deslocamento_pct: {type: number}, ocio_pct: {type: number}, nao_registrado_pct: {type: number}}}}}
+        faltas: {type: object, nullable: true, properties: {injustificadas: {type: integer}, justificadas: {type: integer}, atestados: {type: integer}}}
+        fotos_indicio: {type: array, items: {type: object, properties: {data: {type: string, format: date}, loja: {type: string}, motivos: {type: array, items: {type: string}}, url_assinada: {type: string, description: URL temporária do storage}}}}
+        humor: {type: object, nullable: true, description: Ausente para perfis sem acesso ao contexto de acompanhamento}
+    ConteudoDossie:
+      type: object
+      properties:
+        intro: {type: string}
+        objetivos: {type: string}
+        blocos: {type: array, maxItems: 5, items: {type: object, properties: {chave: {type: string}, titulo: {type: string}, texto: {type: string}, conclusao: {type: string, enum: [procede, procede_parcialmente, nao_procede, sem_dados], nullable: true}}}}
+        impacto: {type: string}
+        contexto_acompanhamento: {type: string, nullable: true}
+        consideracoes_finais: {type: string, pattern: '^Sendo assim,'}
+    Dossie:
+      type: object
+      properties:
+        id: {type: string}
+        numero: {type: string, nullable: true, pattern: '^RP-\d{4}-\d{6}$'}
+        status: {type: string, enum: [rascunho, emitido]}
+        colaborador: {$ref: '#/components/schemas/ColaboradorResumo'}
+        periodo: {$ref: '#/components/schemas/Periodo'}
+        parametro_versao: {type: integer}
+        relato: {type: string, nullable: true}
+        conteudo: {$ref: '#/components/schemas/ConteudoDossie'}
+        avisos_revisao: {type: array, items: {type: string}}
+        arquivos: {type: object, properties: {pdf: {type: string}, xlsx: {type: string}}, description: 'Nome: Dossiê - NOME.pdf / .xlsx'}
+        emitido_em: {type: string, format: date-time, nullable: true}
+    DossieResumo: {type: object, properties: {numero: {type: string}, status: {type: string}, colaborador: {type: string}, periodo: {$ref: '#/components/schemas/Periodo'}, emitido_em: {type: string, format: date-time, nullable: true}}}
+    ParametroVersao: {type: object, properties: {id: {type: integer}, vigente_desde: {type: string, format: date-time}, autor: {type: string}, justificativa: {type: string}, valores: {type: object}}}
+    Carga: {type: object, properties: {id: {type: integer}, origem: {type: string}, arquivo: {type: string}, periodo: {$ref: '#/components/schemas/Periodo'}, gerado_em_origem: {type: string, format: date-time, nullable: true}, linhas_aceitas: {type: integer}, linhas_descartadas: {type: integer}, status: {type: string, enum: [ok, formato_alterado, erro]}}}

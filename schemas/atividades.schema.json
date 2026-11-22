@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radar-promotor/schemas/atividades",
+  "title": "Atividades — pesquisas programadas e respondidas",
+  "x-origem": "Plataforma de monitoramento — relatório de pesquisas",
+  "x-formato": {"tipo": "csv", "separador": ";", "encoding": "utf-8-sig"},
+  "x-colunas-obrigatorias": ["ID", "Formulário", "PDV", "Responsável", "Colaborador superior", "Solicitação", "Expiração", "Status"],
+  "x-chave-unica": ["ID"],
+  "x-fatiamento": "por dia; dias grandes divididos por status ou grupo (até 10 mil linhas por arquivo)",
+  "x-normalizacao": {
+    "cliente_e_tipo": "Formulário no formato '[CLIENTE] Tipo de pesquisa'",
+    "status": {"R": "RESPONDID|REALIZ|CONCLU|FINALIZ|EXECUT|CRITIC", "E": "EXPIR|NAO REALIZ|NAO RESPOND|PERDID|NAO EXECUT", "P": "demais"}
+  },
+  "type": "object",
+  "properties": {
+    "ID": {"type": "string"},
+    "Rótulo": {"type": "string"},
+    "Formulário": {"type": "string"},
+    "PDV": {"type": "string", "description": "'UF / NOME DA LOJA'"},
+    "Bandeira": {"type": "string"},
+    "Canal do PDV": {"type": "string"},
+    "Regional": {"type": "string"},
+    "Responsável": {"type": "string", "description": "Nome do colaborador"},
+    "Perfil de acesso": {"type": "string"},
+    "Colaborador superior": {"type": "string"},
+    "Solicitação": {"type": "string", "description": "dd/mm/aaaa hh:mm"},
+    "Conclusão": {"type": "string"},
+    "Expiração": {"type": "string"},
+    "Tempo dedicado": {"type": "string"},
+    "Status": {"type": "string"},
+    "Justificada?": {"type": "string"},
+    "Justificativa": {"type": "string"},
+    "Total de Fotos": {"type": ["string", "integer"]},
+    "Fotos sincronizadas": {"type": ["string", "integer"]}
+  },
+  "required": ["ID", "Formulário", "Responsável", "Solicitação", "Status"]
+}

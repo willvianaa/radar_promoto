@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radar-promotor/schemas/pdoh",
+  "title": "PDOH — tempo por categoria e colaborador no período",
+  "x-status": "confirmado (extra: não estava na lista original, já usado no protótipo para sobrecarga)",
+  "x-origem": "2PRT — PDOH, aba Rankings, botão 'XLSX' de cada ranking (Produtividade, Deslocamento, Ócio, Horas não Registradas)",
+  "x-formato": {"tipo": "xlsx", "arquivos": ["ranking_pdoh_prod.xlsx", "ranking_pdoh_desl.xlsx", "ranking_pdoh_ocio.xlsx", "ranking_pdoh_hnr.xlsx"], "linha_cabecalho": 1},
+  "x-colunas-obrigatorias": ["Colaborador", "Superior", "UF", "Segundos", "%", "Dias"],
+  "x-chave-unica": ["Colaborador", "categoria", "periodo_ini", "periodo_fim"],
+  "x-fatiamento": "por período do filtro (o ingestor registra início e fim)",
+  "x-observacao": "A aba 'Detalhada' corta em 5.000 linhas e não exporta; não usar como fonte.",
+  "type": "object",
+  "properties": {
+    "#": {"type": ["integer", "string"]},
+    "Colaborador": {"type": "string"},
+    "Marca": {"type": "string"},
+    "Superior": {"type": "string"},
+    "UF": {"type": "string"},
+    "Tempo (HH:MM)": {"type": "string"},
+    "Segundos": {"type": ["integer", "string"]},
+    "%": {"type": ["number", "string"]},
+    "Dias": {"type": ["integer", "string"]}
+  },
+  "required": ["Colaborador", "Segundos"]
+}

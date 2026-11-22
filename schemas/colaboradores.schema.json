@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radar-promotor/schemas/colaboradores",
+  "title": "Cadastro de colaboradores",
+  "x-origem": "Plataforma de monitoramento — cadastro de colaboradores",
+  "x-formato": {"tipo": "csv", "separador": ";", "encoding": "utf-8-sig"},
+  "x-colunas-obrigatorias": ["NOME DO COLABORADOR", "CPF", "COLABORADOR SUPERIOR", "UF", "USUARIO ATIVO"],
+  "x-chave-unica": ["CPF"],
+  "x-fatiamento": "não se aplica (carga completa diária)",
+  "type": "object",
+  "properties": {
+    "ID": {"type": "string", "description": "ID na plataforma"},
+    "NOME DO COLABORADOR": {"type": "string", "minLength": 3},
+    "USUARIO ATIVO": {"type": "string", "enum": ["SIM", "NÃO", "NAO", "Sim", "Não"]},
+    "PERFIL DE ACESSO": {"type": "string"},
+    "EQUIPE DE CAMPO": {"type": "string"},
+    "REGIONAIS": {"type": "string"},
+    "COLABORADOR SUPERIOR": {"type": "string", "description": "Supervisor direto"},
+    "CPF": {"type": "string", "pattern": "^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$"},
+    "UF": {"type": "string", "pattern": "^[A-Z]{2}$"},
+    "CIDADE": {"type": "string"},
+    "DATA DE ADMISSAO": {"type": "string", "description": "dd/mm/aaaa"},
+    "JORNADA": {"type": "string", "description": "Texto livre, ex.: 'INICIO 07H'. Vazio = escala padrão 08:00–17:30"}
+  },
+  "required": ["NOME DO COLABORADOR", "CPF"]
+}

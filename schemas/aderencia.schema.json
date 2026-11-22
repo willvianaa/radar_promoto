@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radar-promotor/schemas/aderencia",
+  "title": "Aderência de visitas por colaborador, loja, marca e semana",
+  "x-origem": "2PRT — Aderência de Visitas, Tabela Analítica, botão 'Exportar XLSX'",
+  "x-formato": {"tipo": "xlsx", "aba": 0, "linha_cabecalho": "procurar nas 15 primeiras"},
+  "x-colunas-obrigatorias": ["MARCA", "LOJA", "SUPERVISOR", "UF", "COLABORADOR", "CONTRATADAS", "REALIZADAS", "AJUSTADAS", "SEMANA", "ANO"],
+  "x-chave-unica": ["MARCA", "LOJA", "COLABORADOR", "SEMANA", "ANO"],
+  "x-fatiamento": "por mês (filtro Mês) e por grupo (Todos; DESCONTOS)",
+  "x-somente-leitura": "O ingestor só mexe em filtros e em 'Exportar XLSX'. Nunca 'Atualizar Aderência' nem 'Gerar Aderência'; 'Recalcular' → Cancelar.",
+  "x-conferencia": "Soma de CONTRATADAS e REALIZADAS por semana deve bater com os cards da tela; registrar o 'Gerado em'.",
+  "type": "object",
+  "properties": {
+    "MARCA": {"type": "string"},
+    "LOJA": {"type": "string", "description": "'UF / NOME DA LOJA'"},
+    "SUPERVISOR": {"type": "string"},
+    "UF": {"type": "string", "pattern": "^[A-Z]{2}$"},
+    "COLABORADOR": {"type": "string", "description": "'SEM COLABORADOR' = visita contratada sem ninguém escalado"},
+    "CONTRATADAS": {"type": ["integer", "string"]},
+    "REALIZADAS": {"type": ["integer", "string"]},
+    "AJUSTADAS": {"type": ["integer", "string"], "description": "Já com teto e feriado"},
+    "SEMANA": {"type": ["integer", "string"], "description": "Semana ISO"},
+    "ANO": {"type": ["integer", "string"]}
+  },
+  "required": ["MARCA", "LOJA", "COLABORADOR", "CONTRATADAS", "REALIZADAS", "SEMANA", "ANO"]
+}

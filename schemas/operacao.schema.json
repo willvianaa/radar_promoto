@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radar-promotor/schemas/operacao",
+  "title": "Operação — check-in e check-out por visita",
+  "x-origem": "Plataforma de monitoramento — relatório de check-in do painel de visitas",
+  "x-formato": {"tipo": "xlsx", "aba": 0, "linha_cabecalho": "procurar nas 15 primeiras"},
+  "x-colunas-obrigatorias": ["DATA DO ROTEIRO", "COLABORADOR", "COLABORADOR SUPERIOR", "ESTADO", "PONTO DE VENDA", "HORA ENTRADA", "HORA SAIDA", "CHECKOUT SISTEMA"],
+  "x-chave-unica": ["COLABORADOR", "PONTO DE VENDA", "HORA ENTRADA", "HORA SAIDA"],
+  "x-fatiamento": "por dia (até 10 mil linhas por arquivo)",
+  "x-descarte": "linha sem HORA ENTRADA (visita não iniciada) não entra; é contada no relatório da carga",
+  "type": "object",
+  "properties": {
+    "DATA DO ROTEIRO": {"description": "Data serial do Excel ou dd/mm/aaaa"},
+    "COLABORADOR": {"type": "string"},
+    "COLABORADOR SUPERIOR": {"type": "string"},
+    "ESTADO": {"type": "string", "pattern": "^[A-Z]{2}$"},
+    "PONTO DE VENDA": {"type": "string", "description": "Formato 'UF / NOME DA LOJA'. 'NÃO OPERACIONAL' = almoço; 'REUNIÃO' = não é loja"},
+    "HORA ENTRADA": {"description": "Data-hora serial do Excel ou hh:mm"},
+    "HORA SAIDA": {"description": "Data-hora serial do Excel ou hh:mm; pode vir vazia"},
+    "CHECKOUT SISTEMA": {"type": "string", "enum": ["SIM", "NÃO", "NAO", ""], "description": "SIM = check-out automático"}
+  },
+  "required": ["DATA DO ROTEIRO", "COLABORADOR", "PONTO DE VENDA"]
+}

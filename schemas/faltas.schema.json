@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radar-promotor/schemas/faltas",
+  "title": "Faltas, atestados e afastamentos",
+  "x-status": "provisório — layout a confirmar com o DP",
+  "x-origem": "DP (upload controlado ou export do sistema de ponto/folha)",
+  "x-formato": {"tipo": "xlsx|csv", "linha_cabecalho": "procurar nas 15 primeiras"},
+  "x-colunas-obrigatorias": ["CPF", "Colaborador", "Data", "Tipo"],
+  "x-chave-unica": ["CPF", "Data", "Tipo"],
+  "x-fatiamento": "mensal",
+  "x-sensivel": "O motivo é visível só para RH e DP (matriz de permissões). Atestado não gera alerta.",
+  "type": "object",
+  "properties": {
+    "CPF": {"type": "string", "pattern": "^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$"},
+    "Colaborador": {"type": "string"},
+    "Data": {"type": "string", "description": "dd/mm/aaaa (um registro por dia)"},
+    "Tipo": {"type": "string", "enum": ["Injustificada", "Justificada", "Atestado", "Afastamento"]},
+    "Motivo": {"type": "string"},
+    "Dias": {"type": ["integer", "string"], "description": "Para afastamento informado como período"}
+  },
+  "required": ["Colaborador", "Data", "Tipo"]
+}

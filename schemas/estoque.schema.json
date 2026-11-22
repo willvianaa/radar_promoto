@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "radar-promotor/schemas/estoque",
+  "title": "Estoque e ruptura por PDV e produto",
+  "x-status": "provisório — formato e frequência dependem do cliente (Q-13)",
+  "x-origem": "Cliente / backoffice (upload controlado)",
+  "x-formato": {"tipo": "xlsx|csv", "linha_cabecalho": "procurar nas 15 primeiras"},
+  "x-colunas-obrigatorias": ["Cliente", "PDV", "Produto", "Data", "Estoque"],
+  "x-chave-unica": ["Cliente", "PDV", "Produto", "Data"],
+  "x-fatiamento": "por cliente e semana",
+  "x-mapeamento": "Cada cliente pode ter um layout; o ingestor mantém um mapa de colunas por cliente (de-para versionado).",
+  "type": "object",
+  "properties": {
+    "Cliente": {"type": "string"},
+    "PDV": {"type": "string", "description": "'UF / NOME DA LOJA'"},
+    "Produto": {"type": "string"},
+    "EAN": {"type": "string", "pattern": "^\\d{8,14}$"},
+    "Data": {"type": "string", "description": "dd/mm/aaaa"},
+    "Estoque": {"type": ["number", "string"], "description": "Estoque do sistema da loja"},
+    "Ruptura": {"type": ["string", "boolean"], "description": "Produto ausente na gôndola segundo a pesquisa"}
+  },
+  "required": ["Cliente", "PDV", "Produto", "Data"]
+}
