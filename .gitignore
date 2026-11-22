@@ -15,6 +15,7 @@ exports/
 # Credenciais
 .env
 .env.*
+!.env.example
 *.key
 *.pem
 
