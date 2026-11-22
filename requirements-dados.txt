@@ -1,0 +1,6 @@
+# Dependências da sessão Dados e regras (migrações e testes). A sessão Infra pode consolidar num requirements único.
+alembic>=1.13
+SQLAlchemy>=2.0
+psycopg[binary]>=3.2
+pytest>=8
+ruff>=0.5
