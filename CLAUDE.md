@@ -49,7 +49,8 @@ na branch da sessão-mãe (`docs/contratos` ou sucessora) antes de mudar o códi
 - Semana = ISO, segunda a domingo. O 2PRT não tem filtro regional.
 
 ### 4.4 Humor
-- Humor é **contexto de acompanhamento, nunca motivo de medida**. Não entra no Índice de risco como penalidade, não gera alerta de conduta sozinho e não aparece em texto acusatório.
+- Humor é **contexto de acompanhamento, nunca motivo de medida**: não fundamenta conclusão do dossiê e não aparece em texto acusatório.
+- **Pontuação (decisão do dono, 22/11/2026):** como no protótipo, os alertas ligados ao humor **somam** severidade no nível e no Índice de risco, para priorizar o cuidado: "Humor negativo recorrente" = 1; "Possível sobrecarga" = 2 (3 quando carga de visitas e humor negativo aparecem juntos). A dimensão Humor continua fora da média de dimensões do risco.
 - Opções negativas: Cansado, Sobrecarregado, Triste, Doente (Luto, Incomodado, Não Valorizado e Estressado: pendentes de decisão do RH).
 - "Doente" é dado sensível (LGPD): visibilidade conforme a matriz de permissões.
 - Humor negativo recorrente + queda de desempenho = **possível sobrecarga** (sinal de cuidado, não de conduta).
@@ -62,7 +63,7 @@ na branch da sessão-mãe (`docs/contratos` ou sucessora) antes de mudar o códi
 - Fuga de rota: posição a mais de 200 m da loja (cerca).
 
 ### 4.7 Alertas e Índice de risco
-- Cada alerta tem severidade 1 (baixa), 2 (média) ou 3 (alta), pelos limites versionados em `parametros` (valores iniciais em `db/modelo.md`).
+- Cada alerta tem severidade 1 (baixa), 2 (média) ou 3 (alta), pelos limites versionados em `parametros` (valores iniciais em `db/modelo.md`). Todos os alertas somam, inclusive os de humor e sobrecarga (§4.4).
 - Nível do colaborador: **Crítico** se soma ≥ 9 ou dois alertas de severidade 3; **Alto** se soma ≥ 5; **Atenção** se soma ≥ 3; senão Estável.
 - Índice de risco (0–100) = `min(100, soma_sev × 9 + (100 − média das dimensões sem humor) × 0,25)`.
 - Toda regra é determinística e reproduzível: mesma entrada + mesma versão de parâmetros = mesmo resultado.
