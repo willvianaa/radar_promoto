@@ -177,6 +177,14 @@ def test_fotos_exigem_hash():
     assert f.sha256 == "ab" * 32 and f.lat == -12.9
 
 
+def test_norm_nome_memoizado_e_equivalente():
+    util._norm_str.cache_clear()
+    assert util.norm_nome("  José   da  Conceição ") == "JOSE DA CONCEICAO"
+    assert util.norm_nome("  José   da  Conceição ") == "JOSE DA CONCEICAO"
+    assert util._norm_str.cache_info().hits == 1
+    assert util.norm_nome(None) == "" and util.norm_nome(123) == "123"
+
+
 def test_aderencia_linhas_invalidas_sao_descartadas_e_contadas():
     cad = t.Cadastro([])
 
