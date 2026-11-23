@@ -1,0 +1,21 @@
+{
+  "intro": "Este dossiê reúne registros operacionais do período analisado para subsidiar a apuração do relato registrado pela supervisão. Os dados são fictícios e servem apenas para validar o padrão do documento.",
+  "objetivos": "Verificar, com base nos registros, a procedência dos pontos do relato e apresentar os indícios encontrados para análise pelas áreas responsáveis.",
+  "blocos": [
+    {
+      "chave": "jornada",
+      "titulo": "Encerramento antecipado da jornada",
+      "texto": "Os registros operacionais indicam check-out anterior ao horário previsto na escala em 3 dos 20 dias trabalhados no período, considerada a tolerância de 15 minutos. Os indícios necessitam ser apurados junto à supervisão.",
+      "conclusao": "procede_parcialmente"
+    },
+    {
+      "chave": "pesquisas",
+      "titulo": "Pesquisas não respondidas na última semana",
+      "texto": "Na semana de 21/09/2026 a 26/09/2026, 6 das 14 pesquisas programadas expiraram sem resposta, percentual superior ao das demais semanas do período.",
+      "conclusao": "procede"
+    }
+  ],
+  "impacto": "A aderência do período ficou abaixo da meta de 93% nas semanas com pesquisas expiradas, o que reduz a cobertura das visitas contratadas. Os registros não indicam impacto sobre outros colaboradores da equipe.",
+  "contexto_acompanhamento": "As informações desta seção têm finalidade exclusiva de acompanhamento e não constituem fundamento para medida disciplinar. Registro de humor no período: 19 de 20 dias com registro, sem alerta de cuidado.",
+  "consideracoes_finais": "Sendo assim, os registros do período apresentam indícios de encerramento antecipado da jornada e de pesquisas não respondidas concentradas em uma semana, os quais necessitam ser apurados pelas áreas responsáveis."
+}
