@@ -1,0 +1,47 @@
+/* Tokens da identidade RT / Monitor Regional. Escuro por padrão; claro por preferência do sistema ou pelo botão de tema. */
+:root {
+  color-scheme: dark;
+  --bg: #0B1E2D; --side: #102D42; --top: #133350; --card: #133350; --card-2: #1A3D5C; --input: #0B1E2D;
+  --border: rgba(255,255,255,.08); --border-2: #1A3E5B;
+  --ink: #FCFCFC; --ink-2: rgba(252,252,252,.72); --ink-3: rgba(252,252,252,.52);
+  --rt: #F4562A; --rt-2: #D94820; --rt-bg: rgba(244,86,42,.12); --rt-line: rgba(244,86,42,.55);
+  --good: #22C55E; --good-bg: rgba(34,197,94,.13);
+  --warn: #F59E0B; --warn-bg: rgba(245,158,11,.13);
+  --bad: #EF4444; --bad-bg: rgba(239,68,68,.13);
+  --m2: #3B82F6; --m2-bg: rgba(59,130,246,.14);
+  --vio: #A78BFA; --vio-bg: rgba(167,139,250,.15);
+  --grid: rgba(255,255,255,.06);
+  --paper: #F7F9FB; --paper-ink: #10263B; --paper-line: #D5DEE8;
+  --radius: 14px;
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #f2f5f9; --side: #ffffff; --top: #ffffff; --card: #ffffff; --card-2: #f5f8fb; --input: #ffffff;
+    --border: #dde5ee; --border-2: #c9d5e2;
+    --ink: #10263b; --ink-2: #4a5d72; --ink-3: #66788c; --rt-bg: rgba(244,86,42,.09);
+    --rt: #D94820;
+    --good: #15803D; --good-bg: rgba(22,163,74,.1);
+    --warn: #B45309; --warn-bg: rgba(217,119,6,.1);
+    --bad: #DC2626; --bad-bg: rgba(220,38,38,.09);
+    --m2: #2563EB; --m2-bg: rgba(37,99,235,.1);
+    --vio: #7C3AED; --vio-bg: rgba(124,58,237,.1);
+    --grid: rgba(16,38,59,.08);
+    --paper: #ffffff; --paper-ink: #10263B; --paper-line: #D5DEE8;
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f2f5f9; --side: #ffffff; --top: #ffffff; --card: #ffffff; --card-2: #f5f8fb; --input: #ffffff;
+  --border: #dde5ee; --border-2: #c9d5e2;
+  --ink: #10263b; --ink-2: #4a5d72; --ink-3: #66788c; --rt-bg: rgba(244,86,42,.09);
+  --rt: #D94820;
+  --good: #15803D; --good-bg: rgba(22,163,74,.1);
+  --warn: #B45309; --warn-bg: rgba(217,119,6,.1);
+  --bad: #DC2626; --bad-bg: rgba(220,38,38,.09);
+  --m2: #2563EB; --m2-bg: rgba(37,99,235,.1);
+  --vio: #7C3AED; --vio-bg: rgba(124,58,237,.1);
+  --grid: rgba(16,38,59,.08);
+  --paper: #ffffff; --paper-ink: #10263B; --paper-line: #D5DEE8;
+}

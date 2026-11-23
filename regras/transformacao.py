@@ -238,21 +238,34 @@ def transforma_faltas(linhas: Iterable[dict], cad: Cadastro) -> list[Falta]:
     return list(out.values())
 
 
-def transforma_aderencia(linhas: Iterable[dict], cad: Cadastro, hoje: date) -> list[Aderencia]:
+def transforma_aderencia(
+    linhas: Iterable[dict], cad: Cadastro, hoje: date, descartes: list[int] | None = None
+) -> list[Aderencia]:
     """Uma linha por colaborador × loja × marca × semana.
 
     ``semana_fechada`` = a semana (segunda a domingo) terminou antes de ``hoje``. Marcas quinzenais
     (WD-40, Botafogo) têm contrato só em semana ISO par: em semana ímpar o contratado é 0.
+
+    Linha inválida (semana ISO 0/54, ano impossível, campo ausente) não derruba o lote: é descartada e,
+    se ``descartes`` for passado, o número da linha (a partir de 0) é acrescentado a ele
+    (``linhas_descartadas`` da carga).
     """
     out = []
-    for d in linhas:
+    for n, d in enumerate(linhas):
         r = Linha(d)
         ano, sem = util.parse_num(r.get("ANO")), util.parse_num(r.get("SEMANA"))
         ct, rz = util.parse_num(r.get("CONTRATADAS")), util.parse_num(r.get("REALIZADAS"))
         loja = r.txt("LOJA")
-        if ano is None or sem is None or ct is None or not loja:
+        seg = None
+        if ano is not None and sem is not None and ct is not None and loja:
+            try:
+                seg = util.segunda_da_semana_iso(int(ano), int(sem))
+            except (ValueError, OverflowError):
+                seg = None
+        if seg is None:
+            if descartes is not None:
+                descartes.append(n)
             continue
-        seg = util.segunda_da_semana_iso(int(ano), int(sem))
         marca = r.txt("MARCA")
         if int(sem) % 2 == 1 and any(q in util.norm_nome(marca) for q in MARCAS_QUINZENAIS):
             ct = 0

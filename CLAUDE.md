@@ -62,15 +62,17 @@ na branch da sessão-mãe (`docs/contratos` ou sucessora) antes de mudar o códi
 ### 4.3 Aderência (2PRT)
 - Aderência = realizadas ÷ contratadas, com **realizadas limitadas ao contratado em cada linha** (colaborador × loja × marca × semana).
 - Mês: soma das semanas por UF + Loja + Marca e só então aplica o teto (o excesso de um grupo não compensa o déficit de outro).
-- **Meta 1 = 85%**, **Meta 2 = 93%**. Corte de aderência para o dossiê: 93%.
+- **Meta de aderência única = 93%** (decisão do dono, 23/11/2026; não existem mais Meta 1 e Meta 2 na tela, nos alertas nem no dossiê). Corte de aderência para o dossiê: 93%.
+- Severidade do alerta de aderência: sobe para 2 quando alguma loja fica abaixo de 85%. Os 85% são só limiar de severidade (parâmetro `meta1`), não uma meta, e não aparecem em texto.
 - WD-40 e Botafogo são quinzenais (contrato só em semana par).
 - A semana em andamento **não entra em alertas** (o contrato vem inteiro e o realizado parcial).
 - Semana = ISO, segunda a domingo. O 2PRT não tem filtro regional.
 
 ### 4.4 Humor
 - Humor é **contexto de acompanhamento, nunca motivo de medida**: não fundamenta conclusão do dossiê e não aparece em texto acusatório.
-- **Pontuação (decisão do dono, 22/11/2026):** como no protótipo, os alertas ligados ao humor **somam** severidade no nível e no Índice de risco, para priorizar o cuidado: "Humor negativo recorrente" = 1; "Possível sobrecarga" = 2 (3 quando carga de visitas e humor negativo aparecem juntos). A dimensão Humor continua fora da média de dimensões do risco.
-- Opções negativas: Cansado, Sobrecarregado, Triste, Doente (Luto, Incomodado, Não Valorizado e Estressado: pendentes de decisão do RH).
+- **Pontuação (decisão do dono, 22/11/2026):** como no protótipo, os alertas ligados ao humor **somam** severidade no nível e no Índice de risco, para priorizar o cuidado: "Humor negativo recorrente" = 1; "Possível sobrecarga" = 2 (3 quando carga de visitas e humor negativo aparecem juntos).
+- **"Humor" e "Sobrecarga" são tipos de alerta separados** (decisão do dono, 23/11/2026): `humor` = "Humor negativo recorrente"; `sobre` = "Possível sobrecarga". Um colaborador pode ter os dois.
+- Opções negativas (decisão do dono, 23/11/2026): Cansado, Sobrecarregado, Triste, Doente, Luto, Incomodado, Estressado e Não Valorizado.
 - "Doente" é dado sensível (LGPD): visibilidade conforme a matriz de permissões.
 - Humor negativo recorrente + queda de desempenho = **possível sobrecarga** (sinal de cuidado, não de conduta).
 
@@ -84,7 +86,7 @@ na branch da sessão-mãe (`docs/contratos` ou sucessora) antes de mudar o códi
 ### 4.7 Alertas e Índice de risco
 - Cada alerta tem severidade 1 (baixa), 2 (média) ou 3 (alta), pelos limites versionados em `parametros` (valores iniciais em `db/modelo.md`). Todos os alertas somam, inclusive os de humor e sobrecarga (§4.4).
 - Nível do colaborador: **Crítico** se soma ≥ 9 ou dois alertas de severidade 3; **Alto** se soma ≥ 5; **Atenção** se soma ≥ 3; senão Estável.
-- Índice de risco (0–100) = `min(100, soma_sev × 9 + (100 − média das dimensões sem humor) × 0,25)`.
+- Índice de risco (0–100) = `min(100, soma_sev × 10)` (decisão do dono, 23/11/2026: risco simples, igual ao protótipo). As dimensões (aderência, pesquisas, pontualidade etc.) continuam no Raio-X como leitura, mas não entram no risco.
 - Toda regra é determinística e reproduzível: mesma entrada + mesma versão de parâmetros = mesmo resultado.
 
 ## 5. Dossiê (padrão formal)
