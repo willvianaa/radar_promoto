@@ -1,7 +1,7 @@
 # 8. Plano de ondas e sessões-filhas
 
 Do protótipo (artefato) para o sistema web do escritório. A sessão-mãe planeja, mantém os contratos,
-revisa os PRs dos filhos e avisa o dono do projeto do que precisa de aprovação. **Só o dono faz merge.**
+revisa os PRs dos filhos e avisa o dono do projeto do que precisa de aprovação. Desde 22/11/2026, mãe e filhos abrem PR e fazem merge pelo GitHub, com CI verde e aprovação da mãe (`CLAUDE.md` §1).
 
 ## 8.1 Ondas
 
@@ -37,7 +37,7 @@ Contratos ──┬─> Infra e Docs ──────────────�
 
 ## 8.4 O que precisa da aprovação do dono
 
-- Merge de todo PR.
+- Merge de PR da mãe que mude contrato ou regra de negócio (os demais seguem `CLAUDE.md` §1).
 - Mudança de contrato (schemas, banco, API, regras do CLAUDE.md).
 - Criação do usuário de serviço e dos secrets (o dono cria; nenhum agente recebe a senha em chat).
 - Repositório: hoje é **público**. Recomendado torná-lo privado antes da Onda 2 (regras internas, nomes de origem nos schemas).

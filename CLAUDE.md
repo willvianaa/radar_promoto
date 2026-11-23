@@ -6,7 +6,12 @@ na branch da sessão-mãe (`docs/contratos` ou sucessora) antes de mudar o códi
 
 ## 1. Fluxo de trabalho
 
-- Toda mudança entra por PR. Ninguém faz merge, nem a sessão-mãe: o dono do projeto aprova e faz o merge.
+- Toda mudança entra por PR, nunca por push direto na `main`.
+- **Autorização do dono (22/11/2026):** a sessão-mãe e as sessões-filhas abrem seus próprios PRs e fazem o merge pelo GitHub, usando a conta do dono no Chrome. Condições para o merge:
+  1. CI verde (todos os checks);
+  2. aprovação da sessão-mãe registrada no PR (comentário "Aprovado pela sessão-mãe"); PR da própria mãe que mude contrato ou regra de negócio exige confirmação do dono no chat;
+  3. merge pelo botão do PR (nunca `push --force` na `main`), apagando a branch só se não houver mais trabalho nela.
+- Sem login no GitHub, captcha, 2FA ou pedido de senha: parar e avisar o dono. Nenhuma sessão digita senha nem altera configurações da conta ou do repositório.
 - Cada sessão-filha trabalha na branch `feat/<área>` e abre PRs pequenos e frequentes (um assunto por PR).
 - PR sempre com: o que muda, como testar, contrato que segue, riscos. Testes verdes antes de pedir revisão.
 - Commits e PRs em português.
