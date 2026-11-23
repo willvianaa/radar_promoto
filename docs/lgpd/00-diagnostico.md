@@ -41,3 +41,10 @@ Script: `.github/scripts/varrer_dados_pessoais.py` (modo árvore e `--historico`
 - R4, R7 e R8: tratados nos PRs #15 e #26 (na `main`).
 - Documentos LGPD em rascunho: `01` a `06` nesta pasta. **Base legal, prazos e visibilidade são propostas; quem decide são DPO, RH e Jurídico (Q-08, Q-09, Q-10).**
 - Pendente: testes de segurança em `tests/seguranca/` (mascaramento, nada sensível em log/URL), e R1, R2, R3, R5 e R6 com os responsáveis indicados.
+
+## Situação em 23/11 (retomada na conta da empresa)
+
+- **Testes de segurança** em `tests/seguranca/`: mascaramento de CPF, textos de alerta e logs sem CPF, humor individual ou motivo de falta, contrato da API sem dado sensível na URL (exceções R5 e filtro de supervisor listadas no teste) e autoteste da varredura do CI (detecta e nunca imprime o valor).
+- **R10 (novo, Médio) — "Doente" em texto livre de alerta:** o detalhe do alerta "Humor negativo recorrente" (`regras/motor.py`) conta os dias marcados como "Doente". O texto do alerta aparece para perfis que não podem ver dado de saúde (CLAUDE.md §2.1 e §4.4). Proposta: o motor guarda a contagem em campo estruturado e a API decide por perfil (`ver_doente`). Responsáveis: Dados (motor) e API. **Corrigido no PR #32**; coberto por `tests/seguranca/test_textos_e_logs.py`.
+- **R2 atualizado — republicação do protótipo `radar_v3` na conta da empresa:** o código no repositório não tem dado real, mas o protótipo grava as bases carregadas no banco do artefato e mostra humor individual (inclusive "Doente") e CPF a quem abre o link, sem perfil nem auditoria. Na conta da empresa o contrato corporativo melhora a situação, mas continua valendo: publicar só para o grupo restrito da matriz, não publicar `radar_v3/fotos/` junto com a página, registrar a operação no `03-registro-operacoes.md` e apagar os dados da conta pessoal assim que a nova estiver conferida. Decisão do dono e do DPO.
+- R1 (repositório público) continua aberto.
