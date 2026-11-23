@@ -12,6 +12,9 @@ revisa os PRs dos filhos e avisa o dono do projeto do que precisa de aprovação
 | 2 | Ingestor · Backend/API | Carga diária automática das origens confirmadas, com parada por formato; API do OpenAPI com login, perfis, escopo, mascaramento e auditoria |
 | 3 | Design/Front · Documentos | 4 abas funcionando contra a API; PDF e Excel do dossiê gerados no servidor com numeração RP-AAAA-NNNNNN |
 | 4 | Otimização e QA | Regressão contra dossiês anonimizados, testes de permissão, desempenho (painel < 2 s com 1.000 colaboradores × 60 dias), revisão de segurança |
+| Todas | LGPD e Segurança | Transversal: diagnóstico, documentos LGPD, controles no CI e revisão dos PRs sensíveis desde o início |
+
+**Ajuste de 22/11/2026 (pedido do dono):** todas as sessões foram criadas de uma vez. As ondas passam a indicar a **ordem de merge e de dependência**, não a ordem de criação: Ingestor, Backend e API, Design e Front e Documentos trabalham desde já contra os contratos (`schemas/`, `db/`, `api/openapi.yaml`) com mocks e fixtures fictícias, e integram quando a onda anterior entrar na `main`. QA começa pela estrutura de regressão e e2e.
 
 ## 8.2 Sessões-filhas
 
