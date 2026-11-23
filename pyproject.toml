@@ -6,11 +6,7 @@ requires-python = ">=3.12"
 
 [tool.ruff]
 target-version = "py312"
-line-length = 100
 extend-exclude = [".venv", "radar_v2", "radar_v3", "prototipo", "ferramentas", "sistema"]
-
-[tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
