@@ -1,0 +1,71 @@
+{
+ "senha_teste": "senha-de-teste-nao-real",
+ "regionais": {
+  "Sudeste": [
+   "SP",
+   "RJ",
+   "MG"
+  ],
+  "Sul": [
+   "PR"
+  ],
+  "Nordeste": [
+   "BA"
+  ]
+ },
+ "periodo": {
+  "ini": "2026-09-07",
+  "fim": "2026-11-15"
+ },
+ "usuarios": [
+  {
+   "id": 1,
+   "nome": "Dora Diretoria",
+   "email": "diretoria@exemplo.teste",
+   "perfil": "diretoria",
+   "escopo": "nacional"
+  },
+  {
+   "id": 2,
+   "nome": "Rita RH",
+   "email": "rh@exemplo.teste",
+   "perfil": "rh",
+   "escopo": "nacional"
+  },
+  {
+   "id": 3,
+   "nome": "Paulo PeP",
+   "email": "pp@exemplo.teste",
+   "perfil": "pp",
+   "escopo": "nacional"
+  },
+  {
+   "id": 4,
+   "nome": "Glória Gerência",
+   "email": "gerencia@exemplo.teste",
+   "perfil": "gerencia_regional",
+   "escopo": "regional:Sudeste"
+  },
+  {
+   "id": 5,
+   "nome": "Aurora Supervisora",
+   "email": "supervisor@exemplo.teste",
+   "perfil": "supervisor",
+   "escopo": "equipe:Supervisor Aurora Teste"
+  },
+  {
+   "id": 6,
+   "nome": "Carlos Compliance",
+   "email": "compliance@exemplo.teste",
+   "perfil": "compliance",
+   "escopo": "nacional"
+  },
+  {
+   "id": 7,
+   "nome": "Admin Teste",
+   "email": "admin@exemplo.teste",
+   "perfil": "admin",
+   "escopo": "nacional"
+  }
+ ]
+}
