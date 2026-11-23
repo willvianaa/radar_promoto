@@ -9,11 +9,29 @@ Variáveis de ambiente (nunca no repositório, nunca em log):
 from __future__ import annotations
 
 import os
+from urllib.parse import urlparse
 
 import httpx
 import pytest
 
 BASE_URL = os.environ.get("E2E_BASE_URL", "").rstrip("/")
+HOSTS_PERMITIDOS = {"localhost", "127.0.0.1", "::1"}
+SUFIXOS_HOMOLOGACAO = (".localhost", ".test")
+MARCAS_HOMOLOGACAO = ("homolog", "staging", "hml", "dev", "qa", "sandbox")
+
+
+def _host_permitido(url: str) -> bool:
+    """Só localhost ou homologação: o e2e usa credenciais de teste e nunca deve apontar para produção."""
+    host = (urlparse(url).hostname or "").lower()
+    if host in HOSTS_PERMITIDOS or host.endswith(SUFIXOS_HOMOLOGACAO):
+        return True
+    return any(m in host.split(".")[0].split("-") for m in MARCAS_HOMOLOGACAO)
+
+
+if BASE_URL and not _host_permitido(BASE_URL):
+    raise pytest.UsageError("E2E_BASE_URL deve apontar para localhost ou homologação (nunca produção)")
+
+
 PERFIS = ("DIRETORIA", "RH", "DP", "COMPLIANCE", "PP", "MERCH", "GERENCIA", "SUPERVISOR")
 
 
@@ -52,4 +70,8 @@ def como():
 
     yield _como
     for c in clientes.values():
+        try:
+            c.post("/auth/logout")
+        except httpx.HTTPError:
+            pass
         c.close()

@@ -39,7 +39,8 @@ def test_cpf_nunca_completo_em_listas(como, perfil):
     for rota in ("/painel/ranking", "/colaboradores?q=a", "/painel/radar"):
         r = c.get(rota)
         assert r.status_code == 200, rota
-        assert not CPF_COMPLETO.search(r.text), f"CPF completo em {rota} para {perfil}"
+        achou = bool(CPF_COMPLETO.search(r.text))  # booleano antes: o assert não imprime o CPF casado no log
+        assert not achou, f"CPF completo em {rota} para {perfil}"
 
 
 def test_lista_traz_cpf_mascarado_no_formato_padrao(como):
@@ -53,6 +54,16 @@ def test_lista_traz_cpf_mascarado_no_formato_padrao(como):
 @pytest.mark.parametrize("perfil", ["DIRETORIA", "DP", "COMPLIANCE", "PP", "MERCH"])
 def test_humor_individual_fora_de_rh_e_supervisor_nao_aparece(como, perfil):
     pytest.skip("completar com o id de colaborador de teste da seed e o campo de humor do schema RaioX")
+
+
+@pytest.mark.parametrize("perfil", ["DIRETORIA", "DP", "COMPLIANCE", "PP", "MERCH", "GERENCIA", "SUPERVISOR"])
+def test_dias_doente_nao_vem_para_perfil_sem_permissao(como, perfil):
+    c = como(perfil)
+    for rota in ("/painel/ranking", "/colaboradores?q=a", "/painel/radar"):
+        r = c.get(rota)
+        assert r.status_code == 200, rota
+        achou = "dias_doente" in r.text
+        assert not achou, f"campo dias_doente presente em {rota} para {perfil}"
 
 
 def test_opcao_doente_so_para_rh(como):
