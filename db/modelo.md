@@ -27,7 +27,7 @@ Três esquemas. O DDL de referência está em `db/modelo.sql`; as migrações re
 - `feriado` — data, uf (nulo = nacional), descricao.
 
 ## app
-- `usuario` — id, email, nome, perfil (`diretoria|rh|dp|compliance|pp|merch|gerencia_regional|supervisor|admin`), escopo_regional, escopo_supervisor_cpf, ativo.
+- `usuario` — id, email, nome, perfil (`diretoria|rh|dp|compliance|pp|merch|gerencia_regional|supervisor|admin`), escopo_regional, escopo_supervisor_cpf, ativo, `senha_hash` (hash argon2; nulo = sem login por senha; migração 0003, até o SSO — Q-06). O `db/modelo.sql` é o DDL da migração 0001; mudanças posteriores entram só por migração nova.
 - `parametro_versao` — id, vigente_desde, autor, justificativa, `valores JSONB`. Toda alteração cria versão nova; documento guarda a versão usada.
 - `calculo` — id, periodo_ini, periodo_fim, parametro_versao_id, criado_em (um cálculo por execução diária e sob demanda).
 - `indicador_colaborador` — calculo_id, cpf, dimensões (aderência, pesquisas, pontualidade, registro de jornada, fotos, presença, humor), carga_media, queda_ader_pp, score, nivel (`C|A|T|N`), risco (0–100).
@@ -55,3 +55,7 @@ Três esquemas. O DDL de referência está em `db/modelo.sql`; as migrações re
 }
 ```
 Limites `[a,b,c]`: valor ≥ c → severidade 3; ≥ b → 2; ≥ a (e a > 0) → 1.
+
+`meta2` (93) é a **meta de aderência única**. `meta1` (85) ficou só como limiar de severidade do alerta de aderência (loja abaixo dele → severidade 2) e não aparece em tela nem em documento (`CLAUDE.md` §4.3). Risco = `min(100, soma_sev × 10)` (§4.7). Como os parâmetros são versionados, a mudança da lista `humor_negativo` entra como nova `parametro_versao`, sem reescrever a nº 1 já gravada.
+
+**`parametro_versao` nº 2 (decisão do dono, 23/11/2026):** igual à nº 1, exceto `"humor_negativo": ["Cansado", "Sobrecarregado", "Triste", "Doente", "Luto", "Incomodado", "Estressado", "Não Valorizado"]`. É a versão vigente; a nº 1 fica para reproduzir cálculos antigos.

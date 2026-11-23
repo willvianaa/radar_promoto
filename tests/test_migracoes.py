@@ -37,8 +37,8 @@ def test_parametro_v1_igual_ao_modelo_md():
 
 def test_cadeia_linear_de_revisoes():
     sd = ScriptDirectory.from_config(_cfg())
-    assert [r.revision for r in sd.walk_revisions()] == ["0002", "0001"]
-    assert sd.get_heads() == ["0002"]
+    assert [r.revision for r in sd.walk_revisions()] == ["0003", "0002", "0001"]
+    assert sd.get_heads() == ["0003"]
 
 
 def test_offline_emite_ddl_e_parametro():

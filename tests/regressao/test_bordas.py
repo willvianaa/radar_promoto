@@ -1,12 +1,11 @@
 """Casos de borda ponta a ponta (linhas cruas → transformação → motor). Dados 100% fictícios.
 
-Testes ``xfail(strict=True)`` documentam defeitos achados pela QA (docs/qa/achados.md): quando a
+Testes ``xfail(strict=True)`` (quando houver) documentam defeitos achados pela QA (docs/qa/achados.md): quando a
 área dona corrigir, o teste passa a falhar como "XPASS" e o marcador deve ser removido.
 """
 
 from datetime import date
 
-import pytest
 
 from regras import motor, transformacao as t, util
 from regras.parametros import parametros_padrao
@@ -90,7 +89,6 @@ def test_so_almoco_no_dia_nao_cria_dia_trabalhado():
     assert calcula(vs) == []
 
 
-@pytest.mark.xfail(strict=True, reason="A-03: reunião entra em DiaJornada.lojas; CLAUDE.md §4.1 diz que não conta como loja atendida")
 def test_reuniao_nao_conta_como_loja_atendida():
     vs, _ = t.transforma_operacao([op("14/09/2026", "08:00", "10:00"), op("14/09/2026", "10:30", "11:30", pdv="BA / REUNIÃO")],
                                   t.Cadastro(cadastro()))
@@ -166,18 +164,15 @@ def test_valores_numericos_em_formato_brasileiro():
     assert util.parse_num("1.234,5") == 1234.5 and util.parse_num("93%") == 93.0 and util.parse_num("x") is None
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="A-02: parse_data lança ValueError em data impossível; uma linha ruim derruba a transformação do lote")
 def test_data_impossivel_nao_derruba_o_lote():
     vs, desc = t.transforma_operacao([op("31/02/2026", "08:00", "17:30"), op("14/09/2026", "08:00", "17:30")], t.Cadastro(cadastro()))
     assert len(vs) == 1 and desc == 1
 
 
-@pytest.mark.xfail(strict=True, reason="A-02: parse_hora aceita 25:99 (=1599 min) em vez de rejeitar")
 def test_hora_impossivel_e_rejeitada():
     assert util.parse_hora("25:99") is None
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="A-02: semana ISO inválida (0 ou 54) lança ValueError em transforma_aderencia")
 def test_semana_iso_invalida_nao_derruba_o_lote():
     linha = {"MARCA": "M", "LOJA": "BA / L", "COLABORADOR": NOME, "CONTRATADAS": 1, "REALIZADAS": 1, "SEMANA": 54, "ANO": 2026}
     assert t.transforma_aderencia([linha], t.Cadastro([]), date(2027, 1, 1)) == []
