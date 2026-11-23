@@ -79,6 +79,8 @@ O workflow `.github/workflows/ci.yml` roda: lint (ruff), testes (pytest), valida
 
 Variáveis estão listadas em [.env.example](.env.example), **só com nomes**. Os valores vão para o `.env` local (não versionado) ou para os secrets do ambiente. Nenhum valor real deve aparecer em código, teste, log ou documentação.
 
+**Segredos da API:** `SEGREDO_SESSAO` e `SEGREDO_ID` são obrigatórios (32+ bytes, aleatórios e diferentes entre si); sem eles a API não sobe. `APP_ENV=teste` ou `ci` dispensam os segredos usando valores fixos do repositório: servem só para testes automatizados e **nunca** podem ser usados em ambiente com dado real.
+
 ## Documentação
 
 | Nº | Entrega | Documento |
