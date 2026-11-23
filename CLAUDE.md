@@ -24,6 +24,20 @@ na branch da sessão-mãe (`docs/contratos` ou sucessora) antes de mudar o códi
 - O ingestor usa usuário de serviço. **Não contorna captcha nem 2FA**: se a origem pedir, para e alerta.
 - Logs da aplicação não registram CPF completo, humor individual nem motivo de falta.
 
+### 2.1 LGPD (Lei 13.709/2018)
+- **Papéis:** a RT é controladora dos dados dos colaboradores; fornecedores de hospedagem e plataformas são operadores (contrato com cláusula de proteção de dados).
+- **Dados tratados:** pessoais (nome, CPF, UF, supervisor, jornada, visitas, posição GPS, fotos) e **sensível** (humor "Doente" = dado de saúde, art. 11). Nenhum outro dado sensível é coletado.
+- **Finalidade única:** gestão operacional, acompanhamento e cuidado da equipe de campo e apuração de indícios. Proibido usar para outra finalidade (ex.: ranking público, marketing).
+- **Base legal:** definida por DPO, RH e Jurídico (Q-10). Até a definição, o humor individual fica restrito aos perfis da matriz e o sistema não entra em uso real com humor "Doente" visível.
+- **Mínimo necessário:** coletar só as colunas dos `schemas/`; descartar o resto na ingestão. Ambientes de teste e desenvolvimento só com dados fictícios ou pseudonimizados.
+- **Acesso:** por perfil e escopo (matriz de permissões), aplicado no servidor; CPF mascarado em listas; toda leitura individual e emissão vai para a auditoria.
+- **Proteção:** HTTPS (TLS 1.2+) em todo acesso; banco, backups e storage de fotos criptografados em repouso; senhas com hash forte; segredos só em cofre/secrets.
+- **Retenção:** prazos por tipo de dado definidos na política (Q-09); expirado o prazo, apagar ou anonimizar com registro.
+- **Direitos do titular:** o sistema precisa permitir localizar, exportar e corrigir os dados de um colaborador por CPF.
+- **Incidente:** suspeita de vazamento → avisar o dono e o DPO no mesmo dia; plano em `docs/lgpd/`. Comunicação à ANPD e aos titulares quando houver risco relevante.
+- **Documentos obrigatórios** (sessão LGPD e Segurança): RIPD (relatório de impacto), registro das operações de tratamento, política de retenção, plano de resposta a incidentes, aviso aos colaboradores.
+- **Revisão:** PR que toque dado pessoal, autenticação, permissão, log, storage ou infraestrutura precisa do comentário "Revisão LGPD/Segurança: OK" antes do merge.
+
 ## 3. Identificação do colaborador
 
 - A chave do colaborador é o **CPF** (não existe matrícula no sistema). Sem CPF na origem, herda o CPF do mesmo nome normalizado (maiúsculas, sem acento, espaços simples) vindo do cadastro; sem cadastro, a chave provisória é o nome normalizado e o registro fica marcado `cpf_pendente`.
