@@ -171,11 +171,11 @@ def test_aderencia_sem_colaborador_e_ignorada():
     assert motor.calcular(Base(colaboradores=[pessoa()], aderencia=[sem]), None, INI, FIM) == []
 
 
-def test_metas_1_e_2_e_severidade_pelas_pendentes():
+def test_meta_unica_93_e_severidade_pelas_pendentes():
     s = semanas(1)[0]
-    assert "abaixo da meta de 93%" in next(a for a in meta2.alertas if a.tipo == "ader").detalhe
     meta2 = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 100, 90)]))  # 90%: abaixo de 93%; 10 pendentes
     assert tipos(meta2)["ader"] == 3
+    assert "abaixo da meta de 93%" in next(a for a in meta2.alertas if a.tipo == "ader").detalhe
     ok = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 100, 93)]))
     assert "ader" not in tipos(ok)
     meta1 = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 10, 8)]))  # 80%: abaixo de 85% (severidade 2); 2 pendentes
