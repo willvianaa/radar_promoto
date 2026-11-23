@@ -28,4 +28,4 @@ A sessão-mãe transforma isso num **sistema web do escritório**, dividindo o t
 - PR pequeno e de um assunto só?
 
 ## Decisões pendentes do dono (travam ondas)
-SSO ou e-mail/senha (Q-06) · hospedagem (Q-01) · layout de faltas e estoque (Q-13) · opções de humor Luto/Incomodado/Não Valorizado/Estressado · quem vê humor e "Doente" (Q-08) · base legal LGPD (Q-10) · repositório público → privado antes da onda 2.
+SSO ou e-mail/senha (Q-06) · hospedagem (Q-01) · layout de faltas e estoque (Q-13) · quem vê humor e "Doente" (Q-08) · base legal LGPD (Q-10) · repositório público → privado antes da onda 2.
