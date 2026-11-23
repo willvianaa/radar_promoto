@@ -1,10 +1,8 @@
-from pathlib import Path
 
 from openpyxl import Workbook
 
 from ingestor.validacao import FORMATO_ALTERADO, OK, validar_arquivo
 
-FIX = Path(__file__).resolve().parent.parent / "fixtures" / "ingestor"
 CAB_ADER = ["MARCA", "LOJA", "SUPERVISOR", "UF", "COLABORADOR", "CONTRATADAS", "REALIZADAS", "AJUSTADAS", "SEMANA", "ANO"]
 
 
@@ -17,29 +15,29 @@ def _xlsx(tmp_path, linhas, nome="x.xlsx"):
     return p
 
 
-def test_csv_ok_descarta_colunas_fora_do_schema_e_deduplica():
-    r = validar_arquivo(FIX / "colaboradores_ok.csv", "colaboradores")
+def test_csv_ok_descarta_colunas_fora_do_schema_e_deduplica(fix):
+    r = validar_arquivo(fix / "colaboradores_ok.csv", "colaboradores")
     assert r.status == OK
     assert r.linhas_aceitas == 2 and r.duplicadas == 1
     assert all("TELEFONE PESSOAL" not in lin and "ID" in lin for lin in r.linhas)
     assert len(r.sha256) == 64
 
 
-def test_cabecalho_fora_da_primeira_linha_e_nome_normalizado():
-    r = validar_arquivo(FIX / "humor_ok.xlsx", "humor")
+def test_cabecalho_fora_da_primeira_linha_e_nome_normalizado(fix):
+    r = validar_arquivo(fix / "humor_ok.xlsx", "humor")
     assert r.status == OK and r.linhas_aceitas == 2
     assert set(r.linhas[0]) == {"NOME DO COLABORADOR", "DATA", "HUMOR"}
 
 
-def test_coluna_obrigatoria_ausente_e_formato_alterado():
-    r = validar_arquivo(FIX / "colaboradores_sem_cpf.csv", "colaboradores")
+def test_coluna_obrigatoria_ausente_e_formato_alterado(fix):
+    r = validar_arquivo(fix / "colaboradores_sem_cpf.csv", "colaboradores")
     assert r.status == FORMATO_ALTERADO and "CPF" in r.motivo and r.linhas == []
-    r = validar_arquivo(FIX / "humor_sem_coluna.xlsx", "humor")
+    r = validar_arquivo(fix / "humor_sem_coluna.xlsx", "humor")
     assert r.status == FORMATO_ALTERADO and "HUMOR" in r.motivo
 
 
-def test_arquivo_vazio_e_formato_alterado():
-    r = validar_arquivo(FIX / "humor_vazio.xlsx", "humor")
+def test_arquivo_vazio_e_formato_alterado(fix):
+    r = validar_arquivo(fix / "humor_vazio.xlsx", "humor")
     assert r.status == FORMATO_ALTERADO and r.linhas == []
 
 

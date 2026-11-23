@@ -1,6 +1,7 @@
 """Gera as planilhas FICTÍCIAS desta pasta (nomes inventados, CPFs inválidos de propósito).
 
-Uso: python tests/fixtures/ingestor/gerar.py
+Os testes chamam `gerar(destino)` (o .gitignore barra planilhas no repositório).
+Uso manual: python tests/fixtures/ingestor/gerar.py
 """
 
 from pathlib import Path
@@ -8,6 +9,7 @@ from pathlib import Path
 from openpyxl import Workbook
 
 AQUI = Path(__file__).parent
+DESTINO = AQUI
 
 
 def xlsx(nome, linhas):
@@ -15,15 +17,18 @@ def xlsx(nome, linhas):
     ws = wb.active
     for lin in linhas:
         ws.append(lin)
-    wb.save(AQUI / nome)
+    wb.save(DESTINO / nome)
 
 
 def csv(nome, linhas):
     texto = "\n".join(";".join(map(str, lin)) for lin in linhas) + "\n"
-    (AQUI / nome).write_text(texto, encoding="utf-8-sig")
+    (DESTINO / nome).write_text(texto, encoding="utf-8-sig")
 
 
-if __name__ == "__main__":
+def gerar(destino=AQUI):
+    global DESTINO
+    DESTINO = Path(destino)
+    DESTINO.mkdir(parents=True, exist_ok=True)
     csv("colaboradores_ok.csv", [
         ["ID", "NOME DO COLABORADOR", "USUARIO ATIVO", "COLABORADOR SUPERIOR", "CPF", "UF", "TELEFONE PESSOAL"],
         [1, "ANA FICTICIA", "SIM", "BRUNO FICTICIO", "000.000.001-91", "SP", "11 00000-0001"],
@@ -42,3 +47,8 @@ if __name__ == "__main__":
     ])
     xlsx("humor_sem_coluna.xlsx", [["NOME DO COLABORADOR", "DATA"], ["ANA FICTICIA", "20/11/2026"]])
     xlsx("humor_vazio.xlsx", [["NOME DO COLABORADOR", "DATA", "HUMOR"]])
+    return DESTINO
+
+
+if __name__ == "__main__":
+    gerar()

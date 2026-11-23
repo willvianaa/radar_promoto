@@ -21,7 +21,7 @@ import jsonschema
 SCHEMAS_DIR = Path(__file__).resolve().parent.parent / "schemas"
 LINHAS_PROCURA_CABECALHO = 15
 LIMITE_TIPO_INVALIDO = 0.02
-LIMITE_LINHAS_EXPORT = 10_000
+LIMITE_LINHAS_EXPORT = 10_000  # a origem corta nesse valor: >= isso é tratado como export truncado
 
 OK = "ok"
 FORMATO_ALTERADO = "formato_alterado"
@@ -48,6 +48,7 @@ class Resultado:
     linhas_descartadas: int = 0
     duplicadas: int = 0
     sem_entrada: int = 0
+    excedeu_limite: bool = False  # export no limite da origem (possível truncamento): fatiar mais
 
     @property
     def linhas_aceitas(self) -> int:
@@ -175,8 +176,9 @@ def validar_arquivo(
     res.linhas_lidas = len(corpo)
     if len(corpo) < minimo_linhas:
         return alterado("arquivo sem linhas de dados")
-    if len(corpo) > LIMITE_LINHAS_EXPORT:
-        return alterado(f"export com mais de {LIMITE_LINHAS_EXPORT} linhas; fatiar por período")
+    if len(corpo) >= LIMITE_LINHAS_EXPORT:
+        res.excedeu_limite = True
+        return alterado(f"export no limite de {LIMITE_LINHAS_EXPORT} linhas (possível truncamento); fatiar por período")
 
     chave = schema["x-chave-unica"]
     campo_descarte = CAMPO_DESCARTE_SE_VAZIO.get(origem)

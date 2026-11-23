@@ -1,10 +1,8 @@
 from contextlib import contextmanager
-from pathlib import Path
 
 from ingestor.gravacao import gravar
 from ingestor.validacao import validar_arquivo
 
-FIX = Path(__file__).resolve().parent.parent / "fixtures" / "ingestor"
 
 
 class Cur:
@@ -49,26 +47,26 @@ class ConnFalsa:
         return Res((7,))
 
 
-def test_formato_alterado_so_abre_alerta():
-    r = validar_arquivo(FIX / "humor_sem_coluna.xlsx", "humor")
+def test_formato_alterado_so_abre_alerta(fix):
+    r = validar_arquivo(fix / "humor_sem_coluna.xlsx", "humor")
     c = ConnFalsa()
-    g = gravar(c, r, FIX / "humor_sem_coluna.xlsx")
+    g = gravar(c, r, fix / "humor_sem_coluna.xlsx")
     assert g.status == "formato_alterado"
     assert len(c.chamadas) == 1 and "app.ingestao_alerta" in c.chamadas[0][0]
 
 
-def test_ok_grava_carga_e_linhas():
-    r = validar_arquivo(FIX / "humor_ok.xlsx", "humor")
+def test_ok_grava_carga_e_linhas(fix):
+    r = validar_arquivo(fix / "humor_ok.xlsx", "humor")
     c = ConnFalsa()
-    g = gravar(c, r, FIX / "humor_ok.xlsx")
+    g = gravar(c, r, fix / "humor_ok.xlsx")
     assert g.status == "gravado" and g.carga_id == 7
     assert any("INSERT INTO raw.carga" in s for s, _ in c.chamadas)
     assert [n for _, n, _ in c.chamadas[-1][1]] == [1, 2]
 
 
-def test_mesmo_arquivo_nao_regrava():
-    r = validar_arquivo(FIX / "humor_ok.xlsx", "humor")
+def test_mesmo_arquivo_nao_regrava(fix):
+    r = validar_arquivo(fix / "humor_ok.xlsx", "humor")
     c = ConnFalsa(existente=(3,))
-    g = gravar(c, r, FIX / "humor_ok.xlsx")
+    g = gravar(c, r, fix / "humor_ok.xlsx")
     assert g.status == "duplicado" and g.carga_id == 3
     assert not any("INSERT" in s for s, _ in c.chamadas)
