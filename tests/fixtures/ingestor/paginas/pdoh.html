@@ -1,0 +1,12 @@
+<!doctype html><meta charset="utf-8"><title>PDOH (simulado)</title>
+<div role="tablist"><button role="tab" onclick="document.getElementById('r').hidden=false">Rankings</button><button role="tab">Detalhada</button></div>
+<input name="data_ini" value="2026-11-01"><input name="data_fim" value="2026-11-30">
+<div id="r" hidden>
+  <section data-ranking="prod"><button onclick="d('prod')">XLSX</button></section>
+  <section data-ranking="desl"><button onclick="d('desl')">XLSX</button></section>
+  <section data-ranking="ocio"><button onclick="d('ocio')">XLSX</button></section>
+  <section data-ranking="hnr"><button onclick="d('hnr')">XLSX</button></section>
+</div>
+<script>
+function d(c) { location.href = '/download/pdoh?cat=' + c + '&ini=' + document.querySelector('[name=data_ini]').value + '&fim=' + document.querySelector('[name=data_fim]').value; }
+</script>

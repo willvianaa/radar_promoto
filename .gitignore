@@ -33,3 +33,7 @@ Thumbs.db
 
 # Logos da marca (nao sao dados)
 !radar_v2/assets/*.png
+
+# Exports baixados e lotes de fotos (dados pessoais)
+storage/
+*.zip
