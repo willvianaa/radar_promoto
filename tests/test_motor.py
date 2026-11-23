@@ -247,10 +247,12 @@ def test_sobrecarga_vale_3_quando_carga_e_humor_aparecem_juntos():
     assert tipos(so_carga) == {"sobre": 2} and so_carga.score == 2
 
 
-def test_doente_aparece_no_alerta_de_humor():
+def test_doente_fica_em_campo_estruturado_e_fora_do_texto():
     ds = dias_uteis(6)
     b = Base(colaboradores=[pessoa()], humor=[Humor(CPF, d, "Doente", True) for d in ds])
-    assert "2 dias" not in calc(b).alertas[0].detalhe and "6 dias como “Doente”" in calc(b).alertas[0].detalhe
+    a = calc(b).alertas[0]
+    assert a.dias_doente == 6  # R10 (LGPD): contagem estruturada, que a API filtra por perfil
+    assert "doente" not in f"{a.titulo} {a.detalhe}".lower()
 
 
 def test_humor_so_conta_com_5_dias_de_registro():
