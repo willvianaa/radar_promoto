@@ -44,4 +44,4 @@ Contratos ──┬─> Infra e Docs ──────────────�
 - Mudança de contrato (schemas, banco, API, regras do CLAUDE.md).
 - Criação do usuário de serviço e dos secrets (o dono cria; nenhum agente recebe a senha em chat).
 - Repositório: hoje é **público**. Recomendado torná-lo privado antes da Onda 2 (regras internas, nomes de origem nos schemas).
-- Decisões em aberto que bloqueiam ondas: SSO (Q-06), hospedagem (Q-01), layout de faltas e estoque (Q-13), opções de humor pendentes, quem vê humor/“Doente” (Q-08), base legal LGPD (Q-10).
+- Decisões em aberto que bloqueiam ondas: SSO (Q-06), hospedagem (Q-01), layout de faltas e estoque (Q-13), quem vê humor/“Doente” (Q-08), base legal LGPD (Q-10).

@@ -55,3 +55,7 @@ Três esquemas. O DDL de referência está em `db/modelo.sql`; as migrações re
 }
 ```
 Limites `[a,b,c]`: valor ≥ c → severidade 3; ≥ b → 2; ≥ a (e a > 0) → 1.
+
+`meta2` (93) é a **meta de aderência única**. `meta1` (85) ficou só como limiar de severidade do alerta de aderência (loja abaixo dele → severidade 2) e não aparece em tela nem em documento (`CLAUDE.md` §4.3). Risco = `min(100, soma_sev × 10)` (§4.7). Como os parâmetros são versionados, a mudança da lista `humor_negativo` entra como nova `parametro_versao`, sem reescrever a nº 1 já gravada.
+
+**`parametro_versao` nº 2 (decisão do dono, 23/11/2026):** igual à nº 1, exceto `"humor_negativo": ["Cansado", "Sobrecarregado", "Triste", "Doente", "Luto", "Incomodado", "Estressado", "Não Valorizado"]`. É a versão vigente; a nº 1 fica para reproduzir cálculos antigos.
