@@ -47,7 +47,7 @@ async function sair() {
 }
 function pintarNav() {
   const abas = abasDoPerfil(S.usuario);
-  const lk = (a, i) => `<a href="#/${a[0]}" class="${S.aba === a[0] ? "active" : ""}" ${S.aba === a[0] ? 'aria-current="page"' : ""}>${i == null ? IC[a[0]] : `<b>${i + 1}</b>`}${esc(a[1])}</a>`;
+  const lk = (a, i) => `<a href="#/${a[0]}" class="${S.aba === a[0] ? "active" : ""}" ${S.aba === a[0] ? 'aria-current="page"' : ""}>${IC[a[0]]}${esc(a[1])}</a>`;
   $("nav").innerHTML = abas.map((a) => lk(a)).join("");
   $("tabs").innerHTML = abas.map((a, i) => lk(a, i)).join("");
   $("crumb").textContent = (abas.find((a) => a[0] === S.aba) || abas[0])[1];
