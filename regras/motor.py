@@ -191,7 +191,7 @@ def calcular(
             saida = esc[1] - lo if (saida_ativa and not fer and not last.checkout_auto and lo is not None
                                     and lo < esc[1] - tol_sai) else 0
             dias.append(DiaJornada(d, first, None if last.checkout_auto else lo, any(v.checkout_auto for v in vs),
-                                   atraso, saida, hm.get(d) is True, len({v.pdv for v in vs})))
+                                   atraso, saida, hm.get(d) is True, len({v.pdv for v in vs if v.tipo_pdv == "loja"})))
         trab = len(dias)
         n_atr = sum(1 for x in dias if x.atraso)
         n_sai = sum(1 for x in dias if x.saida)
