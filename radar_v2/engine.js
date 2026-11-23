@@ -172,7 +172,7 @@ function demo(){
    ["Sara Fictícia Melo","000.000.007-07","Paulo Modelo Dias","MA",{fi:2,auto:9,foraH:2,exp:.12,ad:[.88,.93],neg:.2}],
    ["Tiago Modelo Reis","000.000.008-08","Paulo Modelo Dias","MA",{atr:2,exp:.2,bad:1,ad:[.82,.9],neg:.12}],
    ["Helena Teste Barros","000.000.009-09","Paulo Modelo Dias","MA",{exp:.02,ad:[.98,.97],neg:.05}],
-   ["Caio Exemplo Pinto","000.000.010-10","Marta Fictícia Rocha","CE",{sai:2,exp:.08,ad:[.93,.95],neg:.1}]];
+   ["Caio Exemplo Pinto","000.000.000-00","Marta Fictícia Rocha","CE",{sai:2,exp:.08,ad:[.93,.95],neg:.1}]];
   const W=[];for(let d=1;d<=30;d++){const s="2026-09-"+p2(d),w=new Date(s+"T12:00:00").getDay();if(w!==0&&d!==7)W.push(s)}
   const D={oper:[],pesq:[],humor:[],ader:[],fotos:[],faltas:[],rota:[]},POS=["Feliz","Motivado","Bem"],NEG=["Cansado","Sobrecarregado","Triste","Doente"],MAR=["MARCA A","MARCA B","MARCA C"];
   P.forEach((p,pi)=>{const [nome,mat,sup,uf,f]=p,k=norm(nome),r=rng(1000+pi*77),L=[uf+" / LOJA FICTICIA "+p2(pi*2+1),uf+" / LOJA FICTICIA "+p2(pi*2+2)],M=[MAR[pi%3],MAR[(pi+1)%3]];
