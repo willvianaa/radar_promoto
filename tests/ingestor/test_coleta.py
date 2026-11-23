@@ -37,3 +37,13 @@ def test_um_dia_no_limite_abre_alerta_e_nao_grava(tmp_path):
                         dt.date(2026, 11, 1), dt.date(2026, 11, 1), None)
     assert st == ["formato_alterado"]
     assert len(c.chamadas) == 1 and "ingestao_alerta" in c.chamadas[0][0]
+
+
+def test_arquivo_baixado_e_apagado_apos_gravar_e_mantido_se_formato_alterado(tmp_path):
+    ok = _humor(tmp_path, "ok.xlsx", 3)
+    coletar_origem(ConnFalsa(), "humor", lambda i, f: [(ok, None)], dt.date(2026, 11, 1), dt.date(2026, 11, 1), None)
+    assert not ok.exists()
+    ruim = tmp_path / "ruim.xlsx"
+    ruim.write_bytes(b"nao e xlsx")
+    coletar_origem(ConnFalsa(), "humor", lambda i, f: [(ruim, None)], dt.date(2026, 11, 1), dt.date(2026, 11, 1), None)
+    assert ruim.exists()  # fica no storage (fora do git) para diagnóstico

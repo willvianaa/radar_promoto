@@ -45,6 +45,8 @@ def coletar_janela(conn, origem: str, baixar: Baixar, ini: dt.date, fim: dt.date
     for arq, r in res:
         g = gravar(conn, r, arq, periodo_ini=ini, periodo_fim=fim)
         status.append(g.status)
+        if g.status in ("gravado", "duplicado"):
+            arq.unlink(missing_ok=True)  # o conteúdo já está em raw.linha; não deixa export em disco
     return status
 
 
@@ -108,4 +110,5 @@ def executar(env: dict[str, str] | None = None, hoje: dt.date | None = None) -> 
                 log.warning("ingestor: origem %s interrompida: %s", nome, e)
             except Exception as e:  # falha inesperada numa origem não derruba as demais
                 alertar(conn, nome.lower(), f"erro inesperado ({type(e).__name__})")
-                log.exception("ingestor: erro inesperado em %s", nome)
+                # só o tipo: o traceback do Playwright traz URL interna e trechos da página
+                log.error("ingestor: erro inesperado em %s (%s)", nome, type(e).__name__)
