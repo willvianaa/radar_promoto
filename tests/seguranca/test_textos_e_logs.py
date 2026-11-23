@@ -76,15 +76,13 @@ def test_alerta_nao_traz_motivo_de_falta(resultados):
         assert MOTIVO not in texto.lower()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Achado LGPD-01: o detalhe de 'Humor negativo recorrente' conta os dias como “Doente” "
-    "(dado de saúde) em texto livre, visível a perfis sem acesso ao humor. Mover a contagem para "
-    "campo estruturado que a API filtre por perfil. Quando corrigido, retirar este xfail.",
-)
 def test_alerta_nao_traz_opcao_doente(resultados):
+    # R10: "Doente" (dado de saúde) fica fora do texto livre; a contagem vai em campo
+    # estruturado (Alerta.dias_doente), que a API só entrega a perfis autorizados.
     for texto in _textos_de_alerta(resultados):
         assert "doente" not in texto.lower()
+    humor = [a for r in resultados if r.cpf == CPF_C for a in r.alertas if a.tipo == "humor"]
+    assert humor and humor[0].dias_doente == 8
 
 
 def test_sem_cadastro_aparece_mascarado(resultados):
