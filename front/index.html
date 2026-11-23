@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; base-uri 'none'; form-action 'self'">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark light">
+<title>Radar Promotor · RT Intelligence</title>
+<link rel="icon" href="assets/rt-icon.png">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/telas.css">
+<link rel="stylesheet" href="css/abas.css">
+<link rel="stylesheet" href="css/glass.css">
+</head>
+<body>
+<a class="skip" href="#view">Ir para o conteúdo</a>
+<main id="login" class="login" hidden></main>
+<div class="app" id="app" hidden>
+  <aside class="side" id="side">
+    <div class="brand"><div class="brand-logo" aria-hidden="true"><span>rt</span></div><div class="brand-name">Radar <b>Promotor</b></div><div class="brand-sub">RT Intelligence · P&amp;P</div></div>
+    <div class="side-sec">Análise</div>
+    <nav class="side-nav" id="nav" aria-label="Seções"></nav>
+    <div class="side-sec">Conta</div>
+    <nav class="side-nav"><a href="#" id="sair" role="button">Sair</a></nav>
+    <div class="side-foot">RT Intelligence<br>Monitoramento e Produtividade</div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <div class="main">
+    <header class="top">
+      <button class="burger" id="burger" aria-label="Abrir menu" aria-expanded="false" aria-controls="side">☰</button>
+      <h1 class="top-title"><span class="top-crumb">Radar Promotor ›</span> <span id="crumb"></span></h1>
+      <span class="user-chip" id="usuario"></span>
+      <button class="theme-btn" id="tema" type="button">Tema</button>
+      <div class="meta-pill"><i></i><span id="regchip"></span></div>
+    </header>
+    <div class="content">
+      <nav class="tabs" id="tabs" aria-label="Abas"></nav>
+      <div id="banner" role="status"></div>
+      <div class="filters" id="filtros" role="search" aria-label="Filtros"></div>
+      <div id="view" tabindex="-1"></div>
+    </div>
+  </div>
+</div>
+<script src="vendor/chart-4.4.7.umd.js" integrity="sha384-zYPBGXwO4633CABX/5Spf6emCKUJCfoOkhOMYyxMsatqQZPnDblmmOewfjsIVWCM" crossorigin="anonymous"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
