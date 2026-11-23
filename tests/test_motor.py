@@ -151,7 +151,7 @@ def test_aderencia_teto_por_linha_o_excesso_nao_compensa_o_deficit():
     assert r.aderencia_pct == pytest.approx(20 / 24)
     assert r.dimensoes["aderencia"] == 83
     (a,) = [x for x in r.alertas if x.tipo == "ader"]
-    assert a.severidade == 2  # abaixo da Meta 1 (grupo MARCA A: 16/20 = 80%)
+    assert a.severidade == 2  # abaixo de 85% (severidade 2) (grupo MARCA A: 16/20 = 80%)
 
 
 def test_semana_em_andamento_fica_fora_dos_alertas():
@@ -171,13 +171,14 @@ def test_aderencia_sem_colaborador_e_ignorada():
     assert motor.calcular(Base(colaboradores=[pessoa()], aderencia=[sem]), None, INI, FIM) == []
 
 
-def test_metas_1_e_2_e_severidade_pelas_pendentes():
+def test_meta_unica_93_e_severidade_pelas_pendentes():
     s = semanas(1)[0]
-    meta2 = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 100, 90)]))  # 90%: abaixo da Meta 2; 10 pendentes
+    meta2 = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 100, 90)]))  # 90%: abaixo de 93%; 10 pendentes
     assert tipos(meta2)["ader"] == 3
+    assert "abaixo da meta de 93%" in next(a for a in meta2.alertas if a.tipo == "ader").detalhe
     ok = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 100, 93)]))
     assert "ader" not in tipos(ok)
-    meta1 = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 10, 8)]))  # 80%: abaixo da Meta 1; 2 pendentes
+    meta1 = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 10, 8)]))  # 80%: abaixo de 85% (severidade 2); 2 pendentes
     assert tipos(meta1)["ader"] == 2
 
 
@@ -223,8 +224,8 @@ def test_humor_sozinho_soma_um_ponto():
     assert r.score == 1 and r.nivel == "N"
 
 
-def test_humor_soma_e_a_dimensao_humor_fica_fora_do_risco():
-    """Com humor negativo recorrente: +2 pontos (sobrecarga por humor + queda de desempenho); a dimensão Humor não entra na média."""
+def test_humor_soma_pontos_e_o_risco_e_soma_vezes_10():
+    """Com humor negativo recorrente: +2 pontos (sobrecarga por humor + queda de desempenho); risco = soma × 10."""
     ds = dias_uteis(10)
     vis = [visita(d, 520) for d in ds[:5]] + [visita(d) for d in ds[5:]]  # 5 atrasos → severidade 1
     ps = pesquisas(24, 8)  # 33% expiradas → 2
@@ -235,9 +236,7 @@ def test_humor_soma_e_a_dimensao_humor_fica_fora_do_risco():
     assert tipos(b) == {**tipos(a), "sobre": 2}
     assert b.score == a.score + 2
     assert b.dimensoes["humor"] == 0 and a.dimensoes["humor"] is None
-    # a média das dimensões ignora Humor: a parte "dimensões" do risco é a mesma nos dois
-    dv = [v for k, v in b.dimensoes.items() if k != "humor" and v is not None]
-    assert b.risco == min(100, round(b.score * 9 + (100 - sum(dv) / len(dv)) * 0.25))
+    assert b.risco == b.score * 10 and a.risco == a.score * 10  # as dimensões não entram na conta
 
 
 def test_sobrecarga_vale_3_quando_carga_e_humor_aparecem_juntos():

@@ -5,7 +5,7 @@ patches da v3), uma conta por linha de comentário. O protótipo não foi execut
 neste ambiente): a conta à mão é a referência.
 
 Humor soma pontos como no protótipo (CLAUDE.md §4.4/§4.7): "Humor negativo recorrente" = 1,
-"Possível sobrecarga" = 2 (3 com carga e humor juntos), e a dimensão Humor fica fora do risco.
+"Possível sobrecarga" = 2 (3 com carga e humor juntos), e o risco é min(100, soma das severidades × 10).
 """
 
 from datetime import date
@@ -62,7 +62,7 @@ def test_joana(r):
     #  auto 2 dias           → [5,8,10] → 0 (sem alerta)
     #  pesq 5/25 = 20%       → [20,30,45], 25 ≥ 20 programadas → 1
     #  exec só 24/09 (16 é feriado) → 1 dia → [0,2,4] → 0
-    #  ader grupo MARCA A: 26 de 30 (86,7%) → abaixo da Meta 2, 4 pendentes → max(1, 2) = 2
+    #  ader grupo MARCA A: 26 de 30 (86,7%) → abaixo da meta de 93%, 4 pendentes → max(1, 2) = 2
     #       MARCA B: 6 realizadas viram 4 pelo teto da linha → 12/12 ok
     #  foto 1 de 10 fora do horário → [0,1,3] → 2
     #  sobre: humor 14,15,16 negativos (seq 3 ≥ 3) com atrasos ≥ 4 → sev 2
@@ -73,8 +73,8 @@ def test_joana(r):
     #            reg 100-2/9×200 = 56 · fotos 100-1/10×500 = 50 · presença 100-1×6 = 94 · humor 100-33,3 = 67
     assert j.dimensoes == {"aderencia": 90, "pesquisas": 20, "pontualidade": 11, "registro_jornada": 56,
                            "fotos": 50, "presenca": 94, "humor": 67}
-    # risco = 8×9 + (100 - (90+20+11+56+50+94)/6) × 0,25 = 72 + 11,625 = 83,6 → 84
-    assert j.risco == 84
+    # risco = min(100, 8 × 10) = 80
+    assert j.risco == 80
     # semanas fechadas 36, 37, 38: contratado 14/semana; aderência 92,9% → 78,6% (queda 14,3 p.p.)
     assert j.carga_media == 14
     assert j.queda_ader_pp == pytest.approx(14.2857, abs=1e-3)
@@ -107,8 +107,8 @@ def test_pedro_jornada_cadastrada_e_sobrecarga(r):
     assert p.cruzada == ["3 dos 3 atrasos ocorreram em dias com humor negativo"]
     # dims: ader 130/138 = 94 · pesq 100 · pont 100-3/8×200 = 25 · reg 100 · presença 100 (sem fotos)
     assert p.dimensoes["aderencia"] == 94 and p.dimensoes["pontualidade"] == 25 and p.dimensoes["fotos"] is None
-    # risco = 3×9 + (100 - (94+100+25+100+100)/5) × 0,25 = 27 + 4,05 = 31,05 → 31
-    assert p.risco == 31
+    # risco = 3 × 10 = 30
+    assert p.risco == 30
 
 
 def test_caio_critico(r):
@@ -116,8 +116,8 @@ def test_caio_critico(r):
     # 10 atrasos (→ 3), 10 check-outs automáticos (→ 3), 1 falta injustificada (→ 2): soma 8, duas severidades 3
     assert tipos(k) == {"jor": 3, "auto": 3, "falta": 2}
     assert k.score == 8 and k.nivel == "C"
-    # pont 0 · reg 0 · presença 75 → risco = 8×9 + (100-25)×0,25 = 72 + 18,75 = 90,75 → 91
-    assert k.risco == 91
+    # risco = 8 × 10 = 80
+    assert k.risco == 80
 
 
 def test_dora_chave_provisoria(r):

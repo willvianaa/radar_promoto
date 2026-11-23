@@ -12,7 +12,8 @@ Python 3.12, sem E/S e sem dependências além da biblioteca padrão. Determiní
 
 ## Decisões que seguem o CLAUDE.md onde o protótipo difere
 
-1. **Humor soma, como no protótipo (§4.4/§4.7 atualizados).** "Humor negativo recorrente" = 1 ponto; "Possível sobrecarga" = 2, ou 3 quando carga de visitas e humor negativo aparecem juntos. A dimensão Humor fica fora da média de dimensões do Índice de risco, e o humor não fundamenta conclusão do dossiê.
+1. **Humor soma, como no protótipo (§4.4/§4.7 atualizados).** "Humor negativo recorrente" = 1 ponto; "Possível sobrecarga" = 2, ou 3 quando carga de visitas e humor negativo aparecem juntos. O humor não fundamenta conclusão do dossiê.
+6. **Índice de risco simples (regra do dono).** `risco = min(100, soma das severidades dos alertas × 10)`. As dimensões (0–100) continuam no resultado como informação, mas não entram na conta.
 2. **Almoço (§4.1).** `NÃO OPERACIONAL` sai antes de qualquer cálculo (não é visita, não vira primeiro check-in nem dia trabalhado). `REUNIÃO` conta na jornada, mas não como loja atendida.
 3. **Aderência (§4.3).** Realizadas limitadas ao contratado em cada linha (colaborador × loja × marca × semana) e agrupadas por UF + loja + marca; só semanas fechadas entram (carga, queda, alertas). O protótipo somava as marcas de uma loja e não limitava a linha.
 4. **Semana fechada** = o domingo da semana é anterior a "hoje" (decidido na transformação, gravado em `core.aderencia.semana_fechada`).

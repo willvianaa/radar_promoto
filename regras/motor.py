@@ -4,8 +4,8 @@ cruzada com humor. Porte do protótipo (``radar_v2/engine.js`` + patches da v3),
 Determinístico e sem E/S: ``calcular(base, parametros, ini, fim)`` devolve um resultado por colaborador.
 
 Humor (CLAUDE.md §4.4 e §4.7): "Humor negativo recorrente" soma 1 ponto; "Possível sobrecarga" soma 2, ou 3
-quando carga de visitas e humor negativo aparecem juntos. A dimensão Humor fica fora da média de dimensões
-do Índice de risco, e o humor não fundamenta conclusão do dossiê (isso é do gerador de documentos).
+quando carga de visitas e humor negativo aparecem juntos. O Índice de risco é min(100, soma das severidades × 10); as dimensões
+são informativas (o humor é uma delas) e não entram nessa conta. O humor não fundamenta conclusão do dossiê (isso é do gerador de documentos).
 """
 
 from __future__ import annotations
@@ -230,7 +230,7 @@ def calcular(
             x = rz / ct if ct else None
             if x is None:
                 continue
-            st = "abaixo da Meta 1" if x * 100 < p["meta1"] else "abaixo da Meta 2" if x * 100 < p["meta2"] else "ok"
+            st = "severa" if x * 100 < p["meta1"] else "abaixo" if x * 100 < p["meta2"] else "ok"
             if st != "ok":
                 baixo.append({"loja": loja, "marca": marca, "ct": ct, "rz": rz, "pend": max(0, ct - rz), "pct": x, "st": st})
         ct_tot = sum(g[0] for g in grupos.values())
@@ -328,10 +328,10 @@ def calcular(
                 f"{plural(len(fot_ind), 'foto', 'fotos')} de {len(fotos_p)} analisadas ({'; '.join(motivos).lower()})",
                 max(f.data for f, _ in fot_ind))
         if baixo:
-            s = max(2 if any("Meta 1" in b["st"] for b in baixo) else 1, severidade(pend_baixo, lim["visitas_pendentes"]))
+            s = max(2 if any(b["st"] == "severa" for b in baixo) else 1, severidade(pend_baixo, lim["visitas_pendentes"]))
             n_l = len({b["loja"] for b in baixo})
             add("ader", s, "Impacto na aderência",
-                f"{plural(n_l, 'loja', 'lojas')} abaixo da meta, "
+                f"{plural(n_l, 'loja', 'lojas')} abaixo da meta de {p['meta2']}%, "
                 f"com {plural(pend_baixo, 'visita pendente', 'visitas pendentes')} do contratado")
         s = severidade(rt_dias, lim["dias_fuga_rota"])
         if s:
@@ -391,8 +391,7 @@ def calcular(
             "presenca": _cl(100 - f_i * 25 - f_j * 6) if tem_faltas else None,
             "humor": None if not hd else _cl(100 - (h_pct or 0) * 100),
         }
-        dv = [v for k, v in dim.items() if k != "humor" and v is not None]
-        risco = _cl(soma * 9 + ((100 - sum(dv) / len(dv)) * 0.25 if dv else 0))
+        risco = min(100, soma * 10)  # Índice de risco simples: soma das severidades × 10, teto 100
 
         res.append(Resultado(
             cpf=cpf, nome=nome, uf=uf, supervisor=c.supervisor if c else "", cpf_pendente=cpf.startswith("N:"),
