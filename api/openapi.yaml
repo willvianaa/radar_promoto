@@ -42,6 +42,7 @@ paths:
       responses:
         '200': {description: "Sessão criada (cookie httpOnly, Secure, SameSite=Strict)", content: {application/json: {schema: {$ref: '#/components/schemas/Usuario'}}}}
         '401': {$ref: '#/components/responses/NaoAutenticado'}
+        '429': {description: Muitas tentativas de login (bloqueio temporário), content: {application/json: {schema: {$ref: '#/components/schemas/Erro'}}}}
   /auth/logout:
     post: {tags: [auth], summary: Encerra a sessão, responses: {'204': {description: OK}}}
   /auth/eu:
