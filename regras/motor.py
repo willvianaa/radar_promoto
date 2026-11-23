@@ -4,8 +4,8 @@ cruzada com humor. Porte do protótipo (``radar_v2/engine.js`` + patches da v3),
 Determinístico e sem E/S: ``calcular(base, parametros, ini, fim)`` devolve um resultado por colaborador.
 
 Humor (CLAUDE.md §4.4 e §4.7): "Humor negativo recorrente" soma 1 ponto; "Possível sobrecarga" soma 2, ou 3
-quando carga de visitas e humor negativo aparecem juntos. A dimensão Humor fica fora da média de dimensões
-do Índice de risco, e o humor não fundamenta conclusão do dossiê (isso é do gerador de documentos).
+quando carga de visitas e humor negativo aparecem juntos. O Índice de risco é min(100, soma das severidades × 10); as dimensões
+são informativas (o humor é uma delas) e não entram nessa conta. O humor não fundamenta conclusão do dossiê (isso é do gerador de documentos).
 """
 
 from __future__ import annotations
@@ -390,8 +390,7 @@ def calcular(
             "presenca": _cl(100 - f_i * 25 - f_j * 6) if tem_faltas else None,
             "humor": None if not hd else _cl(100 - (h_pct or 0) * 100),
         }
-        dv = [v for k, v in dim.items() if k != "humor" and v is not None]
-        risco = _cl(soma * 9 + ((100 - sum(dv) / len(dv)) * 0.25 if dv else 0))
+        risco = min(100, soma * 10)  # Índice de risco simples: soma das severidades × 10, teto 100
 
         res.append(Resultado(
             cpf=cpf, nome=nome, uf=uf, supervisor=c.supervisor if c else "", cpf_pendente=cpf.startswith("N:"),

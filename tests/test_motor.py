@@ -223,8 +223,8 @@ def test_humor_sozinho_soma_um_ponto():
     assert r.score == 1 and r.nivel == "N"
 
 
-def test_humor_soma_e_a_dimensao_humor_fica_fora_do_risco():
-    """Com humor negativo recorrente: +2 pontos (sobrecarga por humor + queda de desempenho); a dimensão Humor não entra na média."""
+def test_humor_soma_pontos_e_o_risco_e_soma_vezes_10():
+    """Com humor negativo recorrente: +2 pontos (sobrecarga por humor + queda de desempenho); risco = soma × 10."""
     ds = dias_uteis(10)
     vis = [visita(d, 520) for d in ds[:5]] + [visita(d) for d in ds[5:]]  # 5 atrasos → severidade 1
     ps = pesquisas(24, 8)  # 33% expiradas → 2
@@ -235,9 +235,7 @@ def test_humor_soma_e_a_dimensao_humor_fica_fora_do_risco():
     assert tipos(b) == {**tipos(a), "sobre": 2}
     assert b.score == a.score + 2
     assert b.dimensoes["humor"] == 0 and a.dimensoes["humor"] is None
-    # a média das dimensões ignora Humor: a parte "dimensões" do risco é a mesma nos dois
-    dv = [v for k, v in b.dimensoes.items() if k != "humor" and v is not None]
-    assert b.risco == min(100, round(b.score * 9 + (100 - sum(dv) / len(dv)) * 0.25))
+    assert b.risco == b.score * 10 and a.risco == a.score * 10  # as dimensões não entram na conta
 
 
 def test_sobrecarga_vale_3_quando_carga_e_humor_aparecem_juntos():
