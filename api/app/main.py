@@ -1,15 +1,26 @@
 """API do Radar Promotor (contrato: api/openapi.yaml). Rotas entram por grupo, em PRs pequenos."""
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from .config import configuracao
 from .rotas_auth import router as rotas_auth
+
+
+@asynccontextmanager
+async def _vida(_: FastAPI):
+    configuracao().validar()  # falha fechada: sem segredos fortes a API não sobe
+    yield
+
 
 app = FastAPI(
     title="Radar Promotor API",
     version="0.1.0",
     openapi_url="/api/v1/openapi.json",
+    lifespan=_vida,
     docs_url=None,
     redoc_url=None,
 )
