@@ -45,6 +45,22 @@ function apoio(chave, r) {
   }
 }
 
+/* ---------- quadro-resumo e fotos (dados do Raio-X do mesmo período) ---------- */
+function quadro(r) {
+  if (!r) return "";
+  const sem = r.carga.semanas, ct = sem.reduce((a, w) => a + w.contratadas, 0), rz = sem.reduce((a, w) => a + w.realizadas, 0);
+  const pg = r.pesquisas_semana.reduce((a, w) => a + w.programadas, 0), ex = r.pesquisas_semana.reduce((a, w) => a + w.expiradas, 0);
+  const it = [["Aderência", ct ? pc(rz / ct * 100) : "—", `${num(rz)} de ${num(ct)} visitas`], ["Pesquisas expiradas", pg ? pc(ex / pg * 100) : "—", `${num(ex)} de ${num(pg)}`],
+    ["Atrasos", num(r.jornada_dias.filter((d) => d.atraso_min > 0).length), "dias acima da tolerância"], ["Check-outs automáticos", num(r.jornada_dias.filter((d) => d.checkout_auto).length), "dias no período"],
+    ["Fotos com indício", num(r.fotos_indicio.length), "para conferência"], ["Faltas injustificadas", r.faltas ? num(r.faltas.injustificadas) : "—", r.faltas ? `${r.faltas.justificadas} justificadas · ${r.faltas.atestados} atestados` : "não disponível"]];
+  return `<div class="qd">${it.map((x) => `<div><span>${esc(x[0])}</span><b>${esc(x[1])}</b><small>${esc(x[2])}</small></div>`).join("")}</div>`;
+}
+function fotos(r) {
+  if (!r || !r.fotos_indicio.length) return "";
+  return `<div class="fts">${r.fotos_indicio.map((x, i) => `<figure><img src="${esc(x.url_assinada)}" alt="Foto ${i + 1}: ${esc(x.loja)}" referrerpolicy="no-referrer"><figcaption><b>Foto ${i + 1}</b> · ${fD(x.data)}<br>${esc(x.loja)}<br><span>${esc(x.motivos.join("; "))}</span></figcaption></figure>`).join("")}</div>
+    <p class="nota">Imagens apresentadas como indício para conferência; a decisão cabe às áreas responsáveis.</p>`;
+}
+
 /* ---------- campo editável: textarea na tela, texto fixo na impressão ---------- */
 const campo = (k, v, ro, linhas = 3) => `<div class="ed"><textarea data-k="${k}" rows="1" data-min="${linhas}" ${ro ? "readonly" : ""} aria-label="${esc(k)}">${esc(v || "")}</textarea><div class="pr-txt">${esc(v || "")}</div></div>`;
 
@@ -55,17 +71,19 @@ function folha(d, r, ro, usuario) {
   const sec = (t) => `<div class="sec">${++n}. ${t}</div>`;
   const blocos = (c.blocos || []).map((b, i) => `<div class="bloco"><div class="bl-t"><b>${i + 1}. ${esc(b.titulo)}</b>${d.relato ? `<select data-conc="${i}" ${ro ? "disabled" : ""} aria-label="Conclusão do ponto ${i + 1}"><option value="">Conclusão do ponto…</option>${Object.entries(CONC).map(([k, v]) => `<option value="${k}"${b.conclusao === k ? " selected" : ""}>${v}</option>`).join("")}</select>` : ""}</div>${campo("b" + i, b.texto, ro, 3)}${apoio(b.chave, r)}</div>`).join("");
   return `<article class="a4" id="folha" aria-label="Dossiê de Análise Operacional">
+    <div class="a4-run"><span>RT Intelligence · Dossiê de Análise Operacional${d.numero ? " · " + esc(d.numero) : ""}</span><span>CONFIDENCIAL</span></div>
     <header class="a4-top"><img src="${LOGO}" alt="RT Intelligence" class="a4-logo"><div class="a4-meta">${d.numero ? `Documento nº <b>${esc(d.numero)}</b>` : "Nº gerado na emissão"}<br>Emissão: ${fD(d.emitido_em ? d.emitido_em.slice(0, 10) : hojeISO())}<br><b>CONFIDENCIAL</b></div></header>
     <div class="a4-tit"><h3>DOSSIÊ DE ANÁLISE OPERACIONAL</h3><div>${esc(col.nome)} · ${fD(d.periodo.ini)} a ${fD(d.periodo.fim)}</div></div>
     <div class="sec">1. Identificação</div>
     <div class="idt"><span><b>Nome:</b> ${esc(col.nome)}</span><span><b>CPF:</b> ${esc(cpf)}</span><span><b>Supervisor:</b> ${esc(col.supervisor)}</span><span><b>UF:</b> ${esc(col.uf)}</span>
       ${r ? `<span class="w2"><b>Jornada:</b> ${esc(r.colaborador.jornada || "não cadastrada")}</span><span class="w2"><b>Lojas:</b> ${esc((r.colaborador.lojas || []).join("; ") || "—")}</span>` : ""}
-      <span><b>Período analisado:</b> ${fD(d.periodo.ini)} a ${fD(d.periodo.fim)}</span><span><b>Versão dos parâmetros:</b> ${esc(d.parametro_versao)}</span></div>
+      <span><b>Período analisado:</b> ${fD(d.periodo.ini)} a ${fD(d.periodo.fim)}</span><span><b>Versão dos parâmetros:</b> ${esc(d.parametro_versao)}</span></div>${quadro(r)}
     <div class="sec">2. Introdução e objetivos</div>${campo("intro", c.intro, ro, 4)}${campo("objetivos", c.objetivos, ro, 3)}
     ${d.relato ? `${sec("Relato a apurar")}<blockquote class="relato">“${esc(d.relato)}”</blockquote>` : ""}
     ${(c.blocos || []).length ? `${sec("Relatos identificados")}${blocos}` : `${sec("Relatos identificados")}<p class="vazio">Nenhum indício encontrado no período.</p>`}
     ${sec("Impacto na aderência e na operação")}${campo("impacto", c.impacto, ro, 3)}
     ${c.contexto_acompanhamento != null ? `${sec("Contexto de acompanhamento")}${campo("contexto_acompanhamento", c.contexto_acompanhamento, ro, 3)}<p class="nota">Informação de acompanhamento e cuidado; não fundamenta conclusão nem medida.</p>` : ""}
+    ${r && r.fotos_indicio.length ? `${sec("Fotos com indício")}${fotos(r)}` : ""}
     ${sec("Considerações finais")}${campo("consideracoes_finais", c.consideracoes_finais, ro, 4)}
     <footer class="a4-foot"><span>RT Intelligence</span><span>Este relatório apresenta indícios baseados em registros operacionais. Quem decide medidas são DP e Compliance.</span><span>CONFIDENCIAL</span></footer>
   </article>`;
