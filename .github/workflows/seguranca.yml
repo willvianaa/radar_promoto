@@ -1,0 +1,65 @@
+# Controles de segurança e LGPD (dona: sessão LGPD e Segurança).
+# Separado do ci.yml da Infra por combinação entre as sessões.
+name: Segurança
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  dados-pessoais:
+    name: Varredura de CPF e segredos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Arquivos versionados (HEAD)
+        run: python .github/scripts/varrer_dados_pessoais.py
+      - name: Commits do PR (inclui o que foi apagado depois)
+        if: github.event_name == 'pull_request'
+        run: >
+          python .github/scripts/varrer_dados_pessoais.py
+          --intervalo ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+
+  segredos:
+    name: Secret scanning (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+          GITLEAKS_ENABLE_COMMENTS: "false"
+
+  dependencias:
+    name: Dependências (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: pip-audit -r requirements-dev.txt --progress-spinner off
+
+  sast:
+    name: SAST (bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: bandit -r api regras ingestor ferramentas db scripts .github/scripts -q
