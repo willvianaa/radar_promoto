@@ -81,3 +81,51 @@
 .foto{margin:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--input)}
 .foto img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;background:var(--card-2)}.foto figcaption{padding:8px 10px;font-size:12px}
 @media (max-width:880px){.prof{grid-template-columns:auto minmax(0,1fr)}.prof .gauge{grid-column:1/-1;justify-self:start}}
+
+/* ===== Dossiê: folha A4 formal ===== */
+.dos{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+.a4-wrap{min-width:0;display:flex;justify-content:center;background:repeating-linear-gradient(135deg,var(--card-2) 0 10px,var(--bg) 10px 20px);border:1px solid var(--border);border-radius:var(--radius);padding:20px 12px;overflow:hidden}
+.a4{--ml:18mm;width:210mm;min-height:297mm;flex:none;background:#fff;color:#10263B;padding:16mm var(--ml) 18mm;box-shadow:0 22px 50px rgba(0,0,0,.35);display:grid;gap:11px;align-content:start;font-size:11pt;line-height:1.5;position:relative;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='794' height='1123'><text x='397' y='600' text-anchor='middle' font-family='Arial' font-weight='800' font-size='96' fill='%23F4562A' fill-opacity='.05' transform='rotate(-35 397 600)'>CONFIDENCIAL</text></svg>");background-size:100% 297mm;background-repeat:repeat-y}
+.a4-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:2.5px solid #10263B;padding-bottom:10px}
+.a4-logo{height:46px;width:auto;display:block}
+.a4-meta{font-size:9.5pt;text-align:right;line-height:1.55}
+.a4-tit{text-align:center;display:grid;gap:3px;padding:8px 0 2px}.a4-tit h3{font-size:17pt;letter-spacing:.05em;color:#10263B}.a4-tit div{font-size:10.5pt;color:#4a5d72}
+.a4 .sec{font-size:10pt;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#10263B;border-bottom:1.5px solid #F4562A;padding-bottom:3px;margin-top:6px;break-after:avoid}
+.a4 .idt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 18px;font-size:10pt;border:1px solid #D5DEE8;border-radius:6px;padding:8px 10px;background:#F7F9FB}
+.a4 .idt .w2{grid-column:1/-1}
+.a4 .ed{position:relative}
+.a4 textarea{width:100%;border:1px solid transparent;background:transparent;color:#10263B;border-radius:5px;padding:4px 6px;line-height:1.55;resize:none;font:inherit;overflow:hidden;display:block}
+.a4 textarea:hover:not([readonly]){border-color:#D5DEE8}.a4 textarea:focus{border-color:#F4562A;outline:none;background:rgba(244,86,42,.05)}
+.a4 .pr-txt{display:none;white-space:pre-wrap;padding:4px 6px}
+.a4 .bloco{display:grid;gap:5px;break-inside:avoid;border-left:3px solid #F4562A;padding-left:10px;margin:4px 0}
+.a4 .bl-t{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;align-items:center;font-size:10.5pt}
+.a4 select{border:1px solid #D5DEE8;border-radius:6px;padding:3px 8px;font:inherit;font-size:9.5pt;color:#10263B;background:#fff;max-width:100%}
+.a4 .tb{width:100%;border-collapse:collapse;font-size:9pt;break-inside:avoid}
+.a4 .tb th{background:#10263B;color:#fff;text-align:left;padding:4px 8px;font-weight:600}.a4 .tb td{padding:3.5px 8px;border-bottom:1px solid #D5DEE8}
+.a4 .tb tr:nth-child(even) td{background:#F7F9FB}
+.a4 .gr{display:grid;gap:3px;font-size:8.5pt;margin-top:4px}.a4 .gr-l{display:grid;grid-template-columns:60px 1fr 54px;gap:8px;align-items:center}.a4 .gr-l i{display:block;height:9px;border-radius:3px;background:#F4562A}.a4 .gr-l b{text-align:right;font-weight:600}
+.a4 .relato{margin:0;border-left:3px solid #D5DEE8;padding:6px 12px;background:#F7F9FB;font-style:italic;font-size:10.5pt}
+.a4 .vazio,.a4 .nota{font-size:9.5pt;color:#4a5d72;margin:0}
+.a4-foot{margin-top:10px;border-top:1px solid #D5DEE8;padding-top:7px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:8.5pt;color:#4a5d72}.a4-foot span:last-child{font-weight:800;color:#F4562A}
+.aside{display:grid;gap:12px;position:sticky;top:80px}
+.aside .btn{width:100%}
+.chk{display:grid;gap:8px;font-size:12.5px}.av{display:flex;gap:8px;align-items:flex-start}
+.av i{width:18px;height:18px;border-radius:50%;flex:none;margin-top:1px;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;font-weight:800;color:#fff}
+.av.ok i{background:var(--good)}.av.err i{background:var(--bad)}
+@media (max-width:1150px){.dos{grid-template-columns:minmax(0,1fr)}.aside{position:static}}
+@media (max-width:880px){.a4-wrap{padding:10px 4px}}
+
+/* impressão: só a folha, A4 de verdade, CONFIDENCIAL e rodapé em todas as páginas */
+@media print{
+  @page{size:A4;margin:12mm 0 16mm}
+  html,body{background:#fff!important;height:auto}
+  .side,.top,.tabs,.filters,.scrim,.skip,.aside,.hero,#banner{display:none!important}
+  .app,.main,.content,#view,.dos,.a4-wrap{display:block!important;padding:0!important;margin:0!important;background:none!important;border:0!important;overflow:visible!important}
+  body{padding:0!important}
+  .a4{zoom:1!important;width:auto;min-height:0;box-shadow:none;padding:0 18mm;-webkit-print-color-adjust:exact;print-color-adjust:exact;background-size:100% 261mm}
+  .a4 textarea{display:none}.a4 .pr-txt{display:block}
+  .a4 select{appearance:none;border:0;padding:0;background:none;font-weight:700;color:#F4562A}
+  .a4-foot{position:fixed;left:0;right:0;bottom:0;margin:0;padding:6px 18mm 0;background:#fff}
+  .a4 .sec,.a4 .bloco{break-inside:avoid}
+}

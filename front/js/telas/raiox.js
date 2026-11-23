@@ -88,5 +88,5 @@ export async function mostrar(ctx, id, vivo) {
   grafico("g-rpes", { type: "bar", data: { labels: r.pesquisas_semana.map((w) => "S" + w.semana), datasets: [{ label: "Respondidas", data: r.pesquisas_semana.map((w) => w.respondidas), backgroundColor: k.good, stack: "s", borderRadius: 4 }, { label: "Expiradas", data: r.pesquisas_semana.map((w) => w.expiradas), backgroundColor: k.bad, stack: "s", borderRadius: 4 }] }, options: { scales: { x: { stacked: true }, y: { stacked: true } } } });
   grafico("g-rad", { type: "bar", data: { labels: r.aderencia_lojas.map((l) => l.loja.replace("Loja Exemplo ", "")), datasets: [{ label: "Aderência", data: r.aderencia_lojas.map((l) => l.aderencia), backgroundColor: r.aderencia_lojas.map((l) => (l.aderencia < 85 ? k.bad : k.m2)), borderRadius: 5, maxBarThickness: 22 }] }, options: { indexAxis: "y", scales: { x: { min: 0, max: 100, ticks: { callback: (v) => v + "%" } } }, plugins: { tooltip: { callbacks: { label: (x) => dec(x.raw) + "%" } } } } });
 
-  return { acoes: { voltar: () => ctx.ir("raio-x"), dossie: () => ctx.ir("dossie", id) } };
+  return { acoes: { voltar: () => ctx.ir("raio-x"), dossie: () => ctx.ir("dossie", "n~" + id) } };
 }
