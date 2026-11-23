@@ -10,7 +10,7 @@ Os limites marcados com **(P-xx)** são premissas e os marcados com **(Q-xx)** d
 |-------|-----------|
 | Dia previsto | Dia em que a escala cadastrada prevê trabalho, excluídos feriados e folgas |
 | Dia trabalhado | Dia previsto com pelo menos um check-in, sem falta, atestado ou afastamento (**P-05**) |
-| Registro negativo de humor | Cansado, Sobrecarregado, Triste ou Doente (**P-03**) |
+| Registro negativo de humor | Cansado, Sobrecarregado, Triste, Doente, Luto, Incomodado, Estressado ou Não Valorizado (**P-03**; ampliado pelo dono em 23/11/2026) |
 | Semana | Segunda a domingo (**P-12**) |
 | Dia útil (SLA) | Segunda a sexta, excluídos feriados nacionais (**P-13**) |
 | PDV não operacional | Ponto cadastrado para registrar intervalo, deslocamento ou atividade fora de loja |
