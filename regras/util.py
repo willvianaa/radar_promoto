@@ -54,32 +54,35 @@ def parse_data(v) -> date | None:
         return v.date()
     if isinstance(v, date):
         return v
-    if isinstance(v, (int, float)):
-        if v < 20000:
-            return None
-        return (datetime(1899, 12, 30) + timedelta(days=int(v))).date()
-    s = str(v).strip()
-    m = re.match(r"^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})", s)
-    if m:
-        a = int(m.group(3))
-        a += 2000 if a < 100 else 0
-        return date(a, int(m.group(2)), int(m.group(1)))
-    m = re.match(r"^(\d{4})-(\d{1,2})-(\d{1,2})", s)
-    return date(int(m.group(1)), int(m.group(2)), int(m.group(3))) if m else None
+    try:
+        if isinstance(v, (int, float)):
+            if v < 20000:
+                return None
+            return (datetime(1899, 12, 30) + timedelta(days=int(v))).date()
+        s = str(v).strip()
+        m = re.match(r"^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})", s)
+        if m:
+            a = int(m.group(3))
+            a += 2000 if a < 100 else 0
+            return date(a, int(m.group(2)), int(m.group(1)))
+        m = re.match(r"^(\d{4})-(\d{1,2})-(\d{1,2})", s)
+        return date(int(m.group(1)), int(m.group(2)), int(m.group(3))) if m else None
+    except (ValueError, OverflowError):
+        return None  # data impossível (31/02, mês 13...): a linha é descartada por quem chamou
 
 
 def parse_hora(v) -> int | None:
     """Minutos desde 00:00 a partir de hh:mm, datetime/time ou fração de dia do Excel."""
     if v is None or v == "":
         return None
-    if isinstance(v, datetime):
-        return v.hour * 60 + v.minute
-    if hasattr(v, "hour") and hasattr(v, "minute"):
+    if isinstance(v, datetime) or (hasattr(v, "hour") and hasattr(v, "minute")):
         return v.hour * 60 + v.minute
     if isinstance(v, (int, float)):
-        return round((v - math.floor(v)) * 1440)
+        return round((v - math.floor(v)) * 1440) % 1440
     m = re.search(r"(\d{1,2}):(\d{2})", str(v))
-    return int(m.group(1)) * 60 + int(m.group(2)) if m else None
+    if not m or int(m.group(1)) > 23 or int(m.group(2)) > 59:
+        return None  # 25:99 e semelhantes: hora impossível
+    return int(m.group(1)) * 60 + int(m.group(2))
 
 
 def parse_num(v) -> float | None:

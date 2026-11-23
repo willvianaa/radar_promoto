@@ -58,7 +58,9 @@ jobs:
       - run: docker compose config --quiet
       - run: docker build -f docker/api.Dockerfile -t radar-api:ci .
       - run: docker build -f docker/worker.Dockerfile -t radar-worker:ci .
-      - name: Sobe Postgres e API e checa /api/v1/saude
+      - run: docker build -f docker/migrate.Dockerfile -t radar-migrate:ci .
+      - name: Sobe Postgres, migra e API, e checa /api/v1/saude
+        # a api depende do serviço migrate (service_completed_successfully): o compose o executa antes
         run: |
           docker compose up -d --build db api
           for i in $(seq 1 30); do

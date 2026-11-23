@@ -183,3 +183,22 @@ def test_norm_nome_memoizado_e_equivalente():
     assert util.norm_nome("  José   da  Conceição ") == "JOSE DA CONCEICAO"
     assert util._norm_str.cache_info().hits == 1
     assert util.norm_nome(None) == "" and util.norm_nome(123) == "123"
+
+
+def test_aderencia_linhas_invalidas_sao_descartadas_e_contadas():
+    cad = t.Cadastro([])
+
+    def r(sem, ano=2026):
+        return {"MARCA": "M", "LOJA": "BA / L", "COLABORADOR": "Fulano Teste", "CONTRATADAS": 1, "REALIZADAS": 1, "SEMANA": sem, "ANO": ano}
+
+    descartes: list[int] = []
+    ok = t.transforma_aderencia([r(0), r(38), r(54), r(38, ano=99999), {"LOJA": "BA / L"}], cad, date(2027, 1, 1), descartes)
+    assert len(ok) == 1 and ok[0].semana_ini == date(2026, 9, 14)
+    assert descartes == [0, 2, 3, 4]
+
+
+def test_datas_e_horas_impossiveis_viram_none():
+    assert util.parse_data("31/02/2026") is None and util.parse_data("2026-13-01") is None and util.parse_data("00/00/0000") is None
+    assert util.parse_data("29/02/2028") == date(2028, 2, 29)
+    assert util.parse_hora("25:99") is None and util.parse_hora("24:00") is None and util.parse_hora("23:59") == 1439
+    assert util.parse_hora("08:05") == 485
