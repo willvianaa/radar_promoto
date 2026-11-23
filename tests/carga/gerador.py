@@ -31,7 +31,7 @@ UFS = ["BA", "CE", "PE", "SP", "MG", "RJ", "PR", "RS", "GO", "PA"]
 MARCAS = ["MARCA A", "MARCA B", "MARCA C", "MARCA D"]  # MARCA D é quinzenal (como WD-40 e Botafogo)
 TIPOS_ATIV = ["Preço", "Ruptura", "Validade", "Exposição"]
 HUMOR_POS = ["Feliz", "Animado", "Tranquilo", "Motivado"]
-HUMOR_NEG = ["Cansado", "Sobrecarregado", "Triste", "Doente"]
+HUMOR_NEG = ["Cansado", "Sobrecarregado", "Triste", "Doente", "Luto", "Incomodado", "Estressado", "Não Valorizado"]
 PERFIS = [("normal", 0.70), ("atrasado", 0.06), ("expirador", 0.06), ("baixa_aderencia", 0.06),
           ("sobrecarga", 0.04), ("foto_suspeita", 0.03), ("fuga_rota", 0.02), ("faltoso", 0.03)]
 FERIADOS_NACIONAIS_MMDD = [(1, 1), (4, 21), (5, 1), (9, 7), (10, 12), (11, 2), (11, 15), (12, 25)]
