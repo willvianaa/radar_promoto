@@ -33,3 +33,9 @@ Thumbs.db
 
 # Logos da marca (nao sao dados)
 !radar_v2/assets/*.png
+
+# Protótipo (radar_v3): só o código entra; cargas, fotos e despejos com dados reais ficam fora
+radar_v3/tmp/
+radar_v3/fotos/
+radar_v3/dump.html
+radar_v3/.claude/
