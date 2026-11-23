@@ -14,7 +14,7 @@ from alembic import command
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 
-from regras.parametros import PARAMETROS_V1
+from regras.parametros import PARAMETROS_V2
 
 RAIZ = Path(__file__).resolve().parent.parent
 
@@ -29,16 +29,16 @@ def test_ddl_da_migracao_e_o_contrato():
     assert (RAIZ / "db" / "migrations" / "sql" / "0001_modelo.sql").read_bytes() == (RAIZ / "db" / "modelo.sql").read_bytes()
 
 
-def test_parametro_v1_igual_ao_modelo_md():
+def test_parametro_vigente_igual_ao_modelo_md():
     md = (RAIZ / "db" / "modelo.md").read_text(encoding="utf-8")
     bloco = re.search(r"```json\n(.*?)\n```", md, re.S).group(1)
-    assert json.loads(bloco) == PARAMETROS_V1
+    assert json.loads(bloco) == PARAMETROS_V2
 
 
 def test_cadeia_linear_de_revisoes():
     sd = ScriptDirectory.from_config(_cfg())
-    assert [r.revision for r in sd.walk_revisions()] == ["0002", "0001"]
-    assert sd.get_heads() == ["0002"]
+    assert [r.revision for r in sd.walk_revisions()] == ["0003", "0002", "0001"]
+    assert sd.get_heads() == ["0003"]
 
 
 def test_offline_emite_ddl_e_parametro():
@@ -54,7 +54,7 @@ def test_offline_emite_ddl_e_parametro():
 
 def test_offline_downgrade_remove_esquemas():
     buf = io.StringIO()
-    command.downgrade(_cfg(buf), "0002:base", sql=True)
+    command.downgrade(_cfg(buf), "0003:base", sql=True)
     sql = buf.getvalue()
     for esquema in ("app", "core", "raw"):
         assert f"DROP SCHEMA IF EXISTS {esquema} CASCADE" in sql

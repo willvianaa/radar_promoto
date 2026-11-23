@@ -45,7 +45,7 @@ Três esquemas. O DDL de referência está em `db/modelo.sql`; as migrações re
   "tolerancia_atraso_min": 15, "tolerancia_saida_min": 15, "saida_antecipada_ativa": false,
   "meta1": 85, "meta2": 93, "corte_ader_dossie": 93,
   "dist_foto_m": 300, "cerca_rota_m": 200,
-  "humor_negativo": ["Cansado", "Sobrecarregado", "Triste", "Doente"],
+  "humor_negativo": ["Cansado", "Sobrecarregado", "Triste", "Doente", "Luto", "Incomodado", "Estressado", "Não Valorizado"],
   "limites": {"atraso": [4,7,10], "saida": [4,7,10], "checkout_auto": [5,8,10],
               "pesq_expiradas_pct": [20,30,45], "pesq_min": 20, "dias_sem_atividade": [0,2,4],
               "faltas_injust": [0,1,3], "fotos_indicio": [0,1,3], "visitas_pendentes": [0,1,10],
@@ -55,3 +55,5 @@ Três esquemas. O DDL de referência está em `db/modelo.sql`; as migrações re
 }
 ```
 Limites `[a,b,c]`: valor ≥ c → severidade 3; ≥ b → 2; ≥ a (e a > 0) → 1.
+
+`meta2` (93) é a **meta de aderência única**. `meta1` (85) ficou só como limiar de severidade do alerta de aderência (loja abaixo dele → severidade 2) e não aparece em tela nem em documento (`CLAUDE.md` §4.3). Risco = `min(100, soma_sev × 10)` (§4.7). Como os parâmetros são versionados, a mudança da lista `humor_negativo` entra como nova `parametro_versao`, sem reescrever a nº 1 já gravada.
