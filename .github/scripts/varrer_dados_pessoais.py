@@ -153,11 +153,38 @@ def varrer_head() -> list[Achado]:
     return achados
 
 
-def varrer_historico(intervalo: str | None = None) -> list[Achado]:
-    """Cada blob distinto de cada commit, uma vez; relata o primeiro commit em que aparece.
+def _blobs_alterados(commit: str) -> list[tuple[str, str]]:
+    """(blob, caminho) que o commit acrescenta ou altera em relação aos pais.
 
-    Com ``intervalo`` (``BASE..HEAD``), só os blobs introduzidos nesses commits:
-    os blobs já presentes na base são ignorados.
+    Commit comum: diferença para o pai. Merge: ``-c`` lista só o que difere de
+    **todos** os pais (resolução de conflito ou edição no merge); o conteúdo herdado
+    de um dos lados não entra, porque já foi varrido no próprio PR de origem.
+    """
+    saida = git("diff-tree", "-r", "-z", "-c", "--root", "--no-commit-id", commit).decode("utf-8")
+    partes = saida.split("\0")
+    res: list[tuple[str, str]] = []
+    i = 0
+    while i < len(partes) - 1:
+        meta, caminho = partes[i], partes[i + 1]
+        i += 2
+        if not meta.startswith(":"):
+            continue
+        shas = [t for t in meta.lstrip(":").split() if len(t) == 40 and all(c in "0123456789abcdef" for c in t)]
+        status = meta.split()[-1]
+        if not shas or status.startswith("D") or set(shas[-1]) == {"0"}:
+            continue
+        res.append((shas[-1], caminho))
+    return res
+
+
+def varrer_historico(intervalo: str | None = None) -> list[Achado]:
+    """Varre blobs do histórico sem nunca imprimir o valor.
+
+    Sem ``intervalo``: cada blob distinto de todos os commits, uma vez.
+    Com ``intervalo`` (``BASE..HEAD``): só os blobs que os commits do intervalo
+    acrescentam ou alteram (ver ``_blobs_alterados``), ignorando os que já estão
+    na árvore da base. Assim um merge da ``main`` na branch não traz de volta
+    achados antigos que não são do PR.
     """
     vistos: set[str] = set()
     if intervalo:
@@ -170,13 +197,19 @@ def varrer_historico(intervalo: str | None = None) -> list[Achado]:
         commits = git("rev-list", "--all", "--reverse").decode().split()
     achados: list[Achado] = []
     for commit in commits:
-        arvore = git("ls-tree", "-r", "-z", commit).decode("utf-8").split("\0")
-        for item in arvore:
-            if not item:
-                continue
-            meta, caminho = item.split("\t", 1)
-            _, tipo_obj, blob = meta.split()
-            if tipo_obj != "blob" or blob in vistos:
+        if intervalo:
+            itens = _blobs_alterados(commit)
+        else:
+            itens = []
+            for item in git("ls-tree", "-r", "-z", commit).decode("utf-8").split("\0"):
+                if not item:
+                    continue
+                meta, caminho = item.split("\t", 1)
+                _, tipo_obj, blob = meta.split()
+                if tipo_obj == "blob":
+                    itens.append((blob, caminho))
+        for blob, caminho in itens:
+            if blob in vistos:
                 continue
             vistos.add(blob)
             if caminho in CAMINHOS_ISENTOS:
