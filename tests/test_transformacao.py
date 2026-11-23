@@ -103,9 +103,9 @@ def test_humor_negativo_pela_lista_de_parametros():
     cad = t.Cadastro([])
     rows = [{"NOME DO COLABORADOR": "Fulano Teste", "DATA": "14/09/2026", "HUMOR": "Doente"},
             {"NOME DO COLABORADOR": "Fulano Teste", "DATA": "15/09/2026", "HUMOR": "Feliz"},
-            {"NOME DO COLABORADOR": "Fulano Teste", "DATA": "16/09/2026", "HUMOR": "Luto"}]  # pendente de decisão do RH
-    hs = t.transforma_humor(rows, cad, ["Cansado", "Doente"])
-    assert [h.negativo for h in hs] == [True, False, False]
+            {"NOME DO COLABORADOR": "Fulano Teste", "DATA": "16/09/2026", "HUMOR": "Luto"}]
+    hs = t.transforma_humor(rows, cad, ["Cansado", "Doente", "Luto"])
+    assert [h.negativo for h in hs] == [True, False, True]
 
 
 def test_faltas_tipos():
@@ -175,6 +175,14 @@ def test_fotos_exigem_hash():
             {"Colaborador": "Fulano Teste", "Data": "14/09/2026", "PDV": "BA / L", "Arquivo": "b.jpg"}]
     (f,) = t.transforma_fotos(rows, cad)
     assert f.sha256 == "ab" * 32 and f.lat == -12.9
+
+
+def test_norm_nome_memoizado_e_equivalente():
+    util._norm_str.cache_clear()
+    assert util.norm_nome("  José   da  Conceição ") == "JOSE DA CONCEICAO"
+    assert util.norm_nome("  José   da  Conceição ") == "JOSE DA CONCEICAO"
+    assert util._norm_str.cache_info().hits == 1
+    assert util.norm_nome(None) == "" and util.norm_nome(123) == "123"
 
 
 def test_aderencia_linhas_invalidas_sao_descartadas_e_contadas():

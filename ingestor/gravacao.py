@@ -65,3 +65,9 @@ def gravar(
                 [(carga_id, n, Jsonb(d)) for n, d in enumerate(res.linhas, start=1)],
             )
         return Gravado("gravado", carga_id=carga_id)
+
+
+def alertar(conn, origem: str, motivo: str) -> None:
+    """Abre alerta de ingestão sem carga (bloqueio, login recusado, erro). Só o motivo, sem dados."""
+    with conn.transaction():
+        conn.execute("INSERT INTO app.ingestao_alerta (origem, motivo) VALUES (%s, %s)", (origem, motivo))

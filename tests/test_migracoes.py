@@ -14,7 +14,7 @@ from alembic import command
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 
-from regras.parametros import PARAMETROS_V1
+from regras.parametros import PARAMETROS_V1, PARAMETROS_V2
 
 RAIZ = Path(__file__).resolve().parent.parent
 
@@ -35,10 +35,18 @@ def test_parametro_v1_igual_ao_modelo_md():
     assert json.loads(bloco) == PARAMETROS_V1
 
 
+def test_parametro_v2_so_troca_a_lista_de_humor_do_modelo_md():
+    md = (RAIZ / "db" / "modelo.md").read_text(encoding="utf-8")
+    lista = re.search(r'nº 2.*?"humor_negativo": (\[.*?\])', md, re.S).group(1)
+    assert PARAMETROS_V2["humor_negativo"] == json.loads(lista)
+    assert {k: v for k, v in PARAMETROS_V2.items() if k != "humor_negativo"} ==         {k: v for k, v in PARAMETROS_V1.items() if k != "humor_negativo"}
+    assert PARAMETROS_V1["humor_negativo"] == ["Cansado", "Sobrecarregado", "Triste", "Doente"]  # v1 intacta
+
+
 def test_cadeia_linear_de_revisoes():
     sd = ScriptDirectory.from_config(_cfg())
-    assert [r.revision for r in sd.walk_revisions()] == ["0003", "0002", "0001"]
-    assert sd.get_heads() == ["0003"]
+    assert [r.revision for r in sd.walk_revisions()] == ["0004", "0003", "0002", "0001"]
+    assert sd.get_heads() == ["0004"]
 
 
 def test_offline_emite_ddl_e_parametro():

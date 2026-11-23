@@ -7,15 +7,25 @@ import re
 import unicodedata
 from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
+from functools import lru_cache
+
+
+_ESPACOS = re.compile(r"\s+")
 
 
 def norm_nome(s) -> str:
     """Maiúsculas, sem acento, espaços simples (CLAUDE.md §3)."""
     if s is None:
         return ""
-    t = unicodedata.normalize("NFD", str(s))
+    return _norm_str(s if isinstance(s, str) else str(s))
+
+
+@lru_cache(maxsize=200_000)
+def _norm_str(s: str) -> str:
+    # memoizado: nomes de loja, humor e colaborador se repetem milhões de vezes no cálculo em volume
+    t = unicodedata.normalize("NFD", s)
     t = "".join(c for c in t if not unicodedata.combining(c))
-    return re.sub(r"\s+", " ", t.upper()).strip()
+    return _ESPACOS.sub(" ", t.upper()).strip()
 
 
 def normaliza_cpf(v) -> str:
