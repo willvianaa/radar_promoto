@@ -1,5 +1,5 @@
 # Ambiente local. Antes de subir: copie .env.example para .env e preencha os valores.
-# Sem dados reais: o banco começa vazio (as migrações vêm na Onda 1, feat/dados).
+# Sem dados reais: o banco começa vazio; o serviço migrate aplica as migrações (alembic upgrade head) antes da api e do worker.
 name: radar-promotor
 
 services:
@@ -21,6 +21,19 @@ services:
       timeout: 3s
       retries: 20
 
+  migrate:
+    build:
+      context: .
+      dockerfile: docker/migrate.Dockerfile
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # psycopg 3 (postgresql+psycopg): é o driver instalado em requirements.txt
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      TZ: America/Sao_Paulo
+
   api:
     build:
       context: .
@@ -29,6 +42,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       APP_ENV: ${APP_ENV:-desenvolvimento}
@@ -44,6 +59,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       APP_ENV: ${APP_ENV:-desenvolvimento}
