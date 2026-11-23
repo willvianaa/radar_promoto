@@ -173,6 +173,7 @@ def test_aderencia_sem_colaborador_e_ignorada():
 
 def test_metas_1_e_2_e_severidade_pelas_pendentes():
     s = semanas(1)[0]
+    assert "abaixo da meta de 93%" in next(a for a in meta2.alertas if a.tipo == "ader").detalhe
     meta2 = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 100, 90)]))  # 90%: abaixo de 93%; 10 pendentes
     assert tipos(meta2)["ader"] == 3
     ok = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 100, 93)]))

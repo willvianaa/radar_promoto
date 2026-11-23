@@ -331,7 +331,7 @@ def calcular(
             s = max(2 if any(b["st"] == "severa" for b in baixo) else 1, severidade(pend_baixo, lim["visitas_pendentes"]))
             n_l = len({b["loja"] for b in baixo})
             add("ader", s, "Impacto na aderência",
-                f"{plural(n_l, 'loja', 'lojas')} abaixo da meta, "
+                f"{plural(n_l, 'loja', 'lojas')} abaixo da meta de {p['meta2']}%, "
                 f"com {plural(pend_baixo, 'visita pendente', 'visitas pendentes')} do contratado")
         s = severidade(rt_dias, lim["dias_fuga_rota"])
         if s:
