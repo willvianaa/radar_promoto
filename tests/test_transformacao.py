@@ -26,7 +26,7 @@ def test_cpf_normaliza_e_mascara():
 
 
 def test_cpf_numerico_da_planilha_recupera_zeros():
-    assert util.normaliza_cpf(1234567890) == "01234567890"
+    assert util.normaliza_cpf(191) == "00000000191"
 
 
 def test_heranca_de_cpf_pelo_nome_normalizado():
