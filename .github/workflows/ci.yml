@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+
+  testes:
+    name: Testes (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: pytest
+
+  contratos:
+    name: Contratos (schemas e OpenAPI)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: python scripts/validar_contratos.py
+
+  build:
+    name: Build das imagens e compose
+    runs-on: ubuntu-latest
+    needs: [lint, testes]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Criar .env de teste (valores fictícios, só para validar o compose)
+        run: |
+          cp .env.example .env
+          sed -i 's/^POSTGRES_DB=.*/POSTGRES_DB=radar_teste/' .env
+          sed -i 's/^POSTGRES_USER=.*/POSTGRES_USER=usuario_teste/' .env
+          sed -i 's/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=senha_teste_nao_real/' .env
+          sed -i 's/^APP_ENV=.*/APP_ENV=ci/' .env
+      - run: docker compose config --quiet
+      - run: docker build -f docker/api.Dockerfile -t radar-api:ci .
+      - run: docker build -f docker/worker.Dockerfile -t radar-worker:ci .
+      - name: Sobe Postgres e API e checa /api/v1/saude
+        run: |
+          docker compose up -d --build db api
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/api/v1/saude; then echo; exit 0; fi
+            sleep 2
+          done
+          docker compose logs
+          exit 1
+      - if: always()
+        run: docker compose down -v
