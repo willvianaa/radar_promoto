@@ -20,7 +20,7 @@ docker compose up --build
 
 Quando subir:
 
-- Postgres 16 em `127.0.0.1:5432` (banco vazio; as migrações entram na Onda 1, feat/dados).
+- Postgres 16 em `127.0.0.1:5432`. O serviço `migrate` aplica as migrações (`alembic upgrade head`) antes da API e do worker; rodar de novo não altera nada.
 - API em `http://127.0.0.1:8000/api/v1/saude` → `{"status": "ok"}`.
 - Worker: agendador do ingestor, execução diária às 05:00 (America/Sao_Paulo). Hoje é um placeholder: não lê nenhuma origem.
 

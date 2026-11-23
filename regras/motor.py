@@ -31,6 +31,8 @@ class Alerta:
     titulo: str
     detalhe: str
     data_ref: date | None = None
+    # Dado de saúde (LGPD art. 11): fica fora do texto; a API só entrega a perfis autorizados.
+    dias_doente: int | None = None
 
 
 @dataclass
@@ -191,7 +193,7 @@ def calcular(
             saida = esc[1] - lo if (saida_ativa and not fer and not last.checkout_auto and lo is not None
                                     and lo < esc[1] - tol_sai) else 0
             dias.append(DiaJornada(d, first, None if last.checkout_auto else lo, any(v.checkout_auto for v in vs),
-                                   atraso, saida, hm.get(d) is True, len({v.pdv for v in vs})))
+                                   atraso, saida, hm.get(d) is True, len({v.pdv for v in vs if v.tipo_pdv == "loja"})))
         trab = len(dias)
         n_atr = sum(1 for x in dias if x.atraso)
         n_sai = sum(1 for x in dias if x.saida)
@@ -290,8 +292,8 @@ def calcular(
         # ================= alertas
         A: list[Alerta] = []
 
-        def add(tipo, sev, tit, det, data_ref=None, A=A):
-            A.append(Alerta(tipo, sev, tit, det, data_ref))
+        def add(tipo, sev, tit, det, data_ref=None, A=A, dias_doente=None):
+            A.append(Alerta(tipo, sev, tit, det, data_ref, dias_doente))
 
         s = severidade(n_atr, lim["atraso"])
         if s:
@@ -356,9 +358,8 @@ def calcular(
                 " ".join(x for x in (cg_txt, h_txt, pd_txt) if x), seq_fim if h_neg else None)
         elif h_neg:
             add("humor", 1, "Humor negativo recorrente",
-                f"Humor negativo em {fmt_pct(h_pct, 0)} dos dias com registro (maior sequência: {plural(seq, 'dia', 'dias')})"
-                + (f"; {plural(len(doente_dias), 'dia', 'dias')} como “Doente”" if doente_dias else ""),
-                seq_fim)
+                f"Humor negativo em {fmt_pct(h_pct, 0)} dos dias com registro (maior sequência: {plural(seq, 'dia', 'dias')})",
+                seq_fim, dias_doente=len(doente_dias) or None)
         A.sort(key=lambda a: -a.severidade)
 
         # ================= leitura cruzada com humor (contexto, não motivo de medida)
