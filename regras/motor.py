@@ -3,9 +3,9 @@ cruzada com humor. Porte do protótipo (``radar_v2/engine.js`` + patches da v3),
 
 Determinístico e sem E/S: ``calcular(base, parametros, ini, fim)`` devolve um resultado por colaborador.
 
-Humor nunca penaliza (CLAUDE.md §4.4): os alertas ``humor`` não somam pontos, a dimensão Humor fica
-fora da média do Índice de risco e o alerta ``sobre`` só soma pontos pela carga de trabalho (2), nunca
-pelo humor que o reforça.
+Humor (CLAUDE.md §4.4 e §4.7): "Humor negativo recorrente" soma 1 ponto; "Possível sobrecarga" soma 2, ou 3
+quando carga de visitas e humor negativo aparecem juntos. A dimensão Humor fica fora da média de dimensões
+do Índice de risco, e o humor não fundamenta conclusão do dossiê (isso é do gerador de documentos).
 """
 
 from __future__ import annotations
@@ -31,7 +31,6 @@ class Alerta:
     titulo: str
     detalhe: str
     data_ref: date | None = None
-    pontos: int = 0  # severidade que entra na soma do nível e do risco
 
 
 @dataclass
@@ -91,14 +90,11 @@ def _media(xs) -> float:
 
 
 def calcular(
-    base: Base, parametros: dict | None, ini: date, fim: date, *, humor_penaliza: bool = False
+    base: Base, parametros: dict | None, ini: date, fim: date
 ) -> list[Resultado]:
     """Calcula todos os colaboradores com registro no período [ini, fim].
 
     Só linhas de aderência com ``semana_fechada`` entram (a semana em andamento não gera alerta).
-    ``humor_penaliza=True`` reproduz o protótipo (alertas ``humor`` e ``sobre`` somam a severidade cheia
-    no nível e no risco). Existe só para os testes de paridade; produção usa o padrão (False), que
-    cumpre o CLAUDE.md §4.4.
     """
     p = parametros or parametros_padrao()
     lim = p["limites"]
@@ -294,8 +290,8 @@ def calcular(
         # ================= alertas
         A: list[Alerta] = []
 
-        def add(tipo, sev, tit, det, data_ref=None, pontos=None, A=A):
-            A.append(Alerta(tipo, sev, tit, det, data_ref, sev if pontos is None else pontos))
+        def add(tipo, sev, tit, det, data_ref=None, A=A):
+            A.append(Alerta(tipo, sev, tit, det, data_ref))
 
         s = severidade(n_atr, lim["atraso"])
         if s:
@@ -357,13 +353,12 @@ def calcular(
         if (h_neg and imp) or carga_alta:
             sev = 3 if (h_neg and carga_alta) else 2
             add("sobre", sev, "Possível sobrecarga",
-                " ".join(x for x in (cg_txt, h_txt, pd_txt) if x), seq_fim if h_neg else None,
-                pontos=sev if humor_penaliza else (2 if carga_alta else 0))
+                " ".join(x for x in (cg_txt, h_txt, pd_txt) if x), seq_fim if h_neg else None)
         elif h_neg:
             add("humor", 1, "Humor negativo recorrente",
                 f"Humor negativo em {fmt_pct(h_pct, 0)} dos dias com registro (maior sequência: {plural(seq, 'dia', 'dias')})"
                 + (f"; {plural(len(doente_dias), 'dia', 'dias')} como “Doente”" if doente_dias else ""),
-                seq_fim, pontos=1 if humor_penaliza else 0)
+                seq_fim)
         A.sort(key=lambda a: -a.severidade)
 
         # ================= leitura cruzada com humor (contexto, não motivo de medida)
@@ -383,8 +378,8 @@ def calcular(
                               f"e teve {nw} dias com humor negativo")
 
         # ================= nível, dimensões e risco
-        soma = sum(a.pontos for a in A)
-        n3 = sum(1 for a in A if a.pontos == 3)
+        soma = sum(a.severidade for a in A)
+        n3 = sum(1 for a in A if a.severidade == 3)
         nivel = nivel_de(soma, n3, p)
         dim = {
             "aderencia": None if ad_pct is None else _cl(ad_pct * 100),

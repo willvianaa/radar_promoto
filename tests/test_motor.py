@@ -217,14 +217,14 @@ def test_humor_reforca_sobrecarga_com_severidade_3():
     assert "Humor negativo em 100% dos dias" in r.alertas[0].detalhe
 
 
-def test_humor_sozinho_gera_alerta_de_cuidado_sem_pontos():
+def test_humor_sozinho_soma_um_ponto():
     r = calc(Base(colaboradores=[pessoa()], humor=humor_negativo_seguido()))
     assert tipos(r) == {"humor": 1}
-    assert r.score == 0 and r.nivel == "N"
+    assert r.score == 1 and r.nivel == "N"
 
 
-def test_humor_nunca_penaliza_nivel_nem_risco():
-    """O mesmo colaborador, com e sem humor negativo recorrente, tem o mesmo nível, score e risco."""
+def test_humor_soma_e_a_dimensao_humor_fica_fora_do_risco():
+    """Com humor negativo recorrente: +2 pontos (sobrecarga por humor + queda de desempenho); a dimensão Humor não entra na média."""
     ds = dias_uteis(10)
     vis = [visita(d, 520) for d in ds[:5]] + [visita(d) for d in ds[5:]]  # 5 atrasos → severidade 1
     ps = pesquisas(24, 8)  # 33% expiradas → 2
@@ -232,16 +232,19 @@ def test_humor_nunca_penaliza_nivel_nem_risco():
     com_humor = Base(colaboradores=[pessoa()], visitas=vis, atividades=ps,
                      humor=[Humor(CPF, d, "Sobrecarregado", True) for d in ds])
     a, b = calc(base), calc(com_humor)
-    assert "sobre" in tipos(b) and "sobre" not in tipos(a)  # o humor aparece como contexto...
-    assert (a.score, a.nivel, a.risco) == (b.score, b.nivel, b.risco)  # ...sem mudar pontos
+    assert tipos(b) == {**tipos(a), "sobre": 2}
+    assert b.score == a.score + 2
     assert b.dimensoes["humor"] == 0 and a.dimensoes["humor"] is None
+    # a média das dimensões ignora Humor: a parte "dimensões" do risco é a mesma nos dois
+    dv = [v for k, v in b.dimensoes.items() if k != "humor" and v is not None]
+    assert b.risco == min(100, round(b.score * 9 + (100 - sum(dv) / len(dv)) * 0.25))
 
 
-def test_humor_penaliza_so_para_paridade_com_o_prototipo():
-    ds = dias_uteis(10)
-    base = Base(colaboradores=[pessoa()], visitas=[visita(d, 520) for d in ds],
-                humor=[Humor(CPF, d, "Cansado", True) for d in ds])
-    assert calc(base).score < calc(base, humor_penaliza=True).score
+def test_sobrecarga_vale_3_quando_carga_e_humor_aparecem_juntos():
+    r = calc(sobrecarga_base(44, 39, humor_negativo_seguido()))
+    assert tipos(r) == {"sobre": 3} and r.score == 3 and r.nivel == "T"
+    so_carga = calc(sobrecarga_base(44, 39))
+    assert tipos(so_carga) == {"sobre": 2} and so_carga.score == 2
 
 
 def test_doente_aparece_no_alerta_de_humor():
