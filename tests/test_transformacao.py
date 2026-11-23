@@ -103,9 +103,9 @@ def test_humor_negativo_pela_lista_de_parametros():
     cad = t.Cadastro([])
     rows = [{"NOME DO COLABORADOR": "Fulano Teste", "DATA": "14/09/2026", "HUMOR": "Doente"},
             {"NOME DO COLABORADOR": "Fulano Teste", "DATA": "15/09/2026", "HUMOR": "Feliz"},
-            {"NOME DO COLABORADOR": "Fulano Teste", "DATA": "16/09/2026", "HUMOR": "Luto"}]  # pendente de decisão do RH
-    hs = t.transforma_humor(rows, cad, ["Cansado", "Doente"])
-    assert [h.negativo for h in hs] == [True, False, False]
+            {"NOME DO COLABORADOR": "Fulano Teste", "DATA": "16/09/2026", "HUMOR": "Luto"}]
+    hs = t.transforma_humor(rows, cad, ["Cansado", "Doente", "Luto"])
+    assert [h.negativo for h in hs] == [True, False, True]
 
 
 def test_faltas_tipos():

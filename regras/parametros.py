@@ -35,9 +35,16 @@ PARAMETROS_V1: dict = {
 }
 
 
+# Versão nº 2 (decisão do dono, 23/11/2026): humor negativo inclui Luto, Incomodado, Estressado e Não Valorizado.
+PARAMETROS_V2: dict = {
+    **copy.deepcopy(PARAMETROS_V1),
+    "humor_negativo": ["Cansado", "Sobrecarregado", "Triste", "Doente", "Luto", "Incomodado", "Estressado", "Não Valorizado"],
+}
+
+
 def parametros_padrao() -> dict:
-    """Cópia independente da versão 1 (o motor nunca altera o dicionário recebido)."""
-    return copy.deepcopy(PARAMETROS_V1)
+    """Cópia independente da versão vigente (nº 2) (o motor nunca altera o dicionário recebido)."""
+    return copy.deepcopy(PARAMETROS_V2)
 
 
 def severidade(valor: float, limites: list[float]) -> int:
