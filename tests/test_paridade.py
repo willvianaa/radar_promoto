@@ -4,9 +4,8 @@ Os números esperados foram calculados a mão com as fórmulas do protótipo (``
 patches da v3), uma conta por linha de comentário. O protótipo não foi executado (não há node
 neste ambiente): a conta à mão é a referência.
 
-Única diferença deliberada: humor nunca soma pontos (CLAUDE.md §4.4). O teste
-``test_com_humor_penalizando_reproduz_o_prototipo`` liga o comportamento antigo e confere os
-valores que o protótipo daria.
+Humor soma pontos como no protótipo (CLAUDE.md §4.4/§4.7): "Humor negativo recorrente" = 1,
+"Possível sobrecarga" = 2 (3 com carga e humor juntos), e a dimensão Humor fica fora do risco.
 """
 
 from datetime import date
@@ -66,16 +65,16 @@ def test_joana(r):
     #  ader grupo MARCA A: 26 de 30 (86,7%) → abaixo da Meta 2, 4 pendentes → max(1, 2) = 2
     #       MARCA B: 6 realizadas viram 4 pelo teto da linha → 12/12 ok
     #  foto 1 de 10 fora do horário → [0,1,3] → 2
-    #  sobre: humor 14,15,16 negativos (seq 3 ≥ 3) com atrasos ≥ 4 → sev 2, sem carga alta → 0 ponto
+    #  sobre: humor 14,15,16 negativos (seq 3 ≥ 3) com atrasos ≥ 4 → sev 2
     assert tipos(j) == {"jor": 1, "pesq": 1, "ader": 2, "foto": 2, "sobre": 2}
-    assert j.score == 6  # 1 + 1 + 2 + 2 (sobrecarga por humor não pontua)
-    assert j.nivel == "A"  # 5 ≤ 6 < 9, nenhuma severidade 3
+    assert j.score == 8  # 1 + 1 + 2 + 2 + 2
+    assert j.nivel == "A"  # 5 ≤ 8 < 9, nenhuma severidade 3
     # dimensões: ader 38/42 = 90,5 → 90 · pesq 100-20×4 = 20 · pont 100-4/9×200 = 11
     #            reg 100-2/9×200 = 56 · fotos 100-1/10×500 = 50 · presença 100-1×6 = 94 · humor 100-33,3 = 67
     assert j.dimensoes == {"aderencia": 90, "pesquisas": 20, "pontualidade": 11, "registro_jornada": 56,
                            "fotos": 50, "presenca": 94, "humor": 67}
-    # risco = 6×9 + (100 - (90+20+11+56+50+94)/6) × 0,25 = 54 + 11,625 = 65,6 → 66
-    assert j.risco == 66
+    # risco = 8×9 + (100 - (90+20+11+56+50+94)/6) × 0,25 = 72 + 11,625 = 83,6 → 84
+    assert j.risco == 84
     # semanas fechadas 36, 37, 38: contratado 14/semana; aderência 92,9% → 78,6% (queda 14,3 p.p.)
     assert j.carga_media == 14
     assert j.queda_ader_pp == pytest.approx(14.2857, abs=1e-3)
@@ -98,9 +97,9 @@ def test_pedro_jornada_cadastrada_e_sobrecarga(r):
     # carga: 46 visitas/semana nas semanas 36-38 (a 39, em andamento, fica fora); 100% → 87% = 13 p.p.
     assert p.carga_media == 46
     assert p.queda_ader_pp == pytest.approx(13.0435, abs=1e-3)
-    # humor: 5 dos 8 dias negativos em sequência (62,5% ≥ 40) reforça → severidade 3, mas só a carga pontua (2)
+    # humor: 5 dos 8 dias negativos em sequência (62,5% ≥ 40) junto com a carga → severidade 3
     assert tipos(p) == {"sobre": 3}
-    assert p.score == 2 and p.nivel == "N"
+    assert p.score == 3 and p.nivel == "T"  # uma severidade 3, soma 3
     det = p.alertas[0].detalhe
     assert det == ("Média de 46 visitas contratadas por semana (até 1 loja) e aderência de 100% para 87% nas semanas fechadas. "
                    "Humor negativo em 63% dos dias (maior sequência: 5 dias). "
@@ -108,8 +107,8 @@ def test_pedro_jornada_cadastrada_e_sobrecarga(r):
     assert p.cruzada == ["3 dos 3 atrasos ocorreram em dias com humor negativo"]
     # dims: ader 130/138 = 94 · pesq 100 · pont 100-3/8×200 = 25 · reg 100 · presença 100 (sem fotos)
     assert p.dimensoes["aderencia"] == 94 and p.dimensoes["pontualidade"] == 25 and p.dimensoes["fotos"] is None
-    # risco = 2×9 + (100 - (94+100+25+100+100)/5) × 0,25 = 18 + 4,05 = 22,05 → 22
-    assert p.risco == 22
+    # risco = 3×9 + (100 - (94+100+25+100+100)/5) × 0,25 = 27 + 4,05 = 31,05 → 31
+    assert p.risco == 31
 
 
 def test_caio_critico(r):
@@ -130,13 +129,3 @@ def test_dora_chave_provisoria(r):
 def test_ordem_do_resultado(base):
     res = motor.calcular(base, parametros_padrao(), c.INI, c.FIM)
     assert [x.cpf for x in res] == [c.CAIO, c.JOANA, c.PEDRO, c.DORA]
-
-
-def test_com_humor_penalizando_reproduz_o_prototipo(base):
-    """Com ``humor_penaliza=True`` o motor soma a severidade cheia de ``sobre``, como o protótipo."""
-    r = {x.cpf: x for x in motor.calcular(base, parametros_padrao(), c.INI, c.FIM, humor_penaliza=True)}
-    # Joana: 1+1+2+2+2 = 8 → A · risco = 72 + 11,625 = 83,6 → 84
-    assert (r[c.JOANA].score, r[c.JOANA].nivel, r[c.JOANA].risco) == (8, "A", 84)
-    # Pedro: sobre severidade 3 → soma 3, uma sev 3 → Atenção · risco = 27 + 4,05 = 31
-    assert (r[c.PEDRO].score, r[c.PEDRO].nivel, r[c.PEDRO].risco) == (3, "T", 31)
-    assert (r[c.CAIO].nivel, r[c.CAIO].risco) == ("C", 91)  # sem humor: igual
