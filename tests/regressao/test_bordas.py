@@ -6,7 +6,6 @@ Testes ``xfail(strict=True)`` (quando houver) documentam defeitos achados pela Q
 
 from datetime import date
 
-import pytest
 
 from regras import motor, transformacao as t, util
 from regras.parametros import parametros_padrao
