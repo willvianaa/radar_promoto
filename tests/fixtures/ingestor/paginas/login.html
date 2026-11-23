@@ -1,0 +1,8 @@
+<!doctype html><meta charset="utf-8"><title>Login (simulado)</title>
+<form id="f"><input name="usuario"><input name="senha" type="password"><button type="submit">Entrar</button></form>
+<p class="erro-login" hidden>Credencial inválida</p>
+<script>
+document.getElementById('f').onsubmit = e => { e.preventDefault();
+  if (document.querySelector('[name=senha]').value === 'senha-ficticia') location.href = '/painel';
+  else document.querySelector('.erro-login').hidden = false; };
+</script>
