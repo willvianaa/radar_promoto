@@ -62,7 +62,7 @@ def test_joana(r):
     #  auto 2 dias           → [5,8,10] → 0 (sem alerta)
     #  pesq 5/25 = 20%       → [20,30,45], 25 ≥ 20 programadas → 1
     #  exec só 24/09 (16 é feriado) → 1 dia → [0,2,4] → 0
-    #  ader grupo MARCA A: 26 de 30 (86,7%) → abaixo da Meta 2, 4 pendentes → max(1, 2) = 2
+    #  ader grupo MARCA A: 26 de 30 (86,7%) → abaixo da meta de 93%, 4 pendentes → max(1, 2) = 2
     #       MARCA B: 6 realizadas viram 4 pelo teto da linha → 12/12 ok
     #  foto 1 de 10 fora do horário → [0,1,3] → 2
     #  sobre: humor 14,15,16 negativos (seq 3 ≥ 3) com atrasos ≥ 4 → sev 2

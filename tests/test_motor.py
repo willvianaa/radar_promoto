@@ -151,7 +151,7 @@ def test_aderencia_teto_por_linha_o_excesso_nao_compensa_o_deficit():
     assert r.aderencia_pct == pytest.approx(20 / 24)
     assert r.dimensoes["aderencia"] == 83
     (a,) = [x for x in r.alertas if x.tipo == "ader"]
-    assert a.severidade == 2  # abaixo da Meta 1 (grupo MARCA A: 16/20 = 80%)
+    assert a.severidade == 2  # abaixo de 85% (severidade 2) (grupo MARCA A: 16/20 = 80%)
 
 
 def test_semana_em_andamento_fica_fora_dos_alertas():
@@ -173,11 +173,11 @@ def test_aderencia_sem_colaborador_e_ignorada():
 
 def test_metas_1_e_2_e_severidade_pelas_pendentes():
     s = semanas(1)[0]
-    meta2 = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 100, 90)]))  # 90%: abaixo da Meta 2; 10 pendentes
+    meta2 = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 100, 90)]))  # 90%: abaixo de 93%; 10 pendentes
     assert tipos(meta2)["ader"] == 3
     ok = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 100, 93)]))
     assert "ader" not in tipos(ok)
-    meta1 = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 10, 8)]))  # 80%: abaixo da Meta 1; 2 pendentes
+    meta1 = calc(Base(colaboradores=[pessoa()], aderencia=[ader(s, 10, 8)]))  # 80%: abaixo de 85% (severidade 2); 2 pendentes
     assert tipos(meta1)["ader"] == 2
 
 

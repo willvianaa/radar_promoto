@@ -230,7 +230,7 @@ def calcular(
             x = rz / ct if ct else None
             if x is None:
                 continue
-            st = "abaixo da Meta 1" if x * 100 < p["meta1"] else "abaixo da Meta 2" if x * 100 < p["meta2"] else "ok"
+            st = "severa" if x * 100 < p["meta1"] else "abaixo" if x * 100 < p["meta2"] else "ok"
             if st != "ok":
                 baixo.append({"loja": loja, "marca": marca, "ct": ct, "rz": rz, "pend": max(0, ct - rz), "pct": x, "st": st})
         ct_tot = sum(g[0] for g in grupos.values())
@@ -328,7 +328,7 @@ def calcular(
                 f"{plural(len(fot_ind), 'foto', 'fotos')} de {len(fotos_p)} analisadas ({'; '.join(motivos).lower()})",
                 max(f.data for f, _ in fot_ind))
         if baixo:
-            s = max(2 if any("Meta 1" in b["st"] for b in baixo) else 1, severidade(pend_baixo, lim["visitas_pendentes"]))
+            s = max(2 if any(b["st"] == "severa" for b in baixo) else 1, severidade(pend_baixo, lim["visitas_pendentes"]))
             n_l = len({b["loja"] for b in baixo})
             add("ader", s, "Impacto na aderência",
                 f"{plural(n_l, 'loja', 'lojas')} abaixo da meta, "
