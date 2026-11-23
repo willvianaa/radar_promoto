@@ -14,7 +14,7 @@ Nenhum valor encontrado é reproduzido aqui: só arquivo, commit e tipo do achad
 | R5 | Contrato `api/openapi.yaml`: parâmetro `q` de `/colaboradores` aceita "parte do CPF" **na query string** (vai para logs de proxy, histórico do navegador e auditoria em texto) | **Médio** | Trocar a busca por CPF para `POST` com corpo, ou exigir no servidor que `q` numérico nunca seja registrado em log; teste em `tests/seguranca/` | Sessão-mãe (contrato) + API |
 | R6 | Protótipos carregam bibliotecas de CDN sem SRI; `xlsx 0.18.5` (SheetJS) tem vulnerabilidades públicas (poluição de protótipo e ReDoS ao ler planilhas) e `chart.js` sem versão fixa | **Médio** | No front definitivo: dependências locais e fixas, `integrity` nos scripts, SheetJS ≥ 0.20.2 ou leitura de planilha só no servidor | Front |
 | R7 | Ausência de controles automáticos no CI (segredos, CPF, dependências, SAST) | **Médio** | Workflow `seguranca.yml` (próximo PR): scanner de CPF/segredos, gitleaks, `pip-audit`, `bandit` | LGPD + Infra |
-| R8 | Três padrões de CPF fora da convenção de fixtures (`000.000.00x-xx`): `radar_v2/engine.js` linha 175 (commit `ed2afea`) e `sistema/index.html` linha 470 (commit `db4b54c`), ambos com dígitos verificadores **inválidos** e nomes fictícios; `tests/test_transformacao.py` linha 29 (commit `4af252f`), 11 dígitos com verificador válido em teste de normalização | **Baixo** | Trocar pelos fictícios da convenção (PR de correção avisando as sessões donas). Sem indício de dado real; não requer reescrita do histórico | LGPD (correção) |
+| R8 | Três padrões de CPF fora da convenção de fixtures (`000.000.00x-xx`): `radar_v2/engine.js` linha 175 (commit `ed2afea`) e `sistema/index.html` linha 470 (commit `db4b54c`), ambos com dígitos verificadores **inválidos** e nomes fictícios; `tests/test_transformacao.py` linha 29 (commit `4af252f`), 11 dígitos com verificador válido em teste de normalização | **Baixo** | **Corrigido na árvore** (PR #15). Os valores antigos **continuam no histórico do git**, visível a qualquer pessoa enquanto o repositório for público. Sem indício de dado real; não proponho reescrever o histórico de ninguém. O risco residual é coberto por R1 (tornar o repositório privado). O CI varre o HEAD e só o que cada PR acrescenta (PR #26), para não reprovar PRs limpos por conteúdo antigo | LGPD (feito); dono (R1) |
 | R9 | Pasta local `dados/` (dados reais) | **Baixo** | Confirmado: `dados/`, `uploads/`, `exports/`, `*.xlsx`, `*.csv`, `*.pdf`, imagens, `.env*` estão no `.gitignore` e no `.dockerignore`. A pasta não foi aberta | — |
 
 ## Varredura de segredos e CPF
@@ -36,8 +36,8 @@ Script: `.github/scripts/varrer_dados_pessoais.py` (modo árvore e `--historico`
 - Cookie de sessão previsto `httpOnly`, `Secure`, `SameSite=Strict`; docs da API desligados.
 - Auditoria append-only e coluna `motivo` restrita a RH/DP já previstas em `db/modelo.md`.
 
-## Próximos passos desta sessão
+## Situação em 22/11
 
-1. Documentos LGPD em rascunho (mapa de dados, RIPD, registro de operações, retenção, incidentes, aviso).
-2. PR de dependências (R4) e PR de controles no CI (R7, R8).
-3. Testes de segurança em `tests/seguranca/` (mascaramento, nada sensível em log/URL).
+- R4, R7 e R8: tratados nos PRs #15 e #26 (na `main`).
+- Documentos LGPD em rascunho: `01` a `06` nesta pasta. **Base legal, prazos e visibilidade são propostas; quem decide são DPO, RH e Jurídico (Q-08, Q-09, Q-10).**
+- Pendente: testes de segurança em `tests/seguranca/` (mascaramento, nada sensível em log/URL), e R1, R2, R3, R5 e R6 com os responsáveis indicados.
