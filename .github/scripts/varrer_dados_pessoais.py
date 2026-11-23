@@ -23,7 +23,9 @@ from __future__ import annotations
 
 import argparse
 import re
-import subprocess
+import shutil
+# subprocess só executa o git com argumentos fixos, sem shell.
+import subprocess  # nosec B404
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
@@ -120,8 +122,12 @@ def varrer_texto(caminho: str, texto: str) -> list[tuple[int, str, bool]]:
     return achados
 
 
+GIT = shutil.which("git") or "git"
+
+
 def git(*args: str) -> bytes:
-    return subprocess.run(["git", *args], check=True, capture_output=True).stdout
+    # Sem shell; argumentos montados pelo próprio script (refs do git), nunca de entrada externa livre.
+    return subprocess.run([GIT, *args], check=True, capture_output=True).stdout  # nosec B603
 
 
 def binario(caminho: str, conteudo: bytes) -> bool:
