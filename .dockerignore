@@ -18,3 +18,7 @@ tests
 dados
 uploads
 exports
+storage
+*.zip
+*.xlsx
+*.csv
