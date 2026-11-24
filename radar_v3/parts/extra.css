@@ -291,3 +291,11 @@ h1,h2,h3,.kpi-v,.pr .v,.hero h2{font-family:"Plus Jakarta Sans",Inter,Arial,sans
 .pp-st.ex,.ex-pill{background:color-mix(in srgb,var(--warn) 22%,transparent)!important;color:var(--warn)!important}
 .ex-pill{font-size:11px;vertical-align:middle;margin-left:8px}
 .ex-row{cursor:default;opacity:.9;border-style:dashed}
+/* v4.3: miniaturas das fotos no detalhe de Fotos com indício */
+.kx-ths{display:flex;flex-wrap:wrap;gap:8px;margin:-2px 0 6px 46px}
+.kx-im{all:unset;cursor:pointer;display:grid;gap:3px;width:96px}
+.kx-im img{width:96px;height:96px;object-fit:cover;border-radius:10px;border:1px solid var(--border-2);background:var(--input);transition:transform .15s}
+.kx-im:hover img,.kx-im:focus-visible img{transform:scale(1.04);border-color:var(--k)}
+.kx-im small{font-size:10.5px;color:var(--ink-3);text-align:center}
+.kx-more{align-self:center;font-size:12px;font-weight:700;color:var(--ink-2)}
+@media (max-width:560px){.kx-ths{margin-left:0}.kx-im,.kx-im img{width:72px}.kx-im img{height:72px}}
