@@ -56,6 +56,8 @@ DPO, RH, DP, Compliance, Jurídico, P&P, TI. **Recomendação:** ouvir uma amost
 | T6 | Retenção além do prazo | Alta | Baixo | Médio |
 | T7 | Transferência internacional sem salvaguarda (nuvem, IA de fotos — Q-20) | Baixa | Médio | Baixo |
 | T8 | **Risco aceito pelo dono (24/11/2026):** o protótipo `radar_v3` mostra **nome** de quem marcou humor "Doente" e de quem teve atestado médico (detalhe de Humor e de Ausências), contra a regra provisória do `CLAUDE.md` §2.1 | Alta | Alto | **Alto** |
+| T9 | **Risco aceito pelo dono (24/11/2026):** na tela do protótipo, toda foto tirada fora do horário da visita recebe o rótulo "Foto da foto (possível foto falsa)", embora não haja detecção automática de "foto da foto" (exatidão do indício, art. 6º, V; `CLAUDE.md` §4.6) | Alta | Médio | **Médio** |
+| T10 | **Risco aceito pelo dono (24/11/2026):** o Raio-X e o dossiê do protótipo mostram o **texto livre do motivo** de cada falta, inclusive de atestado médico, que pode conter CID ou diagnóstico (minimização, art. 6º, III; art. 11) | Média | Alto | **Alto** |
 
 ## 8. Medidas de mitigação
 
@@ -68,10 +70,12 @@ DPO, RH, DP, Compliance, Jurídico, P&P, TI. **Recomendação:** ouvir uma amost
 | T5 | Uso do GPS só pontual (foto e check-in), sem rastreamento contínuo; redução à distância após 12 meses | Proposta |
 | T6 | Política de retenção com descarte automático registrado | `04-politica-retencao.md` (proposta) |
 | T7 | Hospedagem no Brasil preferencial; cláusulas-padrão se houver transferência; IA só após Q-20 | Pendente |
-| T8 | Página do protótipo compartilhada só com o grupo restrito da matriz; sem texto livre do motivo da ausência na tela (pode conter CID ou diagnóstico); dado da planilha sempre escapado no HTML; registrar a operação no `03-registro-operacoes.md`; reavaliar quando o DPO decidir Q-08/Q-10. No sistema web continua valendo a matriz de permissões (`ver_doente`) | **Aceito pelo dono, pendente do DPO** |
+| T8 | Página do protótipo compartilhada só com o grupo restrito da matriz; sem texto livre do motivo no detalhe de Ausências (Raio-X e dossiê: ver T10); dado da planilha sempre escapado no HTML; registrar a operação no `03-registro-operacoes.md`; reavaliar quando o DPO decidir Q-08/Q-10. No sistema web continua valendo a matriz de permissões (`ver_doente`) | **Aceito pelo dono, pendente do DPO** |
+| T9 | No **dossiê** (HTML, PDF e Excel) o rótulo vira texto factual, "Imagem de outra tela (captura fora do horário da visita)", sem "falsa" (`CLAUDE.md` §5); a conferência humana das imagens continua obrigatória antes de qualquer medida | **Aceito pelo dono, pendente do DPO** |
+| T10 | Página só para o grupo restrito; o detalhe de Ausências mostra só categoria e datas; recomendação desta sessão (não adotada): no dossiê só a categoria, e no Raio-X o texto livre só da falta não justificada. No sistema web o motivo segue restrito a RH e DP (`ver_motivo_falta`) | **Aceito pelo dono, pendente do DPO** |
 
 ## 9. Risco residual e parecer
 
-Com as medidas implementadas, o risco residual estimado é **médio**, condicionado a: (a) repositório privado antes de qualquer dado real; (b) decisão de Q-10 sobre "Doente"; (c) aviso aos colaboradores entregue antes do piloto; (d) remoção dos dados reais do protótipo no artefato; (e) parecer do DPO sobre o risco T8, aceito pelo dono em 24/11/2026 (nomes visíveis em "Doente" e atestado médico no protótipo).
+Com as medidas implementadas, o risco residual estimado é **médio**, condicionado a: (a) repositório privado antes de qualquer dado real; (b) decisão de Q-10 sobre "Doente"; (c) aviso aos colaboradores entregue antes do piloto; (d) remoção dos dados reais do protótipo no artefato; (e) parecer do DPO sobre os riscos T8, T9 e T10, aceitos pelo dono em 24/11/2026 no protótipo (nomes em "Doente" e atestado médico; rótulo "foto da foto" para foto fora do horário; motivo livre da falta no Raio-X e no dossiê).
 
 **Parecer do DPO:** _pendente_ · **Aprovação RH/Jurídico:** _pendente_ · **Revisão:** a cada mudança relevante ou anualmente.
