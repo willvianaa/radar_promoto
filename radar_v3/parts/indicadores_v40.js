@@ -10,6 +10,11 @@ const KPI={
 const AUS=[["nj","Falta não justificada","#E11D48"],["at","Atestado médico","#EC4899"],["ap","Problema no aparelho","#F59E0B"],["ou","Outras justificativas","#64748B"]];
 function ausCat(x){const t=norm((x.motivo||"")+" "+(x.tpTxt||""));if(x.tipo==="I")return"nj";if(x.tipo==="A"||/ATESTAD|MEDIC|SAUDE|DOENC|CONSULTA|\bCID\b|HOSPITAL|EXAME/.test(t))return"at";
   if(/APARELHO|CELULAR|SMARTPHONE|BATERIA|SINAL|APLICATIVO|\bAPP\b|SISTEMA|TELEFONE/.test(t))return"ap";return"ou"}
+/* EXEMPLO FICTÍCIO: aparece só sem a base de ausências; nunca se mistura com promotores reais nem entra em alertas, nível ou risco */
+const AUS_EX=(()=>{const N=[["Ana Exemplo Prado","BA","Supervisor Fictício 1"],["Bruno Fictício Reis","PE","Supervisor Fictício 2"],["Carla Modelo Dias","CE","Supervisor Fictício 3"],["Diego Teste Lima","MA","Supervisor Fictício 1"],["Elisa Exemplo Rocha","BA","Supervisor Fictício 2"],["Fábio Modelo Nunes","PE","Supervisor Fictício 3"],["Gisele Teste Alves","CE","Supervisor Fictício 1"],["Hugo Fictício Melo","MA","Supervisor Fictício 2"]];
+  const C=[["nj",[0,0,3,5]],["at",[1,4,4,6,7]],["ap",[2,2,5,7]],["ou",[3,6]]],o=[];C.forEach(([c,ix],ci)=>ix.forEach((i,j)=>o.push({c,i,d:"2026-09-"+String(3+ci*5+j*2).padStart(2,"0")})));
+  return N.map((n,i)=>{const p={k:"ex"+i,nome:n[0],uf:n[1],sup:n[2],niv:""},a={nj:[],at:[],ap:[],ou:[]};o.filter(x=>x.i===i).forEach(x=>a[x.c].push({d:x.d}));return[p,a]}).filter(y=>AUS.some(x=>y[1][x[0]].length))})();
+const EXP='<span class="pill p-warn ex-pill">exemplo · dados fictícios</span>';
 function ausDe(p){const o={nj:[],at:[],ap:[],ou:[]};((p.fal&&p.fal.list)||[]).forEach(x=>o[ausCat(x)].push(x));return o}
 /* fuga de rota: posições fora da cerca, por dia, com a ocorrência de jornada do mesmo dia */
 function rotaDet(p){const D=new Map(p.jor.dias.map(x=>[x.d,x]));return[...group(p.rota.list,x=>x.d)].sort((a,b)=>a[0]<b[0]?-1:1).slice(0,4).map(([d,v])=>{const j=D.get(d),oc=j?[j.atraso?"início tardio":"",j.saida?"saída antecipada":"",j.auto?"check-out automático":""].filter(Boolean):[],
@@ -35,10 +40,10 @@ function kpiVals(L){const s=f=>L.reduce((a,p)=>a+(f(p)||0),0),h=R().has,ct=s(p=>
     jor:{v:tr?dc/tr*100:null,big:num(J.atr+J.sai+J.auto),d:"ocorrências em "+num(tr)+" dias trabalhados",mix:JORC.filter(x=>x[0]!=="sai"||J.sai).map(x=>[x[1],J[x[0]],x[2]]),u:""},
     humor:{v:hd?hn/hd*100:null,big:num(hn),d:"respostas negativas de "+num(hd),mix:op.slice(0,4).map(([o,n])=>[o,n,neg.has(norm(o))?"#8B5CF6":"#10B981"]),u:""},
     foto:{v:fn?fs/fn*100:null,big:num(fs),d:"fotos com indício de "+num(fn)+" analisadas",mix:FOTC.filter(x=>F[x[0]]).map(x=>[x[1],F[x[0]],x[3]]).concat(h.rota&&s(p=>p.rota.dias)?[["Fuga de rota (cerca 200 m)",s(p=>p.rota.dias),"#F97316"]]:[]),u:""},
-    aus:{v:h.faltas&&(tr+na)?na/(tr+na)*100:null,big:h.faltas?num(na):"—",d:h.faltas?"dias de ausência no período":"carregue o export de afastamentos",mix:h.faltas?AUS.map(x=>[x[1],A[x[0]],x[2]]):[],u:""}}}
+    aus:h.faltas?{v:(tr+na)?na/(tr+na)*100:null,big:num(na),d:"dias de ausência no período",mix:AUS.map(x=>[x[1],A[x[0]],x[2]]),u:""}:(()=>{const T={};AUS.forEach(x=>T[x[0]]=AUS_EX.reduce((a,y)=>a+y[1][x[0]].length,0));const n=Object.values(T).reduce((a,b)=>a+b,0);return{v:n/(AUS_EX.length*20+n)*100,ex:true,big:num(n),d:"exemplo com dados fictícios: carregue o export de afastamentos",mix:AUS.map(x=>[x[1],T[x[0]],x[2]]),u:""}})()}}
 function paramsPainel(L){const V=kpiVals(L);
   return'<section class="card pp-side"><div class="hd"><h2>Parâmetros da operação</h2><small class="muted">clique num card para ver quem está em cada situação</small></div><div class="pp-grid">'+Object.entries(KPI).map(([k,d])=>{const x=V[k],v=x.v,ok=v==null?null:d.up?v>=d.meta:v<=d.meta,w=v==null?0:Math.min(100,d.up?v:v/Math.max(d.meta*2.2,v)*100),mk=d.up?d.meta:d.meta/Math.max(d.meta*2.2,v||0)*100;
-    return'<button class="pp" style="--k:'+d.c+'" data-a="kpiM" data-v="'+k+'"><span class="pp-h"><span class="pp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="'+d.ic+'"/></svg></span><span class="pp-l">'+d.l+'</span><span class="pp-st '+(ok==null?"":ok?"ok":"no")+'">'+(ok==null?"sem dados":ok?"dentro":"fora")+'</span></span>'+
+    return'<button class="pp" style="--k:'+d.c+'" data-a="kpiM" data-v="'+k+'"><span class="pp-h"><span class="pp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="'+d.ic+'"/></svg></span><span class="pp-l">'+d.l+'</span><span class="pp-st '+(x.ex?"ex":ok==null?"":ok?"ok":"no")+'">'+(x.ex?"exemplo":ok==null?"sem dados":ok?"dentro":"fora")+'</span></span>'+
       '<span class="pp-vv"><span class="pp-v">'+fmtP(v)+'</span><span class="pp-n"><b>'+x.big+'</b>'+x.d+'</span></span>'+
       '<span class="pp-b"><i style="width:'+w+'%"></i><em style="left:'+mk+'%"></em></span>'+
       (x.mix.length?'<span class="pp-mix">'+x.mix.map(m=>'<span style="--m:'+m[2]+'"><i></i>'+esc(m[0])+' <b>'+num(m[1])+'</b></span>').join("")+'</span>':"")+
@@ -46,7 +51,7 @@ function paramsPainel(L){const V=kpiVals(L);
 /* modal de indicador: números no topo, abas por categoria e a lista de promotores de cada aba */
 function modalKpi(k,tiles,tabs,nota){const d=KPI[k],V=kpiVals(R().list)[k],el=document.createElement("div");el.className="modal lb";
   const tb=tabs.filter(t=>t.rows.length||t.fixa);
-  el.innerHTML='<div class="box km kx" style="--k:'+d.c+'"><div class="lb-hd"><div><div class="eyebrow">Parâmetro da operação · '+d.t+' '+d.meta+'%</div><h2>'+d.l+' <span class="kx-v">'+fmtP(V.v)+'</span></h2></div><button class="btn sec sm lb-x" aria-label="Fechar">✕</button></div>'+
+  el.innerHTML='<div class="box km kx" style="--k:'+d.c+'"><div class="lb-hd"><div><div class="eyebrow">Parâmetro da operação · '+d.t+' '+d.meta+'%</div><h2>'+d.l+' <span class="kx-v">'+fmtP(V.v)+'</span>'+(V.ex?EXP:"")+'</h2></div><button class="btn sec sm lb-x" aria-label="Fechar">✕</button></div>'+
     '<div class="kx-tiles">'+tiles.map(t=>'<div class="kx-t" style="--m:'+(t[2]||d.c)+'"><b>'+t[0]+'</b><span>'+t[1]+'</span></div>').join("")+'</div>'+
     (tb.length?'<div class="kx-tabs" role="tablist">'+tb.map((t,i)=>'<button class="kx-tab'+(i?"":" on")+'" role="tab" data-tab="'+i+'" style="--m:'+t.c+'"><i></i>'+esc(t.l)+' <b>'+num(t.n!=null?t.n:t.rows.length)+'</b></button>').join("")+'</div>'+
       tb.map((t,i)=>'<div class="km-l kx-p" data-p="'+i+'"'+(i?" hidden":"")+'>'+(t.rows.join("")||'<div class="nobase">Ninguém nesta situação.</div>')+'</div>').join(""):'<div class="nobase">'+(k==="aus"?"Sem base de ausências carregada. Use “Atualizar dados” com o export de afastamentos.":"Sem dados para os filtros escolhidos.")+'</div>')+
@@ -55,6 +60,7 @@ function modalKpi(k,tiles,tabs,nota){const d=KPI[k],V=kpiVals(R().list)[k],el=do
   el.addEventListener("click",e=>{const t=e.target.closest(".kx-tab");if(t){el.querySelectorAll(".kx-tab").forEach(b=>b.classList.toggle("on",b===t));el.querySelectorAll(".kx-p").forEach(p=>p.hidden=p.dataset.p!==t.dataset.tab);return}
     if(e.target===el||e.target.closest(".lb-x"))fechar();else if(e.target.closest("[data-a]"))setTimeout(fechar,0)});
   document.addEventListener("keydown",ek);document.body.appendChild(el)}
+function exRow(p,val,det,cor){return'<div class="kr ex-row"><span class="kr-av" style="background:var(--m2)">'+esc(p.nome[0]+p.nome.split(" ").pop()[0])+'</span><span class="kr-n"><b>'+esc(p.nome)+'</b><small>'+esc(p.uf)+' · '+esc(p.sup)+'</small><small class="kr-d">'+esc(det)+'</small></span><span class="kr-v" style="color:'+cor+'">'+val+'</span></div>'}
 function kpiModal(k){const d=KPI[k];if(!d)return;const L=R().list,V=kpiVals(L)[k],neg=new Set(S.cfg.neg.map(norm)),dts=a=>a.slice(0,6).map(x=>fDc(x.d||x)).join(", ")+(a.length>6?" e mais "+(a.length-6):"");
   const tab=(l,c,ps,row,n)=>({l,c,rows:ps.map(row),n});let tiles=[],tabs=[],nota="Indícios para conferência antes de qualquer decisão.";
   if(k==="ader"){const pa=L.filter(p=>p.ad.pct!=null).sort((a,b)=>a.ad.pct-b.ad.pct),r=p=>kmRow(p,pc(p.ad.pct),num(p.ad.rz)+" de "+num(p.ad.ct)+" visitas · "+plural(p.ad.baixo.length,"loja","lojas")+" abaixo da meta · "+plural(p.ad.pend,"visita pendente","visitas pendentes"),p.ad.pct*100<85?"var(--bad)":p.ad.pct*100<93?"var(--warn)":"var(--good)");
@@ -79,8 +85,8 @@ function kpiModal(k){const d=KPI[k];if(!d)return;const L=R().list,V=kpiVals(L)[k
     if(R().has.rota){const ps=L.filter(p=>p.rota.dias).sort((a,b)=>b.rota.dias-a.rota.dias);
       tabs.push({l:"Fuga de rota (cerca "+S.cfg.cerca+" m)",c:"#F97316",n:ps.length,rows:ps.map(p=>kmRow(p,p.rota.dias+(p.rota.dias>1?" dias":" dia"),rotaDet(p),"#F97316"))})}
     nota="Fuga de rota: posição fora da cerca de "+S.cfg.cerca+" m da loja durante a jornada, cruzada com a ocorrência de jornada do mesmo dia."}
-  if(k==="aus"&&R().has.faltas){const AP=L.map(p=>[p,ausDe(p)]);
+  if(k==="aus"){const ex=!R().has.faltas,AP=ex?AUS_EX:L.map(p=>[p,ausDe(p)]);
     tiles=[[V.big,"dias de ausência","#EC4899"],...AUS.map(x=>[num(AP.reduce((a,y)=>a+y[1][x[0]].length,0)),x[1].toLowerCase()+" · "+plural(AP.filter(y=>y[1][x[0]].length).length,"promotor","promotores"),x[2]])];
-    tabs=AUS.map(x=>{const ps=AP.filter(y=>y[1][x[0]].length).sort((a,b)=>b[1][x[0]].length-a[1][x[0]].length);return{l:x[1],c:x[2],n:ps.length,rows:ps.map(([p,a])=>{const v=a[x[0]];return kmRow(p,v.length+(v.length>1?" dias":" dia"),dts(v),x[2])})}});
-    nota="Só falta não justificada gera alerta. Atestados e justificativas aparecem para acompanhamento."}
+    tabs=AUS.map(x=>{const ps=AP.filter(y=>y[1][x[0]].length).sort((a,b)=>b[1][x[0]].length-a[1][x[0]].length);return{l:x[1],c:x[2],n:ps.length,rows:ps.map(([p,a])=>{const v=a[x[0]];return ex?exRow(p,v.length+(v.length>1?" dias":" dia"),dts(v),x[2]):kmRow(p,v.length+(v.length>1?" dias":" dia"),dts(v),x[2])})}});
+    nota=ex?"EXEMPLO com nomes e números fictícios, só para mostrar como o detalhe vai funcionar. Some quando o export de afastamentos for carregado.":"Só falta não justificada gera alerta. Atestados e justificativas aparecem para acompanhamento."}
   modalKpi(k,tiles,tabs,nota)}

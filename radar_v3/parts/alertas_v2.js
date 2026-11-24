@@ -4,7 +4,7 @@ function alGrupos(){const r=R(),fa=S.al,A=r.alertas,bn=A.filter(a=>!fa.niv||(fa.
   const G=[...group(vis,a=>a.k)].map(([k,ev])=>{const p=r.todos.find(x=>x.k===k)||{nome:ev[0].nome,uf:ev[0].uf,sup:ev[0].sup,niv:ev[0].niv,risco:0,score:0,k};return{p,ev}}).sort((a,b)=>ord[a.p.niv||""]-ord[b.p.niv||""]||b.p.risco-a.p.risco);
   return{r,fa,A,bn,vis,G}}
 function vAlertas(){const{r,fa,bn,G}=alGrupos(),lim=S.alN||24,D=nivDados(r.list),tot=D.reduce((a,x)=>a+x.n,0);
-  const tipos=Object.keys(TIPOS).filter(t=>t!=="auto"&&(bn.some(a=>TG(a.tipo)===t)||fa.tipo===t||(t==="humor"&&r.has.humor)||(t==="falta"&&r.has.faltas)));
+  const tipos=Object.keys(TIPOS).filter(t=>t!=="auto"&&(bn.some(a=>TG(a.tipo)===t)||fa.tipo===t||(t==="humor"&&r.has.humor)||t==="falta"));
   const ufs=new Set(G.map(g=>g.p.uf)).size,sob=G.filter(g=>g.p.sobre).length,grav=G.filter(g=>g.ev.some(a=>a.sev===3)).length;
   const card=({p,ev})=>{const tp=[...group(ev,a=>a.tipo)].sort((a,b)=>Math.max(...b[1].map(x=>x.sev))-Math.max(...a[1].map(x=>x.sev))),top=ev.slice().sort((a,b)=>b.sev-a.sev)[0],cor=p.niv?NIV[p.niv][1]:"var(--m2)";
     const ini=(p.nome.split(" ")[0]||"?")[0]+((p.nome.split(" ").filter(Boolean).pop()||"")[0]||"");
@@ -26,10 +26,10 @@ function gAlertas(){if(S.al.tipo==="humor")gHumor();const{r,bn,G}=alGrupos(),D=n
   grafico("g-auf",{type:"bar",data:{labels:uf.map(x=>x.u),datasets:[["C","Crítico","--bad"],["A","Alto","--rt"],["T","Atenção","--warn"]].map(([k,l,c])=>({label:l,data:uf.map(x=>x[k]),backgroundColor:css(c),stack:"s",borderRadius:4,maxBarThickness:28}))},options:{scales:{x:{stacked:true},y:{stacked:true,ticks:{precision:0}}},plugins:{legend:{display:false}},onClick:(e,a)=>{if(a.length){S.f.uf=uf[a[0].index].u;S.R=null;render()}}}})}
 
 /* v4.1: Ausências na central de alertas — categorias com os promotores (só falta não justificada gera alerta) */
-function ausPainel(){const r=R(),L=r.list;if(!r.has.faltas)return'<section class="card"><div class="nobase">Sem base de ausências carregada. Use “Atualizar dados” com o export de afastamentos do Involves.</div></section>';
-  const AP=L.map(p=>[p,ausDe(p)]),tot=AP.reduce((a,y)=>a+AUS.reduce((b,x)=>b+y[1][x[0]].length,0),0);
-  return'<section class="card aus-p"><div class="hd"><h2>Ausências no período</h2><button class="btn sec sm" data-a="kpiM" data-v="aus">Ver detalhe completo</button></div>'+
+function ausPainel(){const r=R(),L=r.list,ex=!r.has.faltas,row=ex?exRow:kmRow;
+  const AP=ex?AUS_EX:L.map(p=>[p,ausDe(p)]),tot=AP.reduce((a,y)=>a+AUS.reduce((b,x)=>b+y[1][x[0]].length,0),0);
+  return'<section class="card aus-p"><div class="hd"><h2>Ausências no período '+(ex?EXP:"")+'</h2><button class="btn sec sm" data-a="kpiM" data-v="aus">Ver detalhe completo</button></div>'+
     '<div class="kx-tiles">'+[[num(tot),"dias de ausência","#EC4899"]].concat(AUS.map(x=>[num(AP.reduce((a,y)=>a+y[1][x[0]].length,0)),x[1].toLowerCase(),x[2]])).map(t=>'<div class="kx-t" style="--m:'+t[2]+'"><b>'+t[0]+'</b><span>'+t[1]+'</span></div>').join("")+'</div>'+
     '<div class="aus-g">'+AUS.map(x=>{const ps=AP.filter(y=>y[1][x[0]].length).sort((a,b)=>b[1][x[0]].length-a[1][x[0]].length);
-      return'<div class="aus-c" style="--m:'+x[2]+'"><h3><i></i>'+x[1]+' <b>'+num(ps.length)+'</b></h3>'+(ps.length?ps.slice(0,6).map(([p,a])=>kmRow(p,a[x[0]].length,a[x[0]].slice(0,5).map(z=>fDc(z.d)).join(", "),x[2])).join(""):'<div class="muted small">Ninguém nesta categoria.</div>')+(ps.length>6?'<small class="muted">e mais '+(ps.length-6)+'</small>':"")+'</div>'}).join("")+'</div>'+
-    '<small class="muted">Só a falta não justificada gera alerta e pontua no nível. Atestados e justificativas são acompanhamento.</small></section>'}
+      return'<div class="aus-c" style="--m:'+x[2]+'"><h3><i></i>'+x[1]+' <b>'+num(ps.length)+'</b></h3>'+(ps.length?ps.slice(0,6).map(([p,a])=>row(p,a[x[0]].length,a[x[0]].slice(0,5).map(z=>fDc(z.d)).join(", "),x[2])).join(""):'<div class="muted small">Ninguém nesta categoria.</div>')+(ps.length>6?'<small class="muted">e mais '+(ps.length-6)+'</small>':"")+'</div>'}).join("")+'</div>'+
+    '<small class="muted">'+(ex?"Exemplo com nomes e números fictícios, só para mostrar o painel. Some quando o export de afastamentos for carregado; não gera alerta.":"Só a falta não justificada gera alerta e pontua no nível. Atestados e justificativas são acompanhamento.")+'</small></section>'}

@@ -288,3 +288,6 @@ h1,h2,h3,.kpi-v,.pr .v,.hero h2{font-family:"Plus Jakarta Sans",Inter,Arial,sans
 .aus-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:4px 0 10px}
 .aus-c{display:grid;gap:6px;align-content:start;padding:12px;border-radius:14px;background:var(--card-2);border:1px solid var(--border);border-top:3px solid var(--m)}
 .aus-c h3{margin:0 0 2px;font-size:13px;display:flex;align-items:center;gap:6px}.aus-c h3 i{width:9px;height:9px;border-radius:50%;background:var(--m)}.aus-c h3 b{margin-left:auto;color:var(--m)}
+.pp-st.ex,.ex-pill{background:color-mix(in srgb,var(--warn) 22%,transparent)!important;color:var(--warn)!important}
+.ex-pill{font-size:11px;vertical-align:middle;margin-left:8px}
+.ex-row{cursor:default;opacity:.9;border-style:dashed}
