@@ -55,6 +55,7 @@ DPO, RH, DP, Compliance, Jurídico, P&P, TI. **Recomendação:** ouvir uma amost
 | T5 | Monitoramento excessivo e efeito inibidor (vigilância contínua por GPS) | Média | Médio | Médio |
 | T6 | Retenção além do prazo | Alta | Baixo | Médio |
 | T7 | Transferência internacional sem salvaguarda (nuvem, IA de fotos — Q-20) | Baixa | Médio | Baixo |
+| T8 | **Risco aceito pelo dono (24/11/2026):** o protótipo `radar_v3` mostra **nome** de quem marcou humor "Doente" e de quem teve atestado médico (detalhe de Humor e de Ausências), contra a regra provisória do `CLAUDE.md` §2.1 | Alta | Alto | **Alto** |
 
 ## 8. Medidas de mitigação
 
@@ -67,9 +68,10 @@ DPO, RH, DP, Compliance, Jurídico, P&P, TI. **Recomendação:** ouvir uma amost
 | T5 | Uso do GPS só pontual (foto e check-in), sem rastreamento contínuo; redução à distância após 12 meses | Proposta |
 | T6 | Política de retenção com descarte automático registrado | `04-politica-retencao.md` (proposta) |
 | T7 | Hospedagem no Brasil preferencial; cláusulas-padrão se houver transferência; IA só após Q-20 | Pendente |
+| T8 | Página do protótipo compartilhada só com o grupo restrito da matriz; sem texto livre do motivo da ausência na tela (pode conter CID ou diagnóstico); dado da planilha sempre escapado no HTML; registrar a operação no `03-registro-operacoes.md`; reavaliar quando o DPO decidir Q-08/Q-10. No sistema web continua valendo a matriz de permissões (`ver_doente`) | **Aceito pelo dono, pendente do DPO** |
 
 ## 9. Risco residual e parecer
 
-Com as medidas implementadas, o risco residual estimado é **médio**, condicionado a: (a) repositório privado antes de qualquer dado real; (b) decisão de Q-10 sobre "Doente"; (c) aviso aos colaboradores entregue antes do piloto; (d) remoção dos dados reais do protótipo no artefato.
+Com as medidas implementadas, o risco residual estimado é **médio**, condicionado a: (a) repositório privado antes de qualquer dado real; (b) decisão de Q-10 sobre "Doente"; (c) aviso aos colaboradores entregue antes do piloto; (d) remoção dos dados reais do protótipo no artefato; (e) parecer do DPO sobre o risco T8, aceito pelo dono em 24/11/2026 (nomes visíveis em "Doente" e atestado médico no protótipo).
 
 **Parecer do DPO:** _pendente_ · **Aprovação RH/Jurídico:** _pendente_ · **Revisão:** a cada mudança relevante ou anualmente.
