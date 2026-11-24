@@ -10,13 +10,13 @@ const FIELDS={
   pesq:["k","nome","mat","sup","uf","d","loja","cli","tipo","st"],
   humor:["k","nome","mat","d","op"],
   ader:["k","nome","sup","uf","d","loja","marca","ct","rz"],
-  fotos:["k","nome","mat","d","h","loja","pesq","lat","lon","llat","llon","hash","url"],
+  fotos:["k","nome","mat","d","h","loja","pesq","lat","lon","llat","llon","hash","url","ind"],
   faltas:["k","nome","mat","d","tipo","motivo"],
   rota:["k","nome","mat","d","h","loja","dist"],
   pdoh:["k","nome","sup","uf","d","dias","prod","desl","ocio","hnr"]};
 const NIV={C:["Crítico","var(--bad)","p-bad"],A:["Alto","var(--rt)","p-rt"],T:["Atenção","var(--warn)","p-warn"]};
 const SEVN={3:"alta",2:"média",1:"baixa"};
-const TIPOS={jor:"Atrasos e saídas",auto:"Check-out automático",pesq:"Pesquisas expiradas",exec:"Dias sem atividades",ader:"Impacto na aderência",falta:"Faltas",foto:"Fotos com indício",rota:"Fuga de rota",sobre:"Sobrecarga",humor:"Humor"};
+const TIPOS={jor:"Jornada: início tardio e saída",auto:"Jornada: check-out automático",pesq:"Pesquisas expiradas",exec:"Dias sem atividades",ader:"Impacto na aderência",falta:"Ausências: falta não justificada",foto:"Fotos com indício",rota:"Fuga de rota",sobre:"Sobrecarga",humor:"Humor"};
 
 /* ---------- utilitários ---------- */
 const $=id=>document.getElementById(id);
@@ -69,15 +69,15 @@ const AL={
   tipo:[/TIPO (DE |DO )?(SERVICO|PESQUISA|ATIVIDADE)/,/^PESQUISA$/,/^FORMULARIO$/,/^ATIVIDADE$/,/PESQUISA|FORMULARIO|ATIVIDADE/],
   op:[/HUMOR/,/COMO VOCE ESTA/,/SENTIMENTO/,/^RESPOSTA$/],ct:[/CONTRATAD/,/PREVIST/,/PLANEJAD/],rz:[/REALIZAD/,/EXECUTAD/],sem:[/^SEMANA/],ano:[/^ANO$/],
   h:[/^HORA/,/HORARIO/],lat:[/^LAT(ITUDE)?( DA| DO)?( FOTO| CAPTURA| COLABORADOR)?$/],lon:[/^LON(G|GITUDE)?( DA| DO)?( FOTO| CAPTURA| COLABORADOR)?$/],
-  llat:[/LAT(ITUDE)? (DA |DO )?(LOJA|PDV)/],llon:[/LON(G|GITUDE)? (DA |DO )?(LOJA|PDV)/],hash:[/HASH/],url:[/URL|LINK|IMAGEM|ARQUIVO|^FOTO$/],
-  dist:[/DISTANCIA/,/FORA DA CERCA/],ftipo:[/^TIPO/,/JUSTIFICAD/,/^FALTA/],motivo:[/MOTIVO/,/JUSTIFICATIVA/,/OBSERVA/]};
+  llat:[/LAT(ITUDE)? (DA |DO )?(LOJA|PDV)/],llon:[/LON(G|GITUDE)? (DA |DO )?(LOJA|PDV)/],hash:[/HASH/],ind:[/^INDICIO/],url:[/URL|LINK|IMAGEM|ARQUIVO|^FOTO$/],
+  dist:[/DISTANCIA/,/FORA DA CERCA/],ftipo:[/^TIPO/,/JUSTIFICAD/,/^FALTA/,/AFASTAMENT/],motivo:[/MOTIVO/,/JUSTIFICATIVA/,/OBSERVA/]};
 function mapCols(hdr){const H=hdr.map(norm),c={};for(const f in AL){for(const re of AL[f]){const i=H.findIndex(x=>x&&re.test(x));if(i>=0){c[f]=i;break}}}return c}
 function tipoDe(c,hdr){const H=hdr.map(norm).join(" | ");
   if(c.ct!=null&&c.rz!=null)return"ader";
   if(c.cin!=null&&c.cout!=null)return"oper";
   if(c.dist!=null&&c.nome!=null)return"rota";
   if(c.op!=null&&c.st==null)return"humor";
-  if(/FALTA|ATESTADO|AUSENCIA|JUSTIFICATIVA/.test(H)&&c.st==null)return"faltas";
+  if(/FALTA|ATESTADO|AUSENCIA|AFASTAMENT|JUSTIFICATIVA/.test(H)&&c.st==null)return"faltas";
   if(c.st!=null&&(c.tipo!=null||c.cli!=null))return"pesq";
   if(c.nome!=null&&(c.hash!=null||c.url!=null||(c.lat!=null&&c.lon!=null)))return"fotos";
   return null}
@@ -93,8 +93,8 @@ function linha(base,c,r,anoPad){const g=f=>c[f]==null?null:r[c[f]],s=f=>{const v
     o.d=pDate(g("d"));if(!o.d){const sv=s("sem"),m=sv.match(/(\d{4})\D+(\d{1,2})/),w=m?+m[2]:parseInt(sv,10),y=m?+m[1]:(pNum(g("ano"))||anoPad);if(w)o.d=weekMonday(y,w)}
     if(!o.d)return null;o.sup=s("sup");o.uf=norm(s("uf")).slice(0,2)||norm(o.loja).slice(0,2);o.marca=s("cli");return o}
   if(base==="fotos"){o.d=pDate(g("d"));if(!o.d)return null;o.h=pTime(g("h"));if(o.h==null)o.h=pTime(g("d"));o.loja=s("pdv");o.pesq=s("tipo");
-    o.lat=pNum(g("lat"));o.lon=pNum(g("lon"));o.llat=pNum(g("llat"));o.llon=pNum(g("llon"));o.url=s("url");o.hash=s("hash")||o.url;return o}
-  if(base==="faltas"){o.d=pDate(g("d"));if(!o.d)return null;const t=norm(s("ftipo")+" "+s("motivo"));o.motivo=s("motivo");
+    o.lat=pNum(g("lat"));o.lon=pNum(g("lon"));o.llat=pNum(g("llat"));o.llon=pNum(g("llon"));o.url=s("url");o.hash=s("hash")||o.url;o.ind=s("ind");return o}
+  if(base==="faltas"){o.d=pDate(g("d"));if(!o.d)return null;const t=norm(s("ftipo")+" "+s("motivo"));o.motivo=s("motivo")||s("ftipo");
     o.tipo=/ATESTADO/.test(t)?"A":/INJUSTIF|NAO JUSTIF|SEM JUSTIF/.test(t)?"I":/JUSTIF/.test(t)||o.motivo?"J":"I";return o}
   if(base==="rota"){o.d=pDate(g("d"));if(!o.d)return null;o.h=pTime(g("h"));o.loja=s("pdv");o.dist=pNum(g("dist"));return o.dist==null?null:o}
   return null}
@@ -180,7 +180,7 @@ function demo(){
     const ix=W.map((_,i)=>i).sort(()=>r()-.5);let c=0;const take=n=>{const a=ix.slice(c,c+(n||0));c+=n||0;return new Set(a)};
     const fal=take((f.fi||0)+(f.fj||0)),atr=take(f.atr),sai=take(f.sai),aut=take(f.auto);let fn=0;
     W.forEach((d,i)=>{const wk=isoWeek(d),base={k,nome,mat,sup,uf,d};
-      if(fal.has(i)){const inj=fn<(f.fi||0);fn++;D.faltas.push({k,nome,mat,d,tipo:inj?"I":"J",motivo:inj?"":"Consulta médica"})}
+      if(fal.has(i)){const inj=fn<(f.fi||0);fn++;D.faltas.push({k,nome,mat,d,tipo:inj?"I":"J",motivo:inj?"":["Atestado médico","Oportunidade no aparelho","Consulta médica","Curso da empresa"][fn%4]})}
       else{const c1=atr.has(i)?505+Math.floor(r()*45):472+Math.floor(r()*12);
         D.oper.push({...base,pdv:L[0],cin:c1,cout:708+Math.floor(r()*8),auto:0});
         const c2=792+Math.floor(r()*8),o2=aut.has(i)?1439:sai.has(i)?930+Math.floor(r()*55):1051+Math.floor(r()*12);
@@ -192,7 +192,7 @@ function demo(){
     const lat=-12.9+pi*.3,lon=-38.5-pi*.2,vis=D.oper.filter(o=>o.k===k&&o.pdv===L[0]);
     vis.slice(0,4).forEach((v,i)=>D.fotos.push({k,nome,mat,d:v.d,h:v.cin+60+i*9,loja:L[0],pesq:"Abastecimento – "+M[0],lat,lon,llat:lat,llon:lon,hash:"H"+mat+"-"+i,url:""}));
     if(f.dup&&vis.length>8)[vis[5],vis[8]].forEach(v=>D.fotos.push({k,nome,mat,d:v.d,h:v.cin+95,loja:L[0],pesq:"Abastecimento – "+M[0],lat,lon,llat:lat,llon:lon,hash:"HDUP"+mat,url:""}));
-    if(f.fora&&vis.length>10){const v=vis[10];D.fotos.push({k,nome,mat,d:v.d,h:v.cin+120,loja:L[0],pesq:"Ponto extra – "+M[1],lat:lat+.0058,lon,llat:lat,llon:lon,hash:"HF"+mat,url:""})}
+    if(f.fora&&vis.length>10){const v=vis[10];D.fotos.push({k,nome,mat,d:v.d,h:v.cin+120,loja:L[0],pesq:"Ponto extra – "+M[1],lat:lat+.0058,lon,llat:lat,llon:lon,hash:"HF"+mat,url:""});[0,5,10].forEach(m=>D.rota.push({k,nome,mat,d:v.d,h:v.cin+30+m,loja:L[0],dist:420+m*20}));D.fotos.push({k,nome,mat,d:vis[9].d,h:vis[9].cin+40,loja:L[0],pesq:"Abastecimento – "+M[0],lat,lon,llat:lat,llon:lon,hash:"HP"+mat,url:"",ind:"Foto preta"})}
     for(let i=0;i<(f.foraH||0)&&vis.length>12;i++){const v=vis[11+i];D.fotos.push({k,nome,mat,d:v.d,h:1150+i*12,loja:L[0],pesq:"Abastecimento – "+M[0],lat,lon,llat:lat,llon:lon,hash:"HH"+mat+i,url:""})}});
   const inf={};for(const b in D){if(!D[b].length)continue;const[a,z]=faixaDe(D[b]);inf[b]={n:D[b].length,arq:"dados fictícios",dmin:a,dmax:z,em:"demonstração"}}
   S.all={"2026-09":D};S.meses={"2026-09":inf};faixaPadrao()}
@@ -255,7 +255,8 @@ function calcular(){
     o.fot=[];for(const f of(G.fotos.get(p.k)||[])){const m=[];
       if(f.hash&&hc.get(f.hash).size>1)m.push("Imagem repetida em outra visita");
       if(f.lat!=null&&f.lon!=null&&f.llat!=null&&f.llon!=null){const ds=dist(f.lat,f.lon,f.llat,f.llon);if(ds>cfg.distFoto)m.push("Captura a "+Math.round(ds)+" m da loja")}
-      if(has.oper&&f.h!=null){const vs=vd.get(f.d);if(vs){const nl=norm(f.loja),at=vs.filter(v=>norm(v.pdv)===nl);if(at.length&&!at.some(v=>f.h>=v.cin-5&&(v.cout==null||v.auto||f.h<=v.cout+5)))m.push("Fora do horário da visita")}}
+      if(has.oper&&f.h!=null){const vs=vd.get(f.d);if(vs){const nl=norm(f.loja),at=vs.filter(v=>norm(v.pdv)===nl);if(at.length&&!at.some(v=>f.h>=v.cin-5&&(v.cout==null||v.auto||f.h<=v.cout+5)))m.push("Foto da foto (possível foto falsa): fora do horário da visita")}}
+      {const ix=norm(f.ind||"");if(/PRETA|ESCURA/.test(ix))m.push("Foto preta (imagem escura)");if(/FOTO DA FOTO|FALSA/.test(ix))m.push("Foto da foto (possível foto falsa)")}
       if(m.length)o.fot.push(Object.assign({},f,{mot:m}))}
     o.fotN=(G.fotos.get(p.k)||[]).length;
     /* fuga de rota (posição fora da cerca da loja) */
@@ -489,12 +490,13 @@ function radarPing(k,el){const sc=document.querySelector(".scope");if(!sc)return
     (al?'<ul>'+al+'</ul>':"")+'<button class="btn sm" data-a="abrir" data-v="'+esc(p.k)+'">Abrir Raio-X →</button>';
   sc.appendChild(d)}
 
-/* v3.8: Alertas — painel de gráficos + cards por promotor */
-function alGrupos(){const r=R(),fa=S.al,A=r.alertas,bn=A.filter(a=>!fa.niv||(fa.niv==="B"?!a.niv:a.niv===fa.niv)),vis=bn.filter(a=>!fa.tipo||a.tipo===fa.tipo),ord={C:0,A:1,T:2,"":3};
+/* v3.8: Alertas — painel de gráficos + cards por promotor (v4.0: check-out automático agrupado em Ocorrências de jornada) */
+const TG=t=>t==="auto"?"jor":t,TIPG=t=>({jor:"Ocorrências de jornada",falta:"Ausências"})[t]||TIPOS[t]||t;
+function alGrupos(){const r=R(),fa=S.al,A=r.alertas,bn=A.filter(a=>!fa.niv||(fa.niv==="B"?!a.niv:a.niv===fa.niv)),vis=bn.filter(a=>!fa.tipo||TG(a.tipo)===fa.tipo),ord={C:0,A:1,T:2,"":3};
   const G=[...group(vis,a=>a.k)].map(([k,ev])=>{const p=r.todos.find(x=>x.k===k)||{nome:ev[0].nome,uf:ev[0].uf,sup:ev[0].sup,niv:ev[0].niv,risco:0,score:0,k};return{p,ev}}).sort((a,b)=>ord[a.p.niv||""]-ord[b.p.niv||""]||b.p.risco-a.p.risco);
   return{r,fa,A,bn,vis,G}}
 function vAlertas(){const{r,fa,bn,G}=alGrupos(),lim=S.alN||24,D=nivDados(r.list),tot=D.reduce((a,x)=>a+x.n,0);
-  const tipos=Object.keys(TIPOS).filter(t=>bn.some(a=>a.tipo===t)||fa.tipo===t||(t==="humor"&&r.has.humor));
+  const tipos=Object.keys(TIPOS).filter(t=>t!=="auto"&&(bn.some(a=>TG(a.tipo)===t)||fa.tipo===t||(t==="humor"&&r.has.humor)||t==="falta"));
   const ufs=new Set(G.map(g=>g.p.uf)).size,sob=G.filter(g=>g.p.sobre).length,grav=G.filter(g=>g.ev.some(a=>a.sev===3)).length;
   const card=({p,ev})=>{const tp=[...group(ev,a=>a.tipo)].sort((a,b)=>Math.max(...b[1].map(x=>x.sev))-Math.max(...a[1].map(x=>x.sev))),top=ev.slice().sort((a,b)=>b.sev-a.sev)[0],cor=p.niv?NIV[p.niv][1]:"var(--m2)";
     const ini=(p.nome.split(" ")[0]||"?")[0]+((p.nome.split(" ").filter(Boolean).pop()||"")[0]||"");
@@ -506,14 +508,23 @@ function vAlertas(){const{r,fa,bn,G}=alGrupos(),lim=S.alN||24,D=nivDados(r.list)
   '<div class="al-dash"><section class="card"><div class="hd"><h2>Por nível</h2></div><div class="niv-b sm"><div class="niv-c"><canvas id="g-aniv"></canvas><span class="niv-t"><b>'+num(tot)+'</b>promotores</span></div><div class="niv-l">'+D.map(x=>'<button class="niv-i'+(fa.niv===x.k?" on":"")+'" style="--c:var('+x.c+')" data-a="niv" data-v="'+(fa.niv===x.k?"":x.k)+'"><i></i><span>'+x.l+'</span><b>'+num(x.n)+'</b></button>').join("")+'</div></div></section>'+
     '<section class="card"><div class="hd"><h2>Por tipo de indício</h2><small class="muted">promotores · clique para filtrar</small></div><div class="cv" style="height:250px"><canvas id="g-atip"></canvas></div></section>'+
     '<section class="card"><div class="hd"><h2>Por estado</h2><small class="muted">promotores com alerta</small></div><div class="cv" style="height:250px"><canvas id="g-auf"></canvas></div></section></div>'+
-  (tipos.length?'<div class="al-tabs">'+'<button class="chip'+(!fa.tipo?" on":"")+'" data-a="alTipo" data-v="">Todos os tipos</button>'+tipos.map(t=>'<button class="chip'+(fa.tipo===t?" on":"")+'" data-a="alTipo" data-v="'+t+'">'+(TIPOS[t]||t)+'</button>').join("")+'</div>':"")+
-  (fa.tipo==="humor"?humorPainel():"")+(G.length?'<div class="ac-grid">'+G.slice(0,lim).map(card).join("")+'</div>'+(G.length>lim?'<button class="btn sec" data-a="alMais">Mostrar mais '+Math.min(24,G.length-lim)+' de '+(G.length-lim)+' promotores</button>':""):'<div class="nobase">Nenhum alerta para os filtros escolhidos.</div>')}
+  (tipos.length?'<div class="al-tabs">'+'<button class="chip'+(!fa.tipo?" on":"")+'" data-a="alTipo" data-v="">Todos os tipos</button>'+tipos.map(t=>'<button class="chip'+(fa.tipo===t?" on":"")+'" data-a="alTipo" data-v="'+t+'">'+TIPG(t)+'</button>').join("")+'</div>':"")+
+  (fa.tipo==="humor"?humorPainel():"")+(fa.tipo==="falta"?ausPainel():"")+(G.length?'<div class="ac-grid">'+G.slice(0,lim).map(card).join("")+'</div>'+(G.length>lim?'<button class="btn sec" data-a="alMais">Mostrar mais '+Math.min(24,G.length-lim)+' de '+(G.length-lim)+' promotores</button>':""):'<div class="nobase">Nenhum alerta para os filtros escolhidos.</div>')}
 function gAlertas(){if(S.al.tipo==="humor")gHumor();const{r,bn,G}=alGrupos(),D=nivDados(r.list),el=$("g-aniv");
   if(el&&window.Chart){if(window.__nivCh2)window.__nivCh2.destroy();window.__nivCh2=new Chart(el,{type:"doughnut",data:{labels:D.map(x=>x.l),datasets:[{data:D.map(x=>x.n),backgroundColor:D.map(x=>css(x.c)),borderColor:css("--card"),borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:"70%",plugins:{legend:{display:false}},onClick:(e,a)=>{if(a.length){S.al.niv=D[a[0].index].k;S.alN=24;renderView()}}}})}
-  const tk=Object.keys(TIPOS).map(t=>[t,new Set(bn.filter(a=>a.tipo===t).map(a=>a.k)).size]).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]);
-  grafico("g-atip",{type:"bar",data:{labels:tk.map(x=>TIPOS[x[0]]),datasets:[{label:"Promotores",data:tk.map(x=>x[1]),backgroundColor:css("--rt"),borderRadius:6,maxBarThickness:22}]},options:{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{precision:0}}},onClick:(e,a)=>{if(a.length){S.al.tipo=tk[a[0].index][0];S.alN=24;renderView()}}}});
+  const tk=Object.keys(TIPOS).filter(t=>t!=="auto").map(t=>[t,new Set(bn.filter(a=>TG(a.tipo)===t).map(a=>a.k)).size]).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]);
+  grafico("g-atip",{type:"bar",data:{labels:tk.map(x=>TIPG(x[0])),datasets:[{label:"Promotores",data:tk.map(x=>x[1]),backgroundColor:css("--rt"),borderRadius:6,maxBarThickness:22}]},options:{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{precision:0}}},onClick:(e,a)=>{if(a.length){S.al.tipo=tk[a[0].index][0];S.alN=24;renderView()}}}});
   const uf=[...group(G,g=>g.p.uf||"—")].map(([u,v])=>({u,C:v.filter(g=>g.p.niv==="C").length,A:v.filter(g=>g.p.niv==="A").length,T:v.filter(g=>g.p.niv==="T").length,n:v.length})).sort((a,b)=>b.n-a.n).slice(0,10);
   grafico("g-auf",{type:"bar",data:{labels:uf.map(x=>x.u),datasets:[["C","Crítico","--bad"],["A","Alto","--rt"],["T","Atenção","--warn"]].map(([k,l,c])=>({label:l,data:uf.map(x=>x[k]),backgroundColor:css(c),stack:"s",borderRadius:4,maxBarThickness:28}))},options:{scales:{x:{stacked:true},y:{stacked:true,ticks:{precision:0}}},plugins:{legend:{display:false}},onClick:(e,a)=>{if(a.length){S.f.uf=uf[a[0].index].u;S.R=null;render()}}}})}
+
+/* v4.1: Ausências na central de alertas — categorias com os promotores (só falta não justificada gera alerta) */
+function ausPainel(){const r=R(),L=r.list,ex=!r.has.faltas,row=ex?exRow:kmRow;
+  const AP=ex?AUS_EX:L.map(p=>[p,ausDe(p)]),tot=AP.reduce((a,y)=>a+AUS.reduce((b,x)=>b+y[1][x[0]].length,0),0);
+  return'<section class="card aus-p"><div class="hd"><h2>Ausências no período '+(ex?EXP:"")+'</h2><button class="btn sec sm" data-a="kpiM" data-v="aus">Ver detalhe completo</button></div>'+
+    '<div class="kx-tiles">'+[[num(tot),"dias de ausência","#EC4899"]].concat(AUS.map(x=>[num(AP.reduce((a,y)=>a+y[1][x[0]].length,0)),x[1].toLowerCase(),x[2]])).map(t=>'<div class="kx-t" style="--m:'+t[2]+'"><b>'+t[0]+'</b><span>'+t[1]+'</span></div>').join("")+'</div>'+
+    '<div class="aus-g">'+AUS.map(x=>{const ps=AP.filter(y=>y[1][x[0]].length).sort((a,b)=>b[1][x[0]].length-a[1][x[0]].length);
+      return'<div class="aus-c" style="--m:'+x[2]+'"><h3><i></i>'+x[1]+' <b>'+num(ps.length)+'</b></h3>'+(ps.length?ps.slice(0,6).map(([p,a])=>row(p,a[x[0]].length,a[x[0]].slice(0,5).map(z=>fDc(z.d)).join(", "),x[2])).join(""):'<div class="muted small">Ninguém nesta categoria.</div>')+(ps.length>6?'<small class="muted">e mais '+(ps.length-6)+'</small>':"")+'</div>'}).join("")+'</div>'+
+    '<small class="muted">'+(ex?"Exemplo com nomes e números fictícios, só para mostrar o painel. Some quando o export de afastamentos for carregado; não gera alerta.":"Só a falta não justificada gera alerta e pontua no nível. Atestados e justificativas são acompanhamento.")+'</small></section>'}
 
 /* v3.7: quarto quadrante (níveis), humor no Raio-X, foto ampliada no Raio-X, fotos no dossiê */
 function nivDados(L){return[["C","Crítico","--bad"],["A","Alto","--rt"],["T","Atenção","--warn"],["B","Monitorar","--m2"]].map(([k,l,c])=>({k,l,c,n:k==="B"?L.filter(p=>!p.niv&&p.alertas.length).length:L.filter(p=>p.niv===k).length}))}
@@ -536,37 +547,15 @@ function fotoModal(p,fa,fb){const im=f=>/^https?:/.test(f.url)?f.url:"fotos/"+St
   el.addEventListener("click",e=>{if(e.target===el||e.target.closest(".lb-x"))fechar();else if(e.target.closest('[data-a="abrir"]'))setTimeout(fechar,0)});document.addEventListener("keydown",ek);document.body.appendChild(el)}
 function fotoRx(i){const p=pessoa();if(!p)return;const f=p.fot[i];if(!f)return;const par=p.fot.find(x=>x!==f&&x.hash&&x.hash===f.hash);fotoModal(p,f,par)}
 function dossieFotos(p){if(!p.fot.length)return"";const im=f=>/^https?:/.test(f.url)?f.url:"fotos/"+String(f.url||"").split("/").pop();
-  return'<div class="sec">Fotos com indício</div><div class="dfot">'+p.fot.slice(0,8).map(f=>'<figure><img src="'+esc(im(f))+'" alt="Foto com indício"><figcaption><b>'+fD(f.d)+'</b> · '+esc((f.loja||"").replace(/^[A-Z]{2} \/ /,""))+'<br>'+esc(f.mot.join("; "))+'</figcaption></figure>').join("")+'</div>'}
+  return'<div class="sec">Fotos com indício</div><div class="dfot">'+p.fot.slice(0,8).map(f=>'<figure><img src="'+esc(im(f))+'" alt="Foto com indício"><figcaption><b>'+fD(f.d)+'</b> · '+esc((f.loja||"").replace(/^[A-Z]{2} \/ /,""))+'<br>'+esc(motDoc(f.mot))+'</figcaption></figure>').join("")+'</div>'}
 
 /* v3.9: parâmetros com dado real, detalhe ao clicar (KPI e nível), busca de promotor */
-const KPI={
-  ader:{l:"Aderência",ic:"M3 12l5 5L21 6",c:"#3B82F6",meta:93,up:true,t:"meta"},
-  pesq:{l:"Pesquisas expiradas",ic:"M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11",c:"#F59E0B",meta:20,t:"limite"},
-  jor:{l:"Ocorrências de jornada",ic:"M12 7v5l3 2M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18",c:"#F4562A",meta:10,t:"limite"},
-  auto:{l:"Check-out automático",ic:"M18 8l4 4-4 4M2 12h20",c:"#E11D48",meta:5,t:"limite"},
-  humor:{l:"Humor",ic:"M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18zM8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01",c:"#8B5CF6",meta:40,t:"limite"},
-  foto:{l:"Fotos com indício",ic:"M4 7h3l2-3h6l2 3h3v12H4zM12 17a4 4 0 1 0 0-8a4 4 0 0 0 0 8",c:"#14B8A6",meta:2,t:"limite"}};
-function kpiVals(L){const s=f=>L.reduce((a,p)=>a+(f(p)||0),0),ct=s(p=>p.ad.ct),rz=s(p=>p.ad.rz),pg=s(p=>p.pes.prog),ex=s(p=>p.pes.exp),tr=s(p=>p.jor.trab),dc=s(p=>p.jor.dias.filter(x=>x.desvio).length),au=s(p=>p.jor.nAuto),at=s(p=>p.jor.nAtr),hd=s(p=>p.hum.dias),hn=s(p=>p.hum.neg),fn=s(p=>p.fotN),fs=s(p=>p.fot.length);
-  return{ader:[ct?rz/ct*100:null,num(rz)+" de "+num(ct)+" visitas realizadas"],pesq:[pg?ex/pg*100:null,num(ex)+" de "+num(pg)+" pesquisas expiraram"],jor:[tr?dc/tr*100:null,num(at)+" atrasos em "+num(tr)+" dias trabalhados"],
-    auto:[tr?au/tr*100:null,num(au)+" dias sem check-out manual"],humor:[hd?hn/hd*100:null,num(hn)+" de "+num(hd)+" respostas negativas"],foto:[fn?fs/fn*100:null,num(fs)+" de "+num(fn)+" fotos analisadas"]}}
-function paramsPainel(L){const V=kpiVals(L);
-  return'<section class="card pp-side"><div class="hd"><h2>Parâmetros da operação</h2><small class="muted">clique para ver os promotores</small></div><div class="pp-grid">'+Object.entries(KPI).map(([k,d])=>{const v=V[k][0],ok=v==null?null:d.up?v>=d.meta:v<=d.meta,w=v==null?0:Math.min(100,d.up?v:v/Math.max(d.meta*2.2,v)*100),mk=d.up?d.meta:d.meta/Math.max(d.meta*2.2,v||0)*100;
-    return'<button class="pp" style="--k:'+d.c+'" data-a="kpiM" data-v="'+k+'"><span class="pp-h"><span class="pp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="'+d.ic+'"/></svg></span><span class="pp-l">'+d.l+'</span><span class="pp-st '+(ok==null?"":ok?"ok":"no")+'">'+(ok==null?"sem dados":ok?"dentro":"fora")+'</span></span>'+
-      '<span class="pp-v">'+(v==null?"—":String(Math.round(v*10)/10).replace(".",",")+"%")+'</span><span class="pp-d">'+V[k][1]+'</span><span class="pp-b"><i style="width:'+w+'%"></i><em style="left:'+mk+'%"></em></span><small>'+d.t+' '+d.meta+'%</small></button>'}).join("")+'</div></section>'}
 function modalLista(tit,sub,rows,foot){const el=document.createElement("div");el.className="modal lb";
   el.innerHTML='<div class="box km"><div class="lb-hd"><div><div class="eyebrow">'+sub+'</div><h2>'+tit+'</h2></div><button class="btn sec sm lb-x" aria-label="Fechar">✕</button></div><div class="km-l">'+(rows||'<div class="nobase">Nenhum promotor neste indicador.</div>')+'</div>'+(foot||"")+'</div>';
   const fechar=()=>{el.remove();document.removeEventListener("keydown",ek)},ek=e=>{if(e.key==="Escape")fechar()};
   el.addEventListener("click",e=>{if(e.target===el||e.target.closest(".lb-x"))fechar();else if(e.target.closest("[data-a]"))setTimeout(fechar,0)});document.addEventListener("keydown",ek);document.body.appendChild(el)}
 function kmRow(p,val,det,cor){const ini=(p.nome.split(" ")[0]||"?")[0]+((p.nome.split(" ").filter(Boolean).pop()||"")[0]||"");
-  return'<button class="kr" data-a="abrir" data-v="'+esc(p.k)+'"><span class="kr-av" style="background:'+(p.niv?NIV[p.niv][1]:"var(--m2)")+'">'+esc(ini)+'</span><span class="kr-n"><b>'+esc(p.nome)+'</b><small>'+esc(p.uf||"—")+' · '+esc(p.sup||"sem supervisor")+'</small><small class="kr-d">'+det+'</small></span><span class="kr-v" style="color:'+(cor||"var(--ink)")+'">'+val+'</span></button>'}
-function kpiModal(k){const d=KPI[k];if(!d)return;const L=R().list,neg=new Set(S.cfg.neg.map(norm));let rows=[];
-  if(k==="ader")rows=L.filter(p=>p.ad.pct!=null).sort((a,b)=>a.ad.pct-b.ad.pct).slice(0,40).map(p=>kmRow(p,pc(p.ad.pct),num(p.ad.rz)+" de "+num(p.ad.ct)+" visitas · "+plural(p.ad.baixo.length,"loja","lojas")+" abaixo da meta",p.ad.pct*100<93?"var(--bad)":"var(--good)"));
-  if(k==="pesq")rows=L.filter(p=>p.pes.prog>=20).sort((a,b)=>b.pes.pct-a.pes.pct).slice(0,40).map(p=>kmRow(p,pc(p.pes.pct),num(p.pes.exp)+" de "+num(p.pes.prog)+" pesquisas expiradas",p.pes.pct*100>20?"var(--bad)":"var(--ink)"));
-  if(k==="jor")rows=L.filter(p=>p.jor.nAtr).sort((a,b)=>b.jor.nAtr-a.jor.nAtr).slice(0,40).map(p=>kmRow(p,p.jor.nAtr,plural(p.jor.nAtr,"atraso","atrasos")+" · "+fDur(p.jor.minAtr)+" no total · "+p.jor.trab+" dias trabalhados","var(--rt)"));
-  if(k==="auto")rows=L.filter(p=>p.jor.nAuto).sort((a,b)=>b.jor.nAuto-a.jor.nAuto).slice(0,40).map(p=>kmRow(p,p.jor.nAuto,p.jor.nAuto+" de "+p.jor.trab+" dias sem check-out manual","var(--bad)"));
-  if(k==="foto")rows=L.filter(p=>p.fot.length).sort((a,b)=>b.fot.length-a.fot.length).map(p=>kmRow(p,p.fot.length,p.fot.length+" de "+p.fotN+" fotos · "+[...new Set(p.fot.flatMap(f=>f.mot))].join("; ").toLowerCase(),"var(--bad)"));
-  if(k==="humor"){const H=group(((R().D||{}).humor||[]),x=>x.k);rows=L.filter(p=>p.hum.neg).sort((a,b)=>b.hum.neg-a.hum.neg||b.hum.seq-a.hum.seq).slice(0,40).map(p=>{const c=[...group((H.get(p.k)||[]).filter(x=>neg.has(norm(x.op))),x=>x.op)].map(([o,v])=>o+" "+v.length).join(" · ");return kmRow(p,p.hum.neg+" dias",(c||"respostas negativas")+" · maior sequência "+p.hum.seq,"var(--vio)")})}
-  const V=kpiVals(L)[k];modalLista(d.l,"Parâmetro da operação · "+(V[0]==null?"sem dados":String(Math.round(V[0]*10)/10).replace(".",",")+"%")+" · "+V[1],rows.join(""),'<div class="lb-ft"><span class="muted small">'+(k==="humor"?"Humor é contexto de acompanhamento, não motivo de medida.":"Indícios para conferência.")+'</span><button class="btn" data-a="setor" data-v="'+k+'">Ver alertas deste tipo →</button></div>')}
+  return'<button class="kr" data-a="abrir" data-v="'+esc(p.k)+'"><span class="kr-av" style="background:'+(p.niv?NIV[p.niv][1]:"var(--m2)")+'">'+esc(ini)+'</span><span class="kr-n"><b>'+esc(p.nome)+'</b><small>'+esc(p.uf||"—")+' · '+esc(p.sup||"sem supervisor")+'</small><small class="kr-d">'+esc(det)+'</small></span><span class="kr-v" style="color:'+(cor||"var(--ink)")+'">'+val+'</span></button>'}
 function nivModal(n){const L=R().list,nm={C:"Crítico",A:"Alto",T:"Atenção",B:"Monitorar"}[n],ps=(n==="B"?L.filter(p=>!p.niv&&p.alertas.length):L.filter(p=>p.niv===n)).sort((a,b)=>b.risco-a.risco);
   modalLista(plural(ps.length,"promotor","promotores")+" em "+nm,"Nível de alerta",ps.slice(0,60).map(p=>kmRow(p,p.risco,p.alertas.slice(0,3).map(a=>a.tit).join(" · ")||"sem alertas",p.niv?NIV[p.niv][1]:"var(--m2)")).join(""),'<div class="lb-ft"><span class="muted small">Ordenado pelo risco. Clique para abrir o Raio-X.</span><button class="btn" data-a="niv" data-v="'+n+'">Ver na central de alertas →</button></div>')}
 /* busca de promotor com sugestões */
@@ -576,6 +565,99 @@ function ppLista(inp){let box=document.querySelector(".pp-sug");const q=norm(inp
   box.innerHTML=L.length?L.map(p=>'<button class="pp-o" data-a="abrir" data-v="'+esc(p.k)+'"><span class="kr-av" style="background:'+(p.niv?NIV[p.niv][1]:"var(--good)")+'">'+esc(((p.nome.split(" ")[0]||"?")[0]+((p.nome.split(" ").filter(Boolean).pop()||"")[0]||"")))+'</span><span><b>'+esc(p.nome)+'</b><small>'+esc(p.uf||"—")+' · '+esc(p.sup||"")+(p.mat?' · CPF '+esc(cpfM(p.mat)):"")+'</small></span><span class="pill '+(p.niv?NIV[p.niv][2]:"p-good")+'">'+(p.niv?NIV[p.niv][0]:"Estável")+'</span></button>').join(""):'<div class="pp-o muted">Nenhum promotor encontrado</div>'}
 document.addEventListener("input",e=>{if(e.target&&e.target.id==="f-q")ppLista(e.target)});
 document.addEventListener("focusout",e=>{if(e.target&&e.target.id==="f-q")setTimeout(()=>{const b=document.querySelector(".pp-sug");if(b)b.remove()},200)});
+
+/* v4.0: 6 indicadores da operação (jornada unificada + ausências) e detalhe ao clicar com abas por categoria */
+const KPI={
+  ader:{l:"Aderência",ic:"M3 12l5 5L21 6",c:"#3B82F6",meta:93,up:true,t:"meta",al:"ader"},
+  pesq:{l:"Pesquisas expiradas",ic:"M9 11l3 3 8-8M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11",c:"#F59E0B",meta:20,t:"limite",al:"pesq"},
+  jor:{l:"Ocorrências de jornada",ic:"M12 7v5l3 2M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18",c:"#F4562A",meta:10,t:"limite",al:"jor"},
+  humor:{l:"Humor",ic:"M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18zM8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01",c:"#8B5CF6",meta:40,t:"limite",al:"humor"},
+  foto:{l:"Fotos com indício",ic:"M4 7h3l2-3h6l2 3h3v12H4zM12 17a4 4 0 1 0 0-8a4 4 0 0 0 0 8",c:"#14B8A6",meta:2,t:"limite",al:"foto"},
+  aus:{l:"Ausências",ic:"M8 3v3M16 3v3M4 8h16M5 5h14v15H5zM9.5 13.5l5 5M14.5 13.5l-5 5",c:"#EC4899",meta:3,t:"limite",al:"falta"}};
+/* categorias de ausência a partir do tipo e do motivo registrados */
+const AUS=[["nj","Falta não justificada","#E11D48"],["at","Atestado médico","#EC4899"],["ap","Problema no aparelho","#F59E0B"],["ou","Outras justificativas","#64748B"]];
+function ausCat(x){const t=norm((x.motivo||"")+" "+(x.tpTxt||""));if(x.tipo==="I")return"nj";if(x.tipo==="A"||/ATESTAD|MEDIC|SAUDE|DOENC|CONSULTA|\bCID\b|HOSPITAL|EXAME/.test(t))return"at";
+  if(/APARELHO|CELULAR|SMARTPHONE|BATERIA|SINAL|APLICATIVO|\bAPP\b|SISTEMA|TELEFONE/.test(t))return"ap";return"ou"}
+/* EXEMPLO FICTÍCIO: aparece só sem a base de ausências; nunca se mistura com promotores reais nem entra em alertas, nível ou risco */
+const AUS_EX=(()=>{const N=[["Ana Exemplo Prado","BA","Supervisor Fictício 1"],["Bruno Fictício Reis","PE","Supervisor Fictício 2"],["Carla Modelo Dias","CE","Supervisor Fictício 3"],["Diego Teste Lima","MA","Supervisor Fictício 1"],["Elisa Exemplo Rocha","BA","Supervisor Fictício 2"],["Fábio Modelo Nunes","PE","Supervisor Fictício 3"],["Gisele Teste Alves","CE","Supervisor Fictício 1"],["Hugo Fictício Melo","MA","Supervisor Fictício 2"]];
+  const C=[["nj",[0,0,3,5]],["at",[1,4,4,6,7]],["ap",[2,2,5,7]],["ou",[3,6]]],o=[];C.forEach(([c,ix],ci)=>ix.forEach((i,j)=>o.push({c,i,d:"2026-09-"+String(3+ci*5+j*2).padStart(2,"0")})));
+  return N.map((n,i)=>{const p={k:"ex"+i,nome:n[0],uf:n[1],sup:n[2],niv:""},a={nj:[],at:[],ap:[],ou:[]};o.filter(x=>x.i===i).forEach(x=>a[x.c].push({d:x.d}));return[p,a]}).filter(y=>AUS.some(x=>y[1][x[0]].length))})();
+const EXP='<span class="pill p-warn ex-pill">exemplo · dados fictícios</span>';
+function ausDe(p){const o={nj:[],at:[],ap:[],ou:[]};((p.fal&&p.fal.list)||[]).forEach(x=>o[ausCat(x)].push(x));return o}
+/* fuga de rota: posições fora da cerca, por dia, com a ocorrência de jornada do mesmo dia */
+function rotaDet(p){const D=new Map(p.jor.dias.map(x=>[x.d,x]));return[...group(p.rota.list,x=>x.d)].sort((a,b)=>a[0]<b[0]?-1:1).slice(0,4).map(([d,v])=>{const j=D.get(d),oc=j?[j.atraso?"início tardio":"",j.saida?"saída antecipada":"",j.auto?"check-out automático":""].filter(Boolean):[],
+  hs=v.map(x=>x.h).filter(x=>x!=null).sort((a,b)=>a-b);return fDc(d)+": "+v.length+(v.length>1?" posições":" posição")+" fora (até "+Math.round(Math.max(...v.map(x=>x.dist)))+" m"+(hs.length?", "+fH(hs[0])+(hs.length>1?"–"+fH(hs[hs.length-1]):""):"")+")"+(oc.length?" · no mesmo dia: "+oc.join(", "):"")}).join(" | ")+(new Set(p.rota.list.map(x=>x.d)).size>4?" | …":"")}
+/* dossiê: texto factual para "foto da foto" (decisão do dono 24/11: rótulo da tela mantido; documento sem "falsa") */
+function motDoc(m){return(m||[]).map(t=>/foto da foto/i.test(t)?"Imagem de outra tela"+(/hor[áa]rio/i.test(t)?" (captura fora do horário da visita)":""):t).join("; ")}
+/* categorias de foto e de jornada */
+const FOTC=[["rep","Imagem repetida",/repetida/i,"#E11D48"],["dist","Fora do raio da loja",/m da loja|raio|dist/i,"#F59E0B"],["falsa","Foto da foto (possível foto falsa)",/foto da foto|falsa|hor[áa]rio/i,"#8B5CF6"],["preta","Foto preta",/preta|escura/i,"#94A3B8"]];
+const fotCat=f=>{const m=(f.mot||[]).join(" ");const c=["preta","falsa","rep","dist"].map(k=>FOTC.find(x=>x[0]===k)).find(x=>x[2].test(m));return c?c[0]:"out"};
+const JORC=[["atr","Início tardio","#F4562A"],["sai","Saída antecipada","#F59E0B"],["auto","Check-out automático","#E11D48"]];
+const jorN=(p,k)=>k==="atr"?p.jor.nAtr:k==="sai"?p.jor.nSai:p.jor.nAuto;
+function humRows(){const r=R(),ks=new Set(r.list.map(p=>p.k));return((r.D||{}).humor||[]).filter(x=>ks.has(x.k)&&x.d>=S.f.ini&&x.d<=S.f.fim)}
+const fmtP=v=>v==null?"—":String(Math.round(v*10)/10).replace(".",",")+"%";
+function kpiVals(L){const s=f=>L.reduce((a,p)=>a+(f(p)||0),0),h=R().has,ct=s(p=>p.ad.ct),rz=s(p=>p.ad.rz),pg=s(p=>p.pes.prog),ex=s(p=>p.pes.exp),tr=s(p=>p.jor.trab),
+    dc=s(p=>p.jor.dias.filter(x=>x.atraso||x.saida||x.auto).length),hd=s(p=>p.hum.dias),hn=s(p=>p.hum.neg),fn=s(p=>p.fotN),fs=s(p=>p.fot.length);
+  const J={atr:s(p=>p.jor.nAtr),sai:s(p=>p.jor.nSai),auto:s(p=>p.jor.nAuto)},A={nj:0,at:0,ap:0,ou:0};L.forEach(p=>{const a=ausDe(p);for(const k in A)A[k]+=a[k].length});
+  const na=A.nj+A.at+A.ap+A.ou,F={rep:0,dist:0,falsa:0,preta:0};L.forEach(p=>p.fot.forEach(f=>{const c=fotCat(f);if(c in F)F[c]++}));
+  const op=[...group(humRows(),x=>x.op)].map(([o,v])=>[o,v.length]).sort((a,b)=>b[1]-a[1]),neg=new Set(S.cfg.neg.map(norm));
+  const pa=L.filter(p=>p.ad.pct!=null),pe=L.filter(p=>p.pes.prog>=20);
+  return{
+    ader:{v:ct?rz/ct*100:null,big:num(rz)+" / "+num(ct),d:"visitas realizadas sobre contratadas",mix:[["Abaixo de 85%",pa.filter(p=>p.ad.pct*100<85).length,"#E11D48"],["85% a 93%",pa.filter(p=>p.ad.pct*100>=85&&p.ad.pct*100<93).length,"#F59E0B"],["Na meta",pa.filter(p=>p.ad.pct*100>=93).length,"#10B981"]],u:"promotores"},
+    pesq:{v:pg?ex/pg*100:null,big:num(ex),d:"de "+num(pg)+" pesquisas expiraram",mix:[["Acima de 30%",pe.filter(p=>p.pes.pct*100>30).length,"#E11D48"],["20% a 30%",pe.filter(p=>p.pes.pct*100>20&&p.pes.pct*100<=30).length,"#F59E0B"],["Dias sem atividade",s(p=>p.pes.semExec.length),"#64748B"]],u:""},
+    jor:{v:tr?dc/tr*100:null,big:num(J.atr+J.sai+J.auto),d:"ocorrências em "+num(tr)+" dias trabalhados",mix:JORC.filter(x=>x[0]!=="sai"||J.sai).map(x=>[x[1],J[x[0]],x[2]]),u:""},
+    humor:{v:hd?hn/hd*100:null,big:num(hn),d:"respostas negativas de "+num(hd),mix:op.slice(0,4).map(([o,n])=>[o,n,neg.has(norm(o))?"#8B5CF6":"#10B981"]),u:""},
+    foto:{v:fn?fs/fn*100:null,big:num(fs),d:"fotos com indício de "+num(fn)+" analisadas",mix:FOTC.filter(x=>F[x[0]]).map(x=>[x[1],F[x[0]],x[3]]).concat(h.rota&&s(p=>p.rota.dias)?[["Fuga de rota (cerca 200 m)",s(p=>p.rota.dias),"#F97316"]]:[]),u:""},
+    aus:h.faltas?{v:(tr+na)?na/(tr+na)*100:null,big:num(na),d:"dias de ausência no período",mix:AUS.map(x=>[x[1],A[x[0]],x[2]]),u:""}:(()=>{const T={};AUS.forEach(x=>T[x[0]]=AUS_EX.reduce((a,y)=>a+y[1][x[0]].length,0));const n=Object.values(T).reduce((a,b)=>a+b,0);return{v:n/(AUS_EX.length*20+n)*100,ex:true,big:num(n),d:"exemplo com dados fictícios: carregue o export de afastamentos",mix:AUS.map(x=>[x[1],T[x[0]],x[2]]),u:""}})()}}
+function paramsPainel(L){const V=kpiVals(L);
+  return'<section class="card pp-side"><div class="hd"><h2>Parâmetros da operação</h2><small class="muted">clique num card para ver quem está em cada situação</small></div><div class="pp-grid">'+Object.entries(KPI).map(([k,d])=>{const x=V[k],v=x.v,ok=v==null?null:d.up?v>=d.meta:v<=d.meta,w=v==null?0:Math.min(100,d.up?v:v/Math.max(d.meta*2.2,v)*100),mk=d.up?d.meta:d.meta/Math.max(d.meta*2.2,v||0)*100;
+    return'<button class="pp" style="--k:'+d.c+'" data-a="kpiM" data-v="'+k+'"><span class="pp-h"><span class="pp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="'+d.ic+'"/></svg></span><span class="pp-l">'+d.l+'</span><span class="pp-st '+(x.ex?"ex":ok==null?"":ok?"ok":"no")+'">'+(x.ex?"exemplo":ok==null?"sem dados":ok?"dentro":"fora")+'</span></span>'+
+      '<span class="pp-vv"><span class="pp-v">'+fmtP(v)+'</span><span class="pp-n"><b>'+x.big+'</b>'+x.d+'</span></span>'+
+      '<span class="pp-b"><i style="width:'+w+'%"></i><em style="left:'+mk+'%"></em></span>'+
+      (x.mix.length?'<span class="pp-mix">'+x.mix.map(m=>'<span style="--m:'+m[2]+'"><i></i>'+esc(m[0])+' <b>'+num(m[1])+'</b></span>').join("")+'</span>':"")+
+      '<small>'+d.t+' '+d.meta+'% · ver detalhes →</small></button>'}).join("")+'</div></section>'}
+/* modal de indicador: números no topo, abas por categoria e a lista de promotores de cada aba */
+function modalKpi(k,tiles,tabs,nota){const d=KPI[k],V=kpiVals(R().list)[k],el=document.createElement("div");el.className="modal lb";
+  const tb=tabs.filter(t=>t.rows.length||t.fixa);
+  el.innerHTML='<div class="box km kx" style="--k:'+d.c+'"><div class="lb-hd"><div><div class="eyebrow">Parâmetro da operação · '+d.t+' '+d.meta+'%</div><h2>'+d.l+' <span class="kx-v">'+fmtP(V.v)+'</span>'+(V.ex?EXP:"")+'</h2></div><button class="btn sec sm lb-x" aria-label="Fechar">✕</button></div>'+
+    '<div class="kx-tiles">'+tiles.map(t=>'<div class="kx-t" style="--m:'+(t[2]||d.c)+'"><b>'+t[0]+'</b><span>'+t[1]+'</span></div>').join("")+'</div>'+
+    (tb.length?'<div class="kx-tabs" role="tablist">'+tb.map((t,i)=>'<button class="kx-tab'+(i?"":" on")+'" role="tab" data-tab="'+i+'" style="--m:'+t.c+'"><i></i>'+esc(t.l)+' <b>'+num(t.n!=null?t.n:t.rows.length)+'</b></button>').join("")+'</div>'+
+      tb.map((t,i)=>'<div class="km-l kx-p" data-p="'+i+'"'+(i?" hidden":"")+'>'+(t.rows.join("")||'<div class="nobase">Ninguém nesta situação.</div>')+'</div>').join(""):'<div class="nobase">'+(k==="aus"?"Sem base de ausências carregada. Use “Atualizar dados” com o export de afastamentos.":"Sem dados para os filtros escolhidos.")+'</div>')+
+    '<div class="lb-ft"><span class="muted small">'+nota+'</span><button class="btn" data-a="setor" data-v="'+d.al+'">Ver alertas deste tipo →</button></div></div>';
+  const fechar=()=>{el.remove();document.removeEventListener("keydown",ek)},ek=e=>{if(e.key==="Escape")fechar()};
+  el.addEventListener("click",e=>{const t=e.target.closest(".kx-tab");if(t){el.querySelectorAll(".kx-tab").forEach(b=>b.classList.toggle("on",b===t));el.querySelectorAll(".kx-p").forEach(p=>p.hidden=p.dataset.p!==t.dataset.tab);return}
+    if(e.target===el||e.target.closest(".lb-x"))fechar();else if(e.target.closest("[data-a]"))setTimeout(fechar,0)});
+  document.addEventListener("keydown",ek);document.body.appendChild(el)}
+function exRow(p,val,det,cor){return'<div class="kr ex-row"><span class="kr-av" style="background:var(--m2)">'+esc(p.nome[0]+p.nome.split(" ").pop()[0])+'</span><span class="kr-n"><b>'+esc(p.nome)+'</b><small>'+esc(p.uf)+' · '+esc(p.sup)+'</small><small class="kr-d">'+esc(det)+'</small></span><span class="kr-v" style="color:'+cor+'">'+val+'</span></div>'}
+function kpiModal(k){const d=KPI[k];if(!d)return;const L=R().list,V=kpiVals(L)[k],neg=new Set(S.cfg.neg.map(norm)),dts=a=>a.slice(0,6).map(x=>fDc(x.d||x)).join(", ")+(a.length>6?" e mais "+(a.length-6):"");
+  const tab=(l,c,ps,row,n)=>({l,c,rows:ps.map(row),n});let tiles=[],tabs=[],nota="Indícios para conferência antes de qualquer decisão.";
+  if(k==="ader"){const pa=L.filter(p=>p.ad.pct!=null).sort((a,b)=>a.ad.pct-b.ad.pct),r=p=>kmRow(p,pc(p.ad.pct),num(p.ad.rz)+" de "+num(p.ad.ct)+" visitas · "+plural(p.ad.baixo.length,"loja","lojas")+" abaixo da meta · "+plural(p.ad.pend,"visita pendente","visitas pendentes"),p.ad.pct*100<85?"var(--bad)":p.ad.pct*100<93?"var(--warn)":"var(--good)");
+    tiles=[[V.big,"visitas realizadas / contratadas"],[num(L.reduce((a,p)=>a+p.ad.baixo.length,0)),"lojas abaixo da meta","#E11D48"],[num(L.reduce((a,p)=>a+p.ad.pend,0)),"visitas pendentes","#F59E0B"]];
+    tabs=[tab("Abaixo de 85%","#E11D48",pa.filter(p=>p.ad.pct*100<85),r),tab("85% a 93%","#F59E0B",pa.filter(p=>p.ad.pct*100>=85&&p.ad.pct*100<93),r),tab("Na meta (93% ou mais)","#10B981",pa.filter(p=>p.ad.pct*100>=93).reverse(),r)]}
+  if(k==="pesq"){const pe=L.filter(p=>p.pes.prog>=20).sort((a,b)=>b.pes.pct-a.pes.pct),r=p=>kmRow(p,pc(p.pes.pct),num(p.pes.exp)+" de "+num(p.pes.prog)+" pesquisas expiradas",p.pes.pct*100>30?"var(--bad)":p.pes.pct*100>20?"var(--warn)":"var(--good)"),se=L.filter(p=>p.pes.semExec.length).sort((a,b)=>b.pes.semExec.length-a.pes.semExec.length);
+    tiles=[[V.big,"pesquisas expiradas","#F59E0B"],[num(L.reduce((a,p)=>a+p.pes.prog,0)),"pesquisas programadas"],[num(L.reduce((a,p)=>a+p.pes.semExec.length,0)),"dias sem atividade","#64748B"]];
+    tabs=[tab("Acima de 30%","#E11D48",pe.filter(p=>p.pes.pct*100>30),r),tab("20% a 30%","#F59E0B",pe.filter(p=>p.pes.pct*100>20&&p.pes.pct*100<=30),r),tab("Dias sem atividade","#64748B",se,p=>kmRow(p,p.pes.semExec.length,"Programadas e nenhuma respondida: "+dts(p.pes.semExec),"var(--ink)"))];
+    nota="Considera só promotores com 20 ou mais pesquisas programadas no período."}
+  if(k==="jor"){tiles=JORC.filter(x=>x[0]!=="sai"||L.some(p=>p.jor.nSai)).map(x=>[num(L.reduce((a,p)=>a+jorN(p,x[0]),0)),x[1].toLowerCase()+" · "+plural(L.filter(p=>jorN(p,x[0])).length,"promotor","promotores"),x[2]]);
+    const det={atr:p=>plural(p.jor.nAtr,"início tardio","inícios tardios")+" · "+fDur(p.jor.minAtr)+" no total · "+dts(p.jor.dias.filter(x=>x.atraso)),sai:p=>plural(p.jor.nSai,"saída antecipada","saídas antecipadas")+" · "+dts(p.jor.dias.filter(x=>x.saida)),auto:p=>p.jor.nAuto+" de "+p.jor.trab+" dias sem check-out manual · "+dts(p.jor.dias.filter(x=>x.auto))};
+    tabs=JORC.map(x=>tab(x[1],x[2],L.filter(p=>jorN(p,x[0])).sort((a,b)=>jorN(b,x[0])-jorN(a,x[0])),p=>kmRow(p,jorN(p,x[0]),det[x[0]](p),x[2])));
+    nota="Início tardio: primeiro check-in depois da tolerância de "+S.cfg.tolAtr+" min. Check-out automático: jornada encerrada pelo sistema."}
+  if(k==="humor"){const H=humRows(),byK=group(H,x=>x.k),P=new Map(L.map(p=>[p.k,p]));
+    const ops=[...group(H,x=>x.op)].sort((a,b)=>(neg.has(norm(b[0]))-neg.has(norm(a[0])))||b[1].length-a[1].length);
+    tiles=[[V.big,"respostas negativas","#8B5CF6"],[num(H.length),"respostas registradas"],[num(L.filter(p=>p.hum.neg).length),"promotores com humor negativo","#8B5CF6"],[num(L.filter(p=>p.hum.seq>=S.cfg.t.humSeq).length),"com "+S.cfg.t.humSeq+"+ dias negativos seguidos","#E11D48"]];
+    tabs=ops.map(([o,v])=>{const ng=neg.has(norm(o)),pk=[...group(v,x=>x.k)].map(([kk,vv])=>[P.get(kk),vv]).filter(x=>x[0]).sort((a,b)=>b[1].length-a[1].length);
+      return{l:o,c:ng?"#8B5CF6":"#10B981",n:pk.length,rows:pk.map(([p,vv])=>kmRow(p,vv.length+(vv.length>1?" dias":" dia"),dts(vv.slice().sort((a,b)=>a.d<b.d?-1:1))+" · "+plural((byK.get(p.k)||[]).length,"resposta","respostas")+" no período",ng?"var(--vio)":"var(--good)"))}});
+    nota="Humor é contexto de acompanhamento e cuidado, nunca motivo de medida."}
+  if(k==="foto"){tiles=[[V.big,"fotos com indício","#14B8A6"],...FOTC.map(x=>[num(L.reduce((a,p)=>a+p.fot.filter(f=>fotCat(f)===x[0]).length,0)),x[1].toLowerCase(),x[3]])].concat(R().has.rota?[[num(L.reduce((a,p)=>a+p.rota.dias,0)),"dias com fuga de rota (cerca "+S.cfg.cerca+" m)","#F97316"]]:[]);
+    tabs=FOTC.map(x=>{const ps=L.map(p=>[p,p.fot.filter(f=>fotCat(f)===x[0])]).filter(y=>y[1].length).sort((a,b)=>b[1].length-a[1].length);return{l:x[1],c:x[3],n:ps.length,rows:ps.map(([p,fs])=>kmRow(p,fs.length,fs.length+" de "+p.fotN+" fotos · "+dts(fs)+" · "+[...new Set(fs.map(f=>(f.loja||"").replace(/^[A-Z]{2} \/ /,"")))].slice(0,2).join(", "),x[3]))}});
+    if(R().has.rota){const ps=L.filter(p=>p.rota.dias).sort((a,b)=>b.rota.dias-a.rota.dias);
+      tabs.push({l:"Fuga de rota (cerca "+S.cfg.cerca+" m)",c:"#F97316",n:ps.length,rows:ps.map(p=>kmRow(p,p.rota.dias+(p.rota.dias>1?" dias":" dia"),rotaDet(p),"#F97316"))})}
+    nota="Fuga de rota: posição fora da cerca de "+S.cfg.cerca+" m da loja durante a jornada, cruzada com a ocorrência de jornada do mesmo dia."}
+  if(k==="aus"){const ex=!R().has.faltas,AP=ex?AUS_EX:L.map(p=>[p,ausDe(p)]);
+    tiles=[[V.big,"dias de ausência","#EC4899"],...AUS.map(x=>[num(AP.reduce((a,y)=>a+y[1][x[0]].length,0)),x[1].toLowerCase()+" · "+plural(AP.filter(y=>y[1][x[0]].length).length,"promotor","promotores"),x[2]])];
+    tabs=AUS.map(x=>{const ps=AP.filter(y=>y[1][x[0]].length).sort((a,b)=>b[1][x[0]].length-a[1][x[0]].length);return{l:x[1],c:x[2],n:ps.length,rows:ps.map(([p,a])=>{const v=a[x[0]];return ex?exRow(p,v.length+(v.length>1?" dias":" dia"),dts(v),x[2]):kmRow(p,v.length+(v.length>1?" dias":" dia"),dts(v),x[2])})}});
+    nota=ex?"EXEMPLO com nomes e números fictícios, só para mostrar como o detalhe vai funcionar. Some quando o export de afastamentos for carregado.":"Só falta não justificada gera alerta. Atestados e justificativas aparecem para acompanhamento."}
+  modalKpi(k,tiles,tabs,nota)}
 
 /* v3.10: aba Humor — respostas do Involves cruzadas com os outros indicadores do mesmo dia */
 function humorStats(){const D=R().D||{},H=D.humor||[],neg=new Set(S.cfg.neg.map(norm)),ks=new Set(R().list.map(p=>p.k));
@@ -658,7 +740,7 @@ function vRaio(){const r=R(),p=pessoa(),c=S.cfg,h=r.has;if(!p)return'<div class=
   const ini=p.nome.split(" ").filter(Boolean),av=(ini[0]||"?")[0]+((ini[ini.length-1]||"")[0]||""),f=p.fal;
   return'<section class="card"><div class="prof"><div class="av">'+esc(av.toUpperCase())+'</div><div><div class="eyebrow">Raio-X do promotor</div><h2>'+esc(p.nome)+'</h2><div class="row" style="margin-top:6px">'+clsPill(p)+'<span class="small muted">'+periodoTxt()+'</span></div>'+
     '<div class="kv" style="margin-top:8px"><span>CPF <b>'+esc(p.mat||"não informado")+'</b></span><span>Supervisor <b>'+esc(p.sup||"—")+'</b></span><span>UF <b>'+esc(p.uf||"—")+'</b></span><span>Jornada <b>'+esc(p.jorTxt||"não cadastrada")+'</b> · início às <b>'+fH(p.esc.ini)+'</b></span><span>Dias trabalhados <b>'+p.jor.trab+'</b></span></div>'+
-    '<div class="kv" style="margin-top:4px"><span>Lojas atendidas <b>'+p.lojas.length+'</b></span>'+(h.faltas?'<span>Faltas injustificadas <b>'+f.I+'</b></span><span>Justificadas <b>'+f.J+'</b></span><span>Atestados <b>'+f.A+'</b></span>':"")+'</div>'+rxKpis(p)+'</div>'+gauge(p.risco)+'</div>'+
+    '<div class="kv" style="margin-top:4px"><span>Lojas atendidas <b>'+p.lojas.length+'</b></span>'+(h.faltas?(()=>{const a=ausDe(p);return AUS.map(x=>'<span>'+x[1]+' <b>'+a[x[0]].length+'</b></span>').join("")})():"")+'</div>'+rxKpis(p)+'</div>'+gauge(p.risco)+'</div>'+
     '<div class="row"><label class="f prom" for="rx-p"><span>Trocar promotor</span><select id="rx-p">'+r.base.slice().sort((a,b)=>b.risco-a.risco).slice(0,400).map(x=>'<option value="'+esc(x.k)+'"'+(x.k===p.k?" selected":"")+'>'+esc(x.nome)+' · risco '+x.risco+'</option>').join("")+'</select></label><span style="flex:1"></span><button class="btn big" data-a="dossie">'+IC.dossie+'Gerar dossiê</button></div></section>'+
   '<div class="g-rx"><section class="card"><div class="hd"><h2>Perfil em 7 dimensões</h2><span class="legend"><span><i style="background:var(--rt)"></i>Promotor</span><span><i style="background:var(--m2)"></i>Média do filtro</span></span></div><div class="cv" style="height:300px"><canvas id="g-radar" role="img" aria-label="Perfil do promotor"></canvas></div><small class="muted">Cada dimensão vai de 0 (crítico) a 100 (ideal).</small></section>'+
     '<section class="card"><div class="hd"><h2>Alertas do promotor</h2><small class="muted">'+plural(p.alertas.length,"alerta","alertas")+'</small></div>'+(p.alertas.length?'<div class="pts">'+p.alertas.map(a=>'<div class="pt"><span class="pill '+SEV[a.sev][2]+'">'+SEV[a.sev][0]+'</span><span><b>'+esc(a.tit)+'</b><br><span class="muted">'+esc(a.det)+'</span></span></div>').join("")+'</div>':'<div class="nobase">Nenhum alerta neste período.</div>')+
@@ -778,7 +860,7 @@ function blocosDe(p){const c=S.cfg,h=R().has,B={},j=p.jor,pe=p.pes,ad=p.ad,cz=t=
   if(h.faltas&&p.fal.I){B.fal={key:"fal",tit:"Faltas",sev:lvl(p.fal.I,c.t.falta),txt:"Os registros indicam "+plural(p.fal.I,"falta injustificada","faltas injustificadas")+", "+plural(p.fal.J,"falta justificada","faltas justificadas")+" e "+plural(p.fal.A,"ausência","ausências")+" com atestado no período.",
       tab:{h:["Data","Dia","Tipo","Motivo"],r:p.fal.list.map(x=>[fD(x.d),dow(x.d),{I:"Injustificada",J:"Justificada",A:"Atestado"}[x.tipo],x.motivo||"-"])}}}
   if(h.fotos&&p.fot.length){B.fot={key:"fot",tit:"Fotos com indício",sev:lvl(p.fot.length,c.t.foto),txt:"Os registros indicam "+plural(p.fot.length,"foto","fotos")+" com indício de inconsistência entre as "+p.fotN+" analisadas no período. Os indícios necessitam de conferência das imagens.",
-      tab:{h:["Data","Hora","Loja","Indício"],r:p.fot.map(x=>[fD(x.d),fH(x.h),x.loja,x.mot.join("; ")])}}}
+      tab:{h:["Data","Hora","Loja","Indício"],r:p.fot.map(x=>[fD(x.d),fH(x.h),x.loja,motDoc(x.mot)])}}}
   if(h.rota&&p.rota.n){B.rota={key:"rota",tit:"Fuga de rota",sev:lvl(p.rota.dias,c.t.rota),txt:"Foram registradas "+p.rota.n+" posições fora da cerca de "+c.cerca+" metros da loja, em "+plural(p.rota.dias,"dia","dias")+", com distância máxima de "+Math.round(p.rota.max)+" metros.",
       tab:{h:["Data","Hora","Loja","Distância (m)"],r:p.rota.list.slice(0,40).map(x=>[fD(x.d),fH(x.h),x.loja,Math.round(x.dist)])}}}
   const cg=p.carga;if(cg&&p.ad.sem&&p.ad.sem.length&&(cg.media>=44||(p.pd&&cg.queda*100>=5))){const sm=p.ad.sem,pd=p.pd,alta=cg.media>=44&&cg.queda*100>=5&&sm.length>=2;
@@ -833,7 +915,7 @@ async function gerarPDF(){const p=pessoa(),d=S.dos,num=await numero(),{jsPDF}=wi
     for(let i=0;i<fs.length;i++){const f=fs[i],c=i%cols;if(c===0)need(ch+14);const x=M+c*(cw+gap),u=/^https?:/.test(f.url||"")?f.url:"fotos/"+String(f.url||"").split("/").pop(),im=await imgData(u);
       if(im){doc.addImage(im,"JPEG",x,y,cw,ch);doc.setDrawColor(200);doc.setLineWidth(.2);doc.rect(x,y,cw,ch)}else{doc.setFillColor(236,239,243);doc.rect(x,y,cw,ch,"F")}
       doc.setFont("helvetica","bold");doc.setFontSize(7);doc.setTextColor(16,38,59);doc.text(lat1(fD(f.d)+(f.h!=null?" "+fH(f.h):"")),x,y+ch+3.2);
-      doc.setFont("helvetica","normal");doc.setTextColor(80);doc.text(doc.splitTextToSize(lat1(String(f.loja||"").replace(/^[A-Z]{2} \/ /,"")+" - "+f.mot.join("; ")),cw).slice(0,2),x,y+ch+6.4);
+      doc.setFont("helvetica","normal");doc.setTextColor(80);doc.text(doc.splitTextToSize(lat1(String(f.loja||"").replace(/^[A-Z]{2} \/ /,"")+" - "+motDoc(f.mot)),cw).slice(0,2),x,y+ch+6.4);
       if(c===cols-1||i===fs.length-1)y+=ch+13}};
   /* cabeçalho */
   const lg=await logoData("assets/rt-intelligence.png");
@@ -858,7 +940,7 @@ async function gerarPDF(){const p=pessoa(),d=S.dos,num=await numero(),{jsPDF}=wi
     if(aj.length){tit("Anexo A - Jornada dia a dia");tab(["Data","Dia","Check-in","Check-out","Atraso","Ocorrência"],aj.map(x=>[fD(x.d),dow(x.d),fH(x.cin),x.auto?"automático":fH(x.cout),x.atraso?x.atraso+" min":"",[x.auto?"check-out automático":"",x.atraso?"atraso":""].filter(Boolean).join("; ")||"sem desvios"]))}
     if(al.length){tit("Anexo B - Aderência por loja");tab(["Loja","Contratado","Realizado","Pendente","Aderência"],al.map(l=>[l.loja,l.ct,l.rz,l.pend,pc(l.pct)]))}
     if(p.pes.loja.length){tit("Anexo C - Pesquisas por loja");tab(["Loja","Programadas","Respondidas","Expiradas","% expiradas"],p.pes.loja.map(s=>[s.k,s.prog,s.resp,s.exp,pc(s.prog?s.exp/s.prog:0)]))}
-    if(p.fot.length){tit("Anexo D - Fotos com indício");tab(["Data","Hora","Loja","Pesquisa","Indício"],p.fot.map(f=>[fD(f.d),fH(f.h),f.loja,f.pesq,f.mot.join("; ")]))}}
+    if(p.fot.length){tit("Anexo D - Fotos com indício");tab(["Data","Hora","Loja","Pesquisa","Indício"],p.fot.map(f=>[fD(f.d),fH(f.h),f.loja,f.pesq,motDoc(f.mot)]))}}
   const tp=doc.getNumberOfPages();for(let i=1;i<=tp;i++){doc.setPage(i);doc.setDrawColor(150);doc.setLineWidth(.2);doc.line(M,297-17,W-M,297-17);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(80);
     doc.text(lat1("RT Intelligence · "+num),M,297-12.5);doc.text(lat1("Página "+i+" de "+tp),W-M,297-12.5,{align:"right"});doc.text(lat1("Este relatório apresenta indícios baseados em registros operacionais."),W/2,297-8.5,{align:"center"})}
   return{nome:nomeArq(d,"pdf"),data:doc.output("blob")}}
@@ -892,7 +974,7 @@ async function gerarExcel(){const p=pessoa(),d=S.dos,num=await numero(),c=S.cfg,
   folha("Aderência","Aderência por loja",[["Loja",40],["Contratado",13],["Realizado",13],["Pendente",12],["Aderência",12,PF],["Situação",20]],p.ad.lojas.map(l=>[l.loja,l.ct,l.rz,l.pend,l.pct||0,l.st==="ok"?"meta atingida":l.st]),p.nome+" · Meta de aderência: "+c.m2+"%");
   folha("Jornada","Jornada dia a dia",[["Data",12,DF],["Dia",8],["Check-in",10],["Check-out",12],["Atraso (min)",12],["Check-out automático",14],["Humor",14]],p.jor.dias.map(x=>[dt(x.d),dow(x.d),fH(x.cin),x.auto?"automático":fH(x.cout),x.atraso||0,x.auto?"Sim":"Não",p.hum.map.has(x.d)?(x.neg?"negativo":"ok"):"sem registro"]),p.nome+" · jornada "+jornTxt(p)+" · tolerância "+c.tolAtr+" min");
   folha("Faltas","Faltas e atestados",[["Data",12,DF],["Dia",8],["Tipo",16],["Motivo",50]],p.fal.list.map(x=>[dt(x.d),dow(x.d),{I:"Injustificada",J:"Justificada",A:"Atestado"}[x.tipo],x.motivo||""]));
-  folha("Fotos","Fotos com indício",[["Data",12,DF],["Hora",8],["Loja",36],["Pesquisa",30],["Indício",50]],p.fot.map(f=>[dt(f.d),fH(f.h),f.loja,f.pesq,f.mot.join("; ")]));
+  folha("Fotos","Fotos com indício",[["Data",12,DF],["Hora",8],["Loja",36],["Pesquisa",30],["Indício",50]],p.fot.map(f=>[dt(f.d),fH(f.h),f.loja,f.pesq,motDoc(f.mot)]));
   folha("Humor","Humor (contexto)",[["Data",12,DF],["Dia",8],["Registro",14]],[...p.hum.map.keys()].sort().map(x=>[dt(x),dow(x),p.hum.map.get(x)?"negativo":"ok"]),p.nome+" · informação de acompanhamento");
   folha("Parâmetros","Parâmetros usados",[["Parâmetro",46],["Valor",30]],[["Jornada aplicada",jornTxt(p)],["Tolerância de atraso (min)",c.tolAtr],["Tolerância de saída antecipada (min)",c.tolSai],["Meta de aderência (%)",c.m2],["Cerca de rota (m)",c.cerca],["Foto fora da loja (m)",c.distFoto],["Humor negativo",c.neg.join(", ")],["Feriados",c.fer.map(fD).join(", ")],["Período",d.per]]);
   const buf=await wb.xlsx.writeBuffer();return{nome:nomeArq(d,"xlsx"),data:new Blob([buf])}}

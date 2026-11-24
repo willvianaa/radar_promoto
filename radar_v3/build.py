@@ -21,7 +21,7 @@ def sub(txt, old, new, count=1):
 # ---------------- motor (v2) + ajustes ----------------
 eng = E(6, 291)
 eng = sub(eng, 'A:["Alto","var(--warn)","p-warn"],T:["Atenção","var(--m2)","p-m2"]', 'A:["Alto","var(--rt)","p-rt"],T:["Atenção","var(--warn)","p-warn"]')
-eng = re.sub(r'const TIPOS=\{.*?\};', 'const TIPOS={jor:"Atrasos e saídas",auto:"Check-out automático",pesq:"Pesquisas expiradas",exec:"Dias sem atividades",ader:"Impacto na aderência",falta:"Faltas",foto:"Fotos com indício",rota:"Fuga de rota",sobre:"Sobrecarga",humor:"Humor"};', eng, count=1, flags=re.S)
+eng = re.sub(r'const TIPOS=\{.*?\};', 'const TIPOS={jor:"Jornada: início tardio e saída",auto:"Jornada: check-out automático",pesq:"Pesquisas expiradas",exec:"Dias sem atividades",ader:"Impacto na aderência",falta:"Ausências: falta não justificada",foto:"Fotos com indício",rota:"Fuga de rota",sobre:"Sobrecarga",humor:"Humor"};', eng, count=1, flags=re.S)
 eng = sub(eng, 'al:{niv:"",tipo:""},demo:true', 'al:{niv:"",tipo:""},alN:60,rkN:15,PL:null,demo:true')
 eng = sub(eng, 'const x={d,cin:first,', 'const x={d,vs,cin:first,')
 eng = sub(eng, 'let seq=0,cur=0,neg=0;for(const d of hd){if(hm.get(d)){neg++;cur++;if(cur>seq)seq=cur}else cur=0}', 'let seq=0,cur=0,neg=0,seqFim=null;for(const d of hd){if(hm.get(d)){neg++;cur++;if(cur>seq){seq=cur;seqFim=d}}else cur=0}')
@@ -69,6 +69,19 @@ eng = sub(eng, '''  if(hNeg&&imp)add("sobre",2,"Possível sobrecarga","Humor neg
   const cgT=cgAlta?"Média de "+Math.round(cg.media)+" visitas contratadas por semana (até "+plural(cg.lojas,"loja","lojas")+") e aderência de "+pc(o.ad.sem[0].pct,0)+" para "+pc(o.ad.sem[o.ad.sem.length-1].pct,0)+" nas semanas fechadas.":"";
   const hT=hNeg?"Humor negativo em "+pc(h.pct,0)+" dos dias (maior sequência: "+plural(h.seq,"dia","dias")+")"+(imp&&!cgAlta?", junto com queda de desempenho e "+plural(o.lojas.length,"loja atendida","lojas atendidas"):"")+".":"";
   if((hNeg&&imp)||cgAlta)add("sobre",hNeg&&cgAlta?3:2,"Possível sobrecarga",[cgT,hT,pdT].filter(Boolean).join(" "));""")
+
+# ---------------- v4.0: jornada unificada + ausências (afastamentos) ----------------
+eng = sub(eng, 'if(/FALTA|ATESTADO|AUSENCIA|JUSTIFICATIVA/.test(H)', 'if(/FALTA|ATESTADO|AUSENCIA|AFASTAMENT|JUSTIFICATIVA/.test(H)')
+eng = sub(eng, 'ftipo:[/^TIPO/,/JUSTIFICAD/,/^FALTA/]', 'ftipo:[/^TIPO/,/JUSTIFICAD/,/^FALTA/,/AFASTAMENT/]')
+eng = sub(eng, 'o.motivo=s("motivo");', 'o.motivo=s("motivo")||s("ftipo");')
+eng = sub(eng, 'motivo:inj?"":"Consulta médica"', 'motivo:inj?"":["Atestado médico","Oportunidade no aparelho","Consulta médica","Curso da empresa"][fn%4]')
+# v4.1: fotos — "fora do horário" vira "foto da foto"; coluna Indício (foto preta / foto da foto) vinda do detector
+eng = sub(eng, 'm.push("Fora do horário da visita")', 'm.push("Foto da foto (possível foto falsa): fora do horário da visita")')
+eng = sub(eng, 'hash:[/HASH/]', 'hash:[/HASH/],ind:[/^INDICIO/]')
+eng = sub(eng, 'o.hash=s("hash")||o.url;return o}', 'o.hash=s("hash")||o.url;o.ind=s("ind");return o}')
+eng = sub(eng, 'fotos:["k","nome","mat","d","h","loja","pesq","lat","lon","llat","llon","hash","url"]', 'fotos:["k","nome","mat","d","h","loja","pesq","lat","lon","llat","llon","hash","url","ind"]')
+eng = sub(eng, 'hash:"HF"+mat,url:""})}', 'hash:"HF"+mat,url:""});[0,5,10].forEach(m=>D.rota.push({k,nome,mat,d:v.d,h:v.cin+30+m,loja:L[0],dist:420+m*20}));D.fotos.push({k,nome,mat,d:vis[9].d,h:vis[9].cin+40,loja:L[0],pesq:"Abastecimento – "+M[0],lat,lon,llat:lat,llon:lon,hash:"HP"+mat,url:"",ind:"Foto preta"})}')
+eng = sub(eng, 'if(m.length)o.fot.push', '{const ix=norm(f.ind||"");if(/PRETA|ESCURA/.test(ix))m.push("Foto preta (imagem escura)");if(/FOTO DA FOTO|FALSA/.test(ix))m.push("Foto da foto (possível foto falsa)")}\n      if(m.length)o.fot.push')
 
 # ---------------- UI ----------------
 radar = L(736, 765)
@@ -162,6 +175,7 @@ script = "\n".join([
     P("alertas_v2.js"),
     P("extras_v37.js"),
     P("v39.js"),
+    P("indicadores_v40.js"),
     P("humor_analise.js"),
     P("setores.js"),
     radar,
@@ -193,6 +207,10 @@ for a, b in [
 script = script.replace('.baixo.some(l=>/Meta 1/.test(l.st))?2:1', '.baixo.some(l=>l.pct!=null&&l.pct*100<85)?2:1')
 script = script.replace('n("m1","Meta 1 de aderência (%)",c.m1)+n("m2","Meta 2 de aderência (%)",c.m2)', 'n("m2","Meta de aderência (%)",c.m2)')
 script = script.replace('p.nome+" · Meta 1: "+c.m1+"% · Meta 2: "+c.m2+"%"', 'p.nome+" · Meta de aderência: "+c.m2+"%"')
+# v4.1: no dossiê, "foto da foto" aparece como texto factual (sem adjetivo de juízo, CLAUDE.md §5); na tela fica o rótulo pedido pelo dono
+_n = script.count('x.mot.join("; ")') + script.count('f.mot.join("; ")')
+assert _n == 5, _n
+script = script.replace('x.mot.join("; ")', 'motDoc(x.mot)').replace('f.mot.join("; ")', 'motDoc(f.mot)')
 # calendário: x.n não existe mais; conta as ocorrências do dia
 _oc = "((x.atraso?1:0)+(x.saida?1:0)+(x.auto?1:0))"
 script = sub(script, "n=(x?x.n:0)+nf", "n=(x?" + _oc + ":0)+nf")
