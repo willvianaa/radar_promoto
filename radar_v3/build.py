@@ -75,6 +75,13 @@ eng = sub(eng, 'if(/FALTA|ATESTADO|AUSENCIA|JUSTIFICATIVA/.test(H)', 'if(/FALTA|
 eng = sub(eng, 'ftipo:[/^TIPO/,/JUSTIFICAD/,/^FALTA/]', 'ftipo:[/^TIPO/,/JUSTIFICAD/,/^FALTA/,/AFASTAMENT/]')
 eng = sub(eng, 'o.motivo=s("motivo");', 'o.motivo=s("motivo")||s("ftipo");')
 eng = sub(eng, 'motivo:inj?"":"Consulta médica"', 'motivo:inj?"":["Atestado médico","Oportunidade no aparelho","Consulta médica","Curso da empresa"][fn%4]')
+# v4.1: fotos — "fora do horário" vira "foto da foto"; coluna Indício (foto preta / foto da foto) vinda do detector
+eng = sub(eng, 'm.push("Fora do horário da visita")', 'm.push("Foto da foto (possível foto falsa): fora do horário da visita")')
+eng = sub(eng, 'hash:[/HASH/]', 'hash:[/HASH/],ind:[/^INDICIO/]')
+eng = sub(eng, 'o.hash=s("hash")||o.url;return o}', 'o.hash=s("hash")||o.url;o.ind=s("ind");return o}')
+eng = sub(eng, 'fotos:["k","nome","mat","d","h","loja","pesq","lat","lon","llat","llon","hash","url"]', 'fotos:["k","nome","mat","d","h","loja","pesq","lat","lon","llat","llon","hash","url","ind"]')
+eng = sub(eng, 'hash:"HF"+mat,url:""})}', 'hash:"HF"+mat,url:""});[0,5,10].forEach(m=>D.rota.push({k,nome,mat,d:v.d,h:v.cin+30+m,loja:L[0],dist:420+m*20}));D.fotos.push({k,nome,mat,d:vis[9].d,h:vis[9].cin+40,loja:L[0],pesq:"Abastecimento – "+M[0],lat,lon,llat:lat,llon:lon,hash:"HP"+mat,url:"",ind:"Foto preta"})}')
+eng = sub(eng, 'if(m.length)o.fot.push', '{const ix=norm(f.ind||"");if(/PRETA|ESCURA/.test(ix))m.push("Foto preta (imagem escura)");if(/FOTO DA FOTO|FALSA/.test(ix))m.push("Foto da foto (possível foto falsa)")}\n      if(m.length)o.fot.push')
 
 # ---------------- UI ----------------
 radar = L(736, 765)

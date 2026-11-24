@@ -10,7 +10,7 @@ const FIELDS={
   pesq:["k","nome","mat","sup","uf","d","loja","cli","tipo","st"],
   humor:["k","nome","mat","d","op"],
   ader:["k","nome","sup","uf","d","loja","marca","ct","rz"],
-  fotos:["k","nome","mat","d","h","loja","pesq","lat","lon","llat","llon","hash","url"],
+  fotos:["k","nome","mat","d","h","loja","pesq","lat","lon","llat","llon","hash","url","ind"],
   faltas:["k","nome","mat","d","tipo","motivo"],
   rota:["k","nome","mat","d","h","loja","dist"],
   pdoh:["k","nome","sup","uf","d","dias","prod","desl","ocio","hnr"]};
@@ -69,7 +69,7 @@ const AL={
   tipo:[/TIPO (DE |DO )?(SERVICO|PESQUISA|ATIVIDADE)/,/^PESQUISA$/,/^FORMULARIO$/,/^ATIVIDADE$/,/PESQUISA|FORMULARIO|ATIVIDADE/],
   op:[/HUMOR/,/COMO VOCE ESTA/,/SENTIMENTO/,/^RESPOSTA$/],ct:[/CONTRATAD/,/PREVIST/,/PLANEJAD/],rz:[/REALIZAD/,/EXECUTAD/],sem:[/^SEMANA/],ano:[/^ANO$/],
   h:[/^HORA/,/HORARIO/],lat:[/^LAT(ITUDE)?( DA| DO)?( FOTO| CAPTURA| COLABORADOR)?$/],lon:[/^LON(G|GITUDE)?( DA| DO)?( FOTO| CAPTURA| COLABORADOR)?$/],
-  llat:[/LAT(ITUDE)? (DA |DO )?(LOJA|PDV)/],llon:[/LON(G|GITUDE)? (DA |DO )?(LOJA|PDV)/],hash:[/HASH/],url:[/URL|LINK|IMAGEM|ARQUIVO|^FOTO$/],
+  llat:[/LAT(ITUDE)? (DA |DO )?(LOJA|PDV)/],llon:[/LON(G|GITUDE)? (DA |DO )?(LOJA|PDV)/],hash:[/HASH/],ind:[/^INDICIO/],url:[/URL|LINK|IMAGEM|ARQUIVO|^FOTO$/],
   dist:[/DISTANCIA/,/FORA DA CERCA/],ftipo:[/^TIPO/,/JUSTIFICAD/,/^FALTA/,/AFASTAMENT/],motivo:[/MOTIVO/,/JUSTIFICATIVA/,/OBSERVA/]};
 function mapCols(hdr){const H=hdr.map(norm),c={};for(const f in AL){for(const re of AL[f]){const i=H.findIndex(x=>x&&re.test(x));if(i>=0){c[f]=i;break}}}return c}
 function tipoDe(c,hdr){const H=hdr.map(norm).join(" | ");
@@ -93,7 +93,7 @@ function linha(base,c,r,anoPad){const g=f=>c[f]==null?null:r[c[f]],s=f=>{const v
     o.d=pDate(g("d"));if(!o.d){const sv=s("sem"),m=sv.match(/(\d{4})\D+(\d{1,2})/),w=m?+m[2]:parseInt(sv,10),y=m?+m[1]:(pNum(g("ano"))||anoPad);if(w)o.d=weekMonday(y,w)}
     if(!o.d)return null;o.sup=s("sup");o.uf=norm(s("uf")).slice(0,2)||norm(o.loja).slice(0,2);o.marca=s("cli");return o}
   if(base==="fotos"){o.d=pDate(g("d"));if(!o.d)return null;o.h=pTime(g("h"));if(o.h==null)o.h=pTime(g("d"));o.loja=s("pdv");o.pesq=s("tipo");
-    o.lat=pNum(g("lat"));o.lon=pNum(g("lon"));o.llat=pNum(g("llat"));o.llon=pNum(g("llon"));o.url=s("url");o.hash=s("hash")||o.url;return o}
+    o.lat=pNum(g("lat"));o.lon=pNum(g("lon"));o.llat=pNum(g("llat"));o.llon=pNum(g("llon"));o.url=s("url");o.hash=s("hash")||o.url;o.ind=s("ind");return o}
   if(base==="faltas"){o.d=pDate(g("d"));if(!o.d)return null;const t=norm(s("ftipo")+" "+s("motivo"));o.motivo=s("motivo")||s("ftipo");
     o.tipo=/ATESTADO/.test(t)?"A":/INJUSTIF|NAO JUSTIF|SEM JUSTIF/.test(t)?"I":/JUSTIF/.test(t)||o.motivo?"J":"I";return o}
   if(base==="rota"){o.d=pDate(g("d"));if(!o.d)return null;o.h=pTime(g("h"));o.loja=s("pdv");o.dist=pNum(g("dist"));return o.dist==null?null:o}
@@ -192,7 +192,7 @@ function demo(){
     const lat=-12.9+pi*.3,lon=-38.5-pi*.2,vis=D.oper.filter(o=>o.k===k&&o.pdv===L[0]);
     vis.slice(0,4).forEach((v,i)=>D.fotos.push({k,nome,mat,d:v.d,h:v.cin+60+i*9,loja:L[0],pesq:"Abastecimento – "+M[0],lat,lon,llat:lat,llon:lon,hash:"H"+mat+"-"+i,url:""}));
     if(f.dup&&vis.length>8)[vis[5],vis[8]].forEach(v=>D.fotos.push({k,nome,mat,d:v.d,h:v.cin+95,loja:L[0],pesq:"Abastecimento – "+M[0],lat,lon,llat:lat,llon:lon,hash:"HDUP"+mat,url:""}));
-    if(f.fora&&vis.length>10){const v=vis[10];D.fotos.push({k,nome,mat,d:v.d,h:v.cin+120,loja:L[0],pesq:"Ponto extra – "+M[1],lat:lat+.0058,lon,llat:lat,llon:lon,hash:"HF"+mat,url:""})}
+    if(f.fora&&vis.length>10){const v=vis[10];D.fotos.push({k,nome,mat,d:v.d,h:v.cin+120,loja:L[0],pesq:"Ponto extra – "+M[1],lat:lat+.0058,lon,llat:lat,llon:lon,hash:"HF"+mat,url:""});[0,5,10].forEach(m=>D.rota.push({k,nome,mat,d:v.d,h:v.cin+30+m,loja:L[0],dist:420+m*20}));D.fotos.push({k,nome,mat,d:vis[9].d,h:vis[9].cin+40,loja:L[0],pesq:"Abastecimento – "+M[0],lat,lon,llat:lat,llon:lon,hash:"HP"+mat,url:"",ind:"Foto preta"})}
     for(let i=0;i<(f.foraH||0)&&vis.length>12;i++){const v=vis[11+i];D.fotos.push({k,nome,mat,d:v.d,h:1150+i*12,loja:L[0],pesq:"Abastecimento – "+M[0],lat,lon,llat:lat,llon:lon,hash:"HH"+mat+i,url:""})}});
   const inf={};for(const b in D){if(!D[b].length)continue;const[a,z]=faixaDe(D[b]);inf[b]={n:D[b].length,arq:"dados fictícios",dmin:a,dmax:z,em:"demonstração"}}
   S.all={"2026-09":D};S.meses={"2026-09":inf};faixaPadrao()}
@@ -255,7 +255,8 @@ function calcular(){
     o.fot=[];for(const f of(G.fotos.get(p.k)||[])){const m=[];
       if(f.hash&&hc.get(f.hash).size>1)m.push("Imagem repetida em outra visita");
       if(f.lat!=null&&f.lon!=null&&f.llat!=null&&f.llon!=null){const ds=dist(f.lat,f.lon,f.llat,f.llon);if(ds>cfg.distFoto)m.push("Captura a "+Math.round(ds)+" m da loja")}
-      if(has.oper&&f.h!=null){const vs=vd.get(f.d);if(vs){const nl=norm(f.loja),at=vs.filter(v=>norm(v.pdv)===nl);if(at.length&&!at.some(v=>f.h>=v.cin-5&&(v.cout==null||v.auto||f.h<=v.cout+5)))m.push("Fora do horário da visita")}}
+      if(has.oper&&f.h!=null){const vs=vd.get(f.d);if(vs){const nl=norm(f.loja),at=vs.filter(v=>norm(v.pdv)===nl);if(at.length&&!at.some(v=>f.h>=v.cin-5&&(v.cout==null||v.auto||f.h<=v.cout+5)))m.push("Foto da foto (possível foto falsa): fora do horário da visita")}}
+      {const ix=norm(f.ind||"");if(/PRETA|ESCURA/.test(ix))m.push("Foto preta (imagem escura)");if(/FOTO DA FOTO|FALSA/.test(ix))m.push("Foto da foto (possível foto falsa)")}
       if(m.length)o.fot.push(Object.assign({},f,{mot:m}))}
     o.fotN=(G.fotos.get(p.k)||[]).length;
     /* fuga de rota (posição fora da cerca da loja) */
@@ -495,7 +496,7 @@ function alGrupos(){const r=R(),fa=S.al,A=r.alertas,bn=A.filter(a=>!fa.niv||(fa.
   const G=[...group(vis,a=>a.k)].map(([k,ev])=>{const p=r.todos.find(x=>x.k===k)||{nome:ev[0].nome,uf:ev[0].uf,sup:ev[0].sup,niv:ev[0].niv,risco:0,score:0,k};return{p,ev}}).sort((a,b)=>ord[a.p.niv||""]-ord[b.p.niv||""]||b.p.risco-a.p.risco);
   return{r,fa,A,bn,vis,G}}
 function vAlertas(){const{r,fa,bn,G}=alGrupos(),lim=S.alN||24,D=nivDados(r.list),tot=D.reduce((a,x)=>a+x.n,0);
-  const tipos=Object.keys(TIPOS).filter(t=>t!=="auto"&&(bn.some(a=>TG(a.tipo)===t)||fa.tipo===t||(t==="humor"&&r.has.humor)));
+  const tipos=Object.keys(TIPOS).filter(t=>t!=="auto"&&(bn.some(a=>TG(a.tipo)===t)||fa.tipo===t||(t==="humor"&&r.has.humor)||(t==="falta"&&r.has.faltas)));
   const ufs=new Set(G.map(g=>g.p.uf)).size,sob=G.filter(g=>g.p.sobre).length,grav=G.filter(g=>g.ev.some(a=>a.sev===3)).length;
   const card=({p,ev})=>{const tp=[...group(ev,a=>a.tipo)].sort((a,b)=>Math.max(...b[1].map(x=>x.sev))-Math.max(...a[1].map(x=>x.sev))),top=ev.slice().sort((a,b)=>b.sev-a.sev)[0],cor=p.niv?NIV[p.niv][1]:"var(--m2)";
     const ini=(p.nome.split(" ")[0]||"?")[0]+((p.nome.split(" ").filter(Boolean).pop()||"")[0]||"");
@@ -508,13 +509,22 @@ function vAlertas(){const{r,fa,bn,G}=alGrupos(),lim=S.alN||24,D=nivDados(r.list)
     '<section class="card"><div class="hd"><h2>Por tipo de indício</h2><small class="muted">promotores · clique para filtrar</small></div><div class="cv" style="height:250px"><canvas id="g-atip"></canvas></div></section>'+
     '<section class="card"><div class="hd"><h2>Por estado</h2><small class="muted">promotores com alerta</small></div><div class="cv" style="height:250px"><canvas id="g-auf"></canvas></div></section></div>'+
   (tipos.length?'<div class="al-tabs">'+'<button class="chip'+(!fa.tipo?" on":"")+'" data-a="alTipo" data-v="">Todos os tipos</button>'+tipos.map(t=>'<button class="chip'+(fa.tipo===t?" on":"")+'" data-a="alTipo" data-v="'+t+'">'+TIPG(t)+'</button>').join("")+'</div>':"")+
-  (fa.tipo==="humor"?humorPainel():"")+(G.length?'<div class="ac-grid">'+G.slice(0,lim).map(card).join("")+'</div>'+(G.length>lim?'<button class="btn sec" data-a="alMais">Mostrar mais '+Math.min(24,G.length-lim)+' de '+(G.length-lim)+' promotores</button>':""):'<div class="nobase">Nenhum alerta para os filtros escolhidos.</div>')}
+  (fa.tipo==="humor"?humorPainel():"")+(fa.tipo==="falta"?ausPainel():"")+(G.length?'<div class="ac-grid">'+G.slice(0,lim).map(card).join("")+'</div>'+(G.length>lim?'<button class="btn sec" data-a="alMais">Mostrar mais '+Math.min(24,G.length-lim)+' de '+(G.length-lim)+' promotores</button>':""):'<div class="nobase">Nenhum alerta para os filtros escolhidos.</div>')}
 function gAlertas(){if(S.al.tipo==="humor")gHumor();const{r,bn,G}=alGrupos(),D=nivDados(r.list),el=$("g-aniv");
   if(el&&window.Chart){if(window.__nivCh2)window.__nivCh2.destroy();window.__nivCh2=new Chart(el,{type:"doughnut",data:{labels:D.map(x=>x.l),datasets:[{data:D.map(x=>x.n),backgroundColor:D.map(x=>css(x.c)),borderColor:css("--card"),borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:"70%",plugins:{legend:{display:false}},onClick:(e,a)=>{if(a.length){S.al.niv=D[a[0].index].k;S.alN=24;renderView()}}}})}
   const tk=Object.keys(TIPOS).filter(t=>t!=="auto").map(t=>[t,new Set(bn.filter(a=>TG(a.tipo)===t).map(a=>a.k)).size]).filter(x=>x[1]).sort((a,b)=>b[1]-a[1]);
   grafico("g-atip",{type:"bar",data:{labels:tk.map(x=>TIPG(x[0])),datasets:[{label:"Promotores",data:tk.map(x=>x[1]),backgroundColor:css("--rt"),borderRadius:6,maxBarThickness:22}]},options:{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{precision:0}}},onClick:(e,a)=>{if(a.length){S.al.tipo=tk[a[0].index][0];S.alN=24;renderView()}}}});
   const uf=[...group(G,g=>g.p.uf||"—")].map(([u,v])=>({u,C:v.filter(g=>g.p.niv==="C").length,A:v.filter(g=>g.p.niv==="A").length,T:v.filter(g=>g.p.niv==="T").length,n:v.length})).sort((a,b)=>b.n-a.n).slice(0,10);
   grafico("g-auf",{type:"bar",data:{labels:uf.map(x=>x.u),datasets:[["C","Crítico","--bad"],["A","Alto","--rt"],["T","Atenção","--warn"]].map(([k,l,c])=>({label:l,data:uf.map(x=>x[k]),backgroundColor:css(c),stack:"s",borderRadius:4,maxBarThickness:28}))},options:{scales:{x:{stacked:true},y:{stacked:true,ticks:{precision:0}}},plugins:{legend:{display:false}},onClick:(e,a)=>{if(a.length){S.f.uf=uf[a[0].index].u;S.R=null;render()}}}})}
+
+/* v4.1: Ausências na central de alertas — categorias com os promotores (só falta não justificada gera alerta) */
+function ausPainel(){const r=R(),L=r.list;if(!r.has.faltas)return'<section class="card"><div class="nobase">Sem base de ausências carregada. Use “Atualizar dados” com o export de afastamentos do Involves.</div></section>';
+  const AP=L.map(p=>[p,ausDe(p)]),tot=AP.reduce((a,y)=>a+AUS.reduce((b,x)=>b+y[1][x[0]].length,0),0);
+  return'<section class="card aus-p"><div class="hd"><h2>Ausências no período</h2><button class="btn sec sm" data-a="kpiM" data-v="aus">Ver detalhe completo</button></div>'+
+    '<div class="kx-tiles">'+[[num(tot),"dias de ausência","#EC4899"]].concat(AUS.map(x=>[num(AP.reduce((a,y)=>a+y[1][x[0]].length,0)),x[1].toLowerCase(),x[2]])).map(t=>'<div class="kx-t" style="--m:'+t[2]+'"><b>'+t[0]+'</b><span>'+t[1]+'</span></div>').join("")+'</div>'+
+    '<div class="aus-g">'+AUS.map(x=>{const ps=AP.filter(y=>y[1][x[0]].length).sort((a,b)=>b[1][x[0]].length-a[1][x[0]].length);
+      return'<div class="aus-c" style="--m:'+x[2]+'"><h3><i></i>'+x[1]+' <b>'+num(ps.length)+'</b></h3>'+(ps.length?ps.slice(0,6).map(([p,a])=>kmRow(p,a[x[0]].length,a[x[0]].slice(0,5).map(z=>fDc(z.d)).join(", "),x[2])).join(""):'<div class="muted small">Ninguém nesta categoria.</div>')+(ps.length>6?'<small class="muted">e mais '+(ps.length-6)+'</small>':"")+'</div>'}).join("")+'</div>'+
+    '<small class="muted">Só a falta não justificada gera alerta e pontua no nível. Atestados e justificativas são acompanhamento.</small></section>'}
 
 /* v3.7: quarto quadrante (níveis), humor no Raio-X, foto ampliada no Raio-X, fotos no dossiê */
 function nivDados(L){return[["C","Crítico","--bad"],["A","Alto","--rt"],["T","Atenção","--warn"],["B","Monitorar","--m2"]].map(([k,l,c])=>({k,l,c,n:k==="B"?L.filter(p=>!p.niv&&p.alertas.length).length:L.filter(p=>p.niv===k).length}))}
@@ -569,9 +579,12 @@ const AUS=[["nj","Falta não justificada","#E11D48"],["at","Atestado médico","#
 function ausCat(x){const t=norm((x.motivo||"")+" "+(x.tpTxt||""));if(x.tipo==="I")return"nj";if(x.tipo==="A"||/ATESTAD|MEDIC|SAUDE|DOENC|CONSULTA|\bCID\b|HOSPITAL|EXAME/.test(t))return"at";
   if(/APARELHO|CELULAR|SMARTPHONE|BATERIA|SINAL|APLICATIVO|\bAPP\b|SISTEMA|TELEFONE/.test(t))return"ap";return"ou"}
 function ausDe(p){const o={nj:[],at:[],ap:[],ou:[]};((p.fal&&p.fal.list)||[]).forEach(x=>o[ausCat(x)].push(x));return o}
+/* fuga de rota: posições fora da cerca, por dia, com a ocorrência de jornada do mesmo dia */
+function rotaDet(p){const D=new Map(p.jor.dias.map(x=>[x.d,x]));return[...group(p.rota.list,x=>x.d)].sort((a,b)=>a[0]<b[0]?-1:1).slice(0,4).map(([d,v])=>{const j=D.get(d),oc=j?[j.atraso?"início tardio":"",j.saida?"saída antecipada":"",j.auto?"check-out automático":""].filter(Boolean):[],
+  hs=v.map(x=>x.h).filter(x=>x!=null).sort((a,b)=>a-b);return fDc(d)+": "+v.length+(v.length>1?" posições":" posição")+" fora (até "+Math.round(Math.max(...v.map(x=>x.dist)))+" m"+(hs.length?", "+fH(hs[0])+(hs.length>1?"–"+fH(hs[hs.length-1]):""):"")+")"+(oc.length?" · no mesmo dia: "+oc.join(", "):"")}).join(" | ")+(new Set(p.rota.list.map(x=>x.d)).size>4?" | …":"")}
 /* categorias de foto e de jornada */
-const FOTC=[["rep","Imagem repetida",/repetida/i,"#E11D48"],["dist","Fora do raio da loja",/m da loja|raio|dist/i,"#F59E0B"],["hor","Fora do horário da visita",/hor/i,"#8B5CF6"]];
-const fotCat=f=>{const m=(f.mot||[]).join(" ");const c=FOTC.find(x=>x[2].test(m));return c?c[0]:"out"};
+const FOTC=[["rep","Imagem repetida",/repetida/i,"#E11D48"],["dist","Fora do raio da loja",/m da loja|raio|dist/i,"#F59E0B"],["falsa","Foto da foto (possível foto falsa)",/foto da foto|falsa|hor[áa]rio/i,"#8B5CF6"],["preta","Foto preta",/preta|escura/i,"#94A3B8"]];
+const fotCat=f=>{const m=(f.mot||[]).join(" ");const c=["preta","falsa","rep","dist"].map(k=>FOTC.find(x=>x[0]===k)).find(x=>x[2].test(m));return c?c[0]:"out"};
 const JORC=[["atr","Início tardio","#F4562A"],["sai","Saída antecipada","#F59E0B"],["auto","Check-out automático","#E11D48"]];
 const jorN=(p,k)=>k==="atr"?p.jor.nAtr:k==="sai"?p.jor.nSai:p.jor.nAuto;
 function humRows(){const r=R(),ks=new Set(r.list.map(p=>p.k));return((r.D||{}).humor||[]).filter(x=>ks.has(x.k)&&x.d>=S.f.ini&&x.d<=S.f.fim)}
@@ -579,7 +592,7 @@ const fmtP=v=>v==null?"—":String(Math.round(v*10)/10).replace(".",",")+"%";
 function kpiVals(L){const s=f=>L.reduce((a,p)=>a+(f(p)||0),0),h=R().has,ct=s(p=>p.ad.ct),rz=s(p=>p.ad.rz),pg=s(p=>p.pes.prog),ex=s(p=>p.pes.exp),tr=s(p=>p.jor.trab),
     dc=s(p=>p.jor.dias.filter(x=>x.atraso||x.saida||x.auto).length),hd=s(p=>p.hum.dias),hn=s(p=>p.hum.neg),fn=s(p=>p.fotN),fs=s(p=>p.fot.length);
   const J={atr:s(p=>p.jor.nAtr),sai:s(p=>p.jor.nSai),auto:s(p=>p.jor.nAuto)},A={nj:0,at:0,ap:0,ou:0};L.forEach(p=>{const a=ausDe(p);for(const k in A)A[k]+=a[k].length});
-  const na=A.nj+A.at+A.ap+A.ou,F={rep:0,dist:0,hor:0};L.forEach(p=>p.fot.forEach(f=>{const c=fotCat(f);if(c in F)F[c]++}));
+  const na=A.nj+A.at+A.ap+A.ou,F={rep:0,dist:0,falsa:0,preta:0};L.forEach(p=>p.fot.forEach(f=>{const c=fotCat(f);if(c in F)F[c]++}));
   const op=[...group(humRows(),x=>x.op)].map(([o,v])=>[o,v.length]).sort((a,b)=>b[1]-a[1]),neg=new Set(S.cfg.neg.map(norm));
   const pa=L.filter(p=>p.ad.pct!=null),pe=L.filter(p=>p.pes.prog>=20);
   return{
@@ -587,7 +600,7 @@ function kpiVals(L){const s=f=>L.reduce((a,p)=>a+(f(p)||0),0),h=R().has,ct=s(p=>
     pesq:{v:pg?ex/pg*100:null,big:num(ex),d:"de "+num(pg)+" pesquisas expiraram",mix:[["Acima de 30%",pe.filter(p=>p.pes.pct*100>30).length,"#E11D48"],["20% a 30%",pe.filter(p=>p.pes.pct*100>20&&p.pes.pct*100<=30).length,"#F59E0B"],["Dias sem atividade",s(p=>p.pes.semExec.length),"#64748B"]],u:""},
     jor:{v:tr?dc/tr*100:null,big:num(J.atr+J.sai+J.auto),d:"ocorrências em "+num(tr)+" dias trabalhados",mix:JORC.filter(x=>x[0]!=="sai"||J.sai).map(x=>[x[1],J[x[0]],x[2]]),u:""},
     humor:{v:hd?hn/hd*100:null,big:num(hn),d:"respostas negativas de "+num(hd),mix:op.slice(0,4).map(([o,n])=>[o,n,neg.has(norm(o))?"#8B5CF6":"#10B981"]),u:""},
-    foto:{v:fn?fs/fn*100:null,big:num(fs),d:"fotos com indício de "+num(fn)+" analisadas",mix:FOTC.filter(x=>F[x[0]]).map(x=>[x[1],F[x[0]],x[3]]),u:""},
+    foto:{v:fn?fs/fn*100:null,big:num(fs),d:"fotos com indício de "+num(fn)+" analisadas",mix:FOTC.filter(x=>F[x[0]]).map(x=>[x[1],F[x[0]],x[3]]).concat(h.rota&&s(p=>p.rota.dias)?[["Fuga de rota (cerca 200 m)",s(p=>p.rota.dias),"#F97316"]]:[]),u:""},
     aus:{v:h.faltas&&(tr+na)?na/(tr+na)*100:null,big:h.faltas?num(na):"—",d:h.faltas?"dias de ausência no período":"carregue o export de afastamentos",mix:h.faltas?AUS.map(x=>[x[1],A[x[0]],x[2]]):[],u:""}}}
 function paramsPainel(L){const V=kpiVals(L);
   return'<section class="card pp-side"><div class="hd"><h2>Parâmetros da operação</h2><small class="muted">clique num card para ver quem está em cada situação</small></div><div class="pp-grid">'+Object.entries(KPI).map(([k,d])=>{const x=V[k],v=x.v,ok=v==null?null:d.up?v>=d.meta:v<=d.meta,w=v==null?0:Math.min(100,d.up?v:v/Math.max(d.meta*2.2,v)*100),mk=d.up?d.meta:d.meta/Math.max(d.meta*2.2,v||0)*100;
@@ -615,7 +628,7 @@ function kpiModal(k){const d=KPI[k];if(!d)return;const L=R().list,V=kpiVals(L)[k
     tabs=[tab("Abaixo de 85%","#E11D48",pa.filter(p=>p.ad.pct*100<85),r),tab("85% a 93%","#F59E0B",pa.filter(p=>p.ad.pct*100>=85&&p.ad.pct*100<93),r),tab("Na meta (93% ou mais)","#10B981",pa.filter(p=>p.ad.pct*100>=93).reverse(),r)]}
   if(k==="pesq"){const pe=L.filter(p=>p.pes.prog>=20).sort((a,b)=>b.pes.pct-a.pes.pct),r=p=>kmRow(p,pc(p.pes.pct),num(p.pes.exp)+" de "+num(p.pes.prog)+" pesquisas expiradas",p.pes.pct*100>30?"var(--bad)":p.pes.pct*100>20?"var(--warn)":"var(--good)"),se=L.filter(p=>p.pes.semExec.length).sort((a,b)=>b.pes.semExec.length-a.pes.semExec.length);
     tiles=[[V.big,"pesquisas expiradas","#F59E0B"],[num(L.reduce((a,p)=>a+p.pes.prog,0)),"pesquisas programadas"],[num(L.reduce((a,p)=>a+p.pes.semExec.length,0)),"dias sem atividade","#64748B"]];
-    tabs=[tab("Acima de 30%","#E11D48",pe.filter(p=>p.pes.pct*100>30),r),tab("20% a 30%","#F59E0B",pe.filter(p=>p.pes.pct*100>20&&p.pes.pct*100<=30),r),tab("Dias sem atividade","#64748B",se,p=>kmRow(p,p.pes.semExec.length,"Programadas e nenhuma respondida: "+dts(p.pes.semExec),"var(--ink)")),tab("Até 20%","#10B981",pe.filter(p=>p.pes.pct*100<=20).reverse(),r)];
+    tabs=[tab("Acima de 30%","#E11D48",pe.filter(p=>p.pes.pct*100>30),r),tab("20% a 30%","#F59E0B",pe.filter(p=>p.pes.pct*100>20&&p.pes.pct*100<=30),r),tab("Dias sem atividade","#64748B",se,p=>kmRow(p,p.pes.semExec.length,"Programadas e nenhuma respondida: "+dts(p.pes.semExec),"var(--ink)"))];
     nota="Considera só promotores com 20 ou mais pesquisas programadas no período."}
   if(k==="jor"){tiles=JORC.filter(x=>x[0]!=="sai"||L.some(p=>p.jor.nSai)).map(x=>[num(L.reduce((a,p)=>a+jorN(p,x[0]),0)),x[1].toLowerCase()+" · "+plural(L.filter(p=>jorN(p,x[0])).length,"promotor","promotores"),x[2]]);
     const det={atr:p=>plural(p.jor.nAtr,"início tardio","inícios tardios")+" · "+fDur(p.jor.minAtr)+" no total · "+dts(p.jor.dias.filter(x=>x.atraso)),sai:p=>plural(p.jor.nSai,"saída antecipada","saídas antecipadas")+" · "+dts(p.jor.dias.filter(x=>x.saida)),auto:p=>p.jor.nAuto+" de "+p.jor.trab+" dias sem check-out manual · "+dts(p.jor.dias.filter(x=>x.auto))};
@@ -627,8 +640,11 @@ function kpiModal(k){const d=KPI[k];if(!d)return;const L=R().list,V=kpiVals(L)[k
     tabs=ops.map(([o,v])=>{const ng=neg.has(norm(o)),pk=[...group(v,x=>x.k)].map(([kk,vv])=>[P.get(kk),vv]).filter(x=>x[0]).sort((a,b)=>b[1].length-a[1].length);
       return{l:o,c:ng?"#8B5CF6":"#10B981",n:pk.length,rows:pk.map(([p,vv])=>kmRow(p,vv.length+(vv.length>1?" dias":" dia"),dts(vv.slice().sort((a,b)=>a.d<b.d?-1:1))+" · "+plural((byK.get(p.k)||[]).length,"resposta","respostas")+" no período",ng?"var(--vio)":"var(--good)"))}});
     nota="Humor é contexto de acompanhamento e cuidado, nunca motivo de medida."}
-  if(k==="foto"){tiles=[[V.big,"fotos com indício","#14B8A6"],...FOTC.map(x=>[num(L.reduce((a,p)=>a+p.fot.filter(f=>fotCat(f)===x[0]).length,0)),x[1].toLowerCase(),x[3]])];
-    tabs=FOTC.map(x=>{const ps=L.map(p=>[p,p.fot.filter(f=>fotCat(f)===x[0])]).filter(y=>y[1].length).sort((a,b)=>b[1].length-a[1].length);return{l:x[1],c:x[3],n:ps.length,rows:ps.map(([p,fs])=>kmRow(p,fs.length,fs.length+" de "+p.fotN+" fotos · "+dts(fs)+" · "+[...new Set(fs.map(f=>(f.loja||"").replace(/^[A-Z]{2} \/ /,"")))].slice(0,2).join(", "),x[3]))}})}
+  if(k==="foto"){tiles=[[V.big,"fotos com indício","#14B8A6"],...FOTC.map(x=>[num(L.reduce((a,p)=>a+p.fot.filter(f=>fotCat(f)===x[0]).length,0)),x[1].toLowerCase(),x[3]])].concat(R().has.rota?[[num(L.reduce((a,p)=>a+p.rota.dias,0)),"dias com fuga de rota (cerca "+S.cfg.cerca+" m)","#F97316"]]:[]);
+    tabs=FOTC.map(x=>{const ps=L.map(p=>[p,p.fot.filter(f=>fotCat(f)===x[0])]).filter(y=>y[1].length).sort((a,b)=>b[1].length-a[1].length);return{l:x[1],c:x[3],n:ps.length,rows:ps.map(([p,fs])=>kmRow(p,fs.length,fs.length+" de "+p.fotN+" fotos · "+dts(fs)+" · "+[...new Set(fs.map(f=>(f.loja||"").replace(/^[A-Z]{2} \/ /,"")))].slice(0,2).join(", "),x[3]))}});
+    if(R().has.rota){const ps=L.filter(p=>p.rota.dias).sort((a,b)=>b.rota.dias-a.rota.dias);
+      tabs.push({l:"Fuga de rota (cerca "+S.cfg.cerca+" m)",c:"#F97316",n:ps.length,rows:ps.map(p=>kmRow(p,p.rota.dias+(p.rota.dias>1?" dias":" dia"),rotaDet(p),"#F97316"))})}
+    nota="Fuga de rota: posição fora da cerca de "+S.cfg.cerca+" m da loja durante a jornada, cruzada com a ocorrência de jornada do mesmo dia."}
   if(k==="aus"&&R().has.faltas){const AP=L.map(p=>[p,ausDe(p)]);
     tiles=[[V.big,"dias de ausência","#EC4899"],...AUS.map(x=>[num(AP.reduce((a,y)=>a+y[1][x[0]].length,0)),x[1].toLowerCase()+" · "+plural(AP.filter(y=>y[1][x[0]].length).length,"promotor","promotores"),x[2]])];
     tabs=AUS.map(x=>{const ps=AP.filter(y=>y[1][x[0]].length).sort((a,b)=>b[1][x[0]].length-a[1][x[0]].length);return{l:x[1],c:x[2],n:ps.length,rows:ps.map(([p,a])=>{const v=a[x[0]];return kmRow(p,v.length+(v.length>1?" dias":" dia"),dts(v),x[2])})}});

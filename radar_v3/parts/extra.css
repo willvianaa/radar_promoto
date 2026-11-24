@@ -284,3 +284,7 @@ h1,h2,h3,.kpi-v,.pr .v,.hero h2{font-family:"Plus Jakarta Sans",Inter,Arial,sans
 .kx-tab.on{color:var(--ink);border-color:var(--m);background:color-mix(in srgb,var(--m) 18%,var(--input))}
 .kx-tab:focus-visible{outline:2px solid var(--m);outline-offset:2px}
 @media (max-width:560px){.kx-v{display:block;margin:4px 0 0}.kx-t b{font-size:22px}}
+/* v4.1: ausências na central de alertas */
+.aus-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:4px 0 10px}
+.aus-c{display:grid;gap:6px;align-content:start;padding:12px;border-radius:14px;background:var(--card-2);border:1px solid var(--border);border-top:3px solid var(--m)}
+.aus-c h3{margin:0 0 2px;font-size:13px;display:flex;align-items:center;gap:6px}.aus-c h3 i{width:9px;height:9px;border-radius:50%;background:var(--m)}.aus-c h3 b{margin-left:auto;color:var(--m)}
