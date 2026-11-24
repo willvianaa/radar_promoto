@@ -547,7 +547,7 @@ function fotoModal(p,fa,fb){const im=f=>/^https?:/.test(f.url)?f.url:"fotos/"+St
   el.addEventListener("click",e=>{if(e.target===el||e.target.closest(".lb-x"))fechar();else if(e.target.closest('[data-a="abrir"]'))setTimeout(fechar,0)});document.addEventListener("keydown",ek);document.body.appendChild(el)}
 function fotoRx(i){const p=pessoa();if(!p)return;const f=p.fot[i];if(!f)return;const par=p.fot.find(x=>x!==f&&x.hash&&x.hash===f.hash);fotoModal(p,f,par)}
 function dossieFotos(p){if(!p.fot.length)return"";const im=f=>/^https?:/.test(f.url)?f.url:"fotos/"+String(f.url||"").split("/").pop();
-  return'<div class="sec">Fotos com indício</div><div class="dfot">'+p.fot.slice(0,8).map(f=>'<figure><img src="'+esc(im(f))+'" alt="Foto com indício"><figcaption><b>'+fD(f.d)+'</b> · '+esc((f.loja||"").replace(/^[A-Z]{2} \/ /,""))+'<br>'+esc(f.mot.join("; "))+'</figcaption></figure>').join("")+'</div>'}
+  return'<div class="sec">Fotos com indício</div><div class="dfot">'+p.fot.slice(0,8).map(f=>'<figure><img src="'+esc(im(f))+'" alt="Foto com indício"><figcaption><b>'+fD(f.d)+'</b> · '+esc((f.loja||"").replace(/^[A-Z]{2} \/ /,""))+'<br>'+esc(motDoc(f.mot))+'</figcaption></figure>').join("")+'</div>'}
 
 /* v3.9: parâmetros com dado real, detalhe ao clicar (KPI e nível), busca de promotor */
 function modalLista(tit,sub,rows,foot){const el=document.createElement("div");el.className="modal lb";
@@ -582,6 +582,8 @@ function ausDe(p){const o={nj:[],at:[],ap:[],ou:[]};((p.fal&&p.fal.list)||[]).fo
 /* fuga de rota: posições fora da cerca, por dia, com a ocorrência de jornada do mesmo dia */
 function rotaDet(p){const D=new Map(p.jor.dias.map(x=>[x.d,x]));return[...group(p.rota.list,x=>x.d)].sort((a,b)=>a[0]<b[0]?-1:1).slice(0,4).map(([d,v])=>{const j=D.get(d),oc=j?[j.atraso?"início tardio":"",j.saida?"saída antecipada":"",j.auto?"check-out automático":""].filter(Boolean):[],
   hs=v.map(x=>x.h).filter(x=>x!=null).sort((a,b)=>a-b);return fDc(d)+": "+v.length+(v.length>1?" posições":" posição")+" fora (até "+Math.round(Math.max(...v.map(x=>x.dist)))+" m"+(hs.length?", "+fH(hs[0])+(hs.length>1?"–"+fH(hs[hs.length-1]):""):"")+")"+(oc.length?" · no mesmo dia: "+oc.join(", "):"")}).join(" | ")+(new Set(p.rota.list.map(x=>x.d)).size>4?" | …":"")}
+/* dossiê: texto factual para "foto da foto" (decisão do dono 24/11: rótulo da tela mantido; documento sem "falsa") */
+function motDoc(m){return(m||[]).map(t=>/foto da foto/i.test(t)?"Imagem de outra tela"+(/hor[áa]rio/i.test(t)?" (captura fora do horário da visita)":""):t).join("; ")}
 /* categorias de foto e de jornada */
 const FOTC=[["rep","Imagem repetida",/repetida/i,"#E11D48"],["dist","Fora do raio da loja",/m da loja|raio|dist/i,"#F59E0B"],["falsa","Foto da foto (possível foto falsa)",/foto da foto|falsa|hor[áa]rio/i,"#8B5CF6"],["preta","Foto preta",/preta|escura/i,"#94A3B8"]];
 const fotCat=f=>{const m=(f.mot||[]).join(" ");const c=["preta","falsa","rep","dist"].map(k=>FOTC.find(x=>x[0]===k)).find(x=>x[2].test(m));return c?c[0]:"out"};
@@ -852,7 +854,7 @@ function blocosDe(p){const c=S.cfg,h=R().has,B={},j=p.jor,pe=p.pes,ad=p.ad,cz=t=
   if(h.faltas&&p.fal.I){B.fal={key:"fal",tit:"Faltas",sev:lvl(p.fal.I,c.t.falta),txt:"Os registros indicam "+plural(p.fal.I,"falta injustificada","faltas injustificadas")+", "+plural(p.fal.J,"falta justificada","faltas justificadas")+" e "+plural(p.fal.A,"ausência","ausências")+" com atestado no período.",
       tab:{h:["Data","Dia","Tipo","Motivo"],r:p.fal.list.map(x=>[fD(x.d),dow(x.d),{I:"Injustificada",J:"Justificada",A:"Atestado"}[x.tipo],x.motivo||"-"])}}}
   if(h.fotos&&p.fot.length){B.fot={key:"fot",tit:"Fotos com indício",sev:lvl(p.fot.length,c.t.foto),txt:"Os registros indicam "+plural(p.fot.length,"foto","fotos")+" com indício de inconsistência entre as "+p.fotN+" analisadas no período. Os indícios necessitam de conferência das imagens.",
-      tab:{h:["Data","Hora","Loja","Indício"],r:p.fot.map(x=>[fD(x.d),fH(x.h),x.loja,x.mot.join("; ")])}}}
+      tab:{h:["Data","Hora","Loja","Indício"],r:p.fot.map(x=>[fD(x.d),fH(x.h),x.loja,motDoc(x.mot)])}}}
   if(h.rota&&p.rota.n){B.rota={key:"rota",tit:"Fuga de rota",sev:lvl(p.rota.dias,c.t.rota),txt:"Foram registradas "+p.rota.n+" posições fora da cerca de "+c.cerca+" metros da loja, em "+plural(p.rota.dias,"dia","dias")+", com distância máxima de "+Math.round(p.rota.max)+" metros.",
       tab:{h:["Data","Hora","Loja","Distância (m)"],r:p.rota.list.slice(0,40).map(x=>[fD(x.d),fH(x.h),x.loja,Math.round(x.dist)])}}}
   const cg=p.carga;if(cg&&p.ad.sem&&p.ad.sem.length&&(cg.media>=44||(p.pd&&cg.queda*100>=5))){const sm=p.ad.sem,pd=p.pd,alta=cg.media>=44&&cg.queda*100>=5&&sm.length>=2;
@@ -907,7 +909,7 @@ async function gerarPDF(){const p=pessoa(),d=S.dos,num=await numero(),{jsPDF}=wi
     for(let i=0;i<fs.length;i++){const f=fs[i],c=i%cols;if(c===0)need(ch+14);const x=M+c*(cw+gap),u=/^https?:/.test(f.url||"")?f.url:"fotos/"+String(f.url||"").split("/").pop(),im=await imgData(u);
       if(im){doc.addImage(im,"JPEG",x,y,cw,ch);doc.setDrawColor(200);doc.setLineWidth(.2);doc.rect(x,y,cw,ch)}else{doc.setFillColor(236,239,243);doc.rect(x,y,cw,ch,"F")}
       doc.setFont("helvetica","bold");doc.setFontSize(7);doc.setTextColor(16,38,59);doc.text(lat1(fD(f.d)+(f.h!=null?" "+fH(f.h):"")),x,y+ch+3.2);
-      doc.setFont("helvetica","normal");doc.setTextColor(80);doc.text(doc.splitTextToSize(lat1(String(f.loja||"").replace(/^[A-Z]{2} \/ /,"")+" - "+f.mot.join("; ")),cw).slice(0,2),x,y+ch+6.4);
+      doc.setFont("helvetica","normal");doc.setTextColor(80);doc.text(doc.splitTextToSize(lat1(String(f.loja||"").replace(/^[A-Z]{2} \/ /,"")+" - "+motDoc(f.mot)),cw).slice(0,2),x,y+ch+6.4);
       if(c===cols-1||i===fs.length-1)y+=ch+13}};
   /* cabeçalho */
   const lg=await logoData("assets/rt-intelligence.png");
@@ -932,7 +934,7 @@ async function gerarPDF(){const p=pessoa(),d=S.dos,num=await numero(),{jsPDF}=wi
     if(aj.length){tit("Anexo A - Jornada dia a dia");tab(["Data","Dia","Check-in","Check-out","Atraso","Ocorrência"],aj.map(x=>[fD(x.d),dow(x.d),fH(x.cin),x.auto?"automático":fH(x.cout),x.atraso?x.atraso+" min":"",[x.auto?"check-out automático":"",x.atraso?"atraso":""].filter(Boolean).join("; ")||"sem desvios"]))}
     if(al.length){tit("Anexo B - Aderência por loja");tab(["Loja","Contratado","Realizado","Pendente","Aderência"],al.map(l=>[l.loja,l.ct,l.rz,l.pend,pc(l.pct)]))}
     if(p.pes.loja.length){tit("Anexo C - Pesquisas por loja");tab(["Loja","Programadas","Respondidas","Expiradas","% expiradas"],p.pes.loja.map(s=>[s.k,s.prog,s.resp,s.exp,pc(s.prog?s.exp/s.prog:0)]))}
-    if(p.fot.length){tit("Anexo D - Fotos com indício");tab(["Data","Hora","Loja","Pesquisa","Indício"],p.fot.map(f=>[fD(f.d),fH(f.h),f.loja,f.pesq,f.mot.join("; ")]))}}
+    if(p.fot.length){tit("Anexo D - Fotos com indício");tab(["Data","Hora","Loja","Pesquisa","Indício"],p.fot.map(f=>[fD(f.d),fH(f.h),f.loja,f.pesq,motDoc(f.mot)]))}}
   const tp=doc.getNumberOfPages();for(let i=1;i<=tp;i++){doc.setPage(i);doc.setDrawColor(150);doc.setLineWidth(.2);doc.line(M,297-17,W-M,297-17);doc.setFont("helvetica","normal");doc.setFontSize(8);doc.setTextColor(80);
     doc.text(lat1("RT Intelligence · "+num),M,297-12.5);doc.text(lat1("Página "+i+" de "+tp),W-M,297-12.5,{align:"right"});doc.text(lat1("Este relatório apresenta indícios baseados em registros operacionais."),W/2,297-8.5,{align:"center"})}
   return{nome:nomeArq(d,"pdf"),data:doc.output("blob")}}
@@ -966,7 +968,7 @@ async function gerarExcel(){const p=pessoa(),d=S.dos,num=await numero(),c=S.cfg,
   folha("Aderência","Aderência por loja",[["Loja",40],["Contratado",13],["Realizado",13],["Pendente",12],["Aderência",12,PF],["Situação",20]],p.ad.lojas.map(l=>[l.loja,l.ct,l.rz,l.pend,l.pct||0,l.st==="ok"?"meta atingida":l.st]),p.nome+" · Meta de aderência: "+c.m2+"%");
   folha("Jornada","Jornada dia a dia",[["Data",12,DF],["Dia",8],["Check-in",10],["Check-out",12],["Atraso (min)",12],["Check-out automático",14],["Humor",14]],p.jor.dias.map(x=>[dt(x.d),dow(x.d),fH(x.cin),x.auto?"automático":fH(x.cout),x.atraso||0,x.auto?"Sim":"Não",p.hum.map.has(x.d)?(x.neg?"negativo":"ok"):"sem registro"]),p.nome+" · jornada "+jornTxt(p)+" · tolerância "+c.tolAtr+" min");
   folha("Faltas","Faltas e atestados",[["Data",12,DF],["Dia",8],["Tipo",16],["Motivo",50]],p.fal.list.map(x=>[dt(x.d),dow(x.d),{I:"Injustificada",J:"Justificada",A:"Atestado"}[x.tipo],x.motivo||""]));
-  folha("Fotos","Fotos com indício",[["Data",12,DF],["Hora",8],["Loja",36],["Pesquisa",30],["Indício",50]],p.fot.map(f=>[dt(f.d),fH(f.h),f.loja,f.pesq,f.mot.join("; ")]));
+  folha("Fotos","Fotos com indício",[["Data",12,DF],["Hora",8],["Loja",36],["Pesquisa",30],["Indício",50]],p.fot.map(f=>[dt(f.d),fH(f.h),f.loja,f.pesq,motDoc(f.mot)]));
   folha("Humor","Humor (contexto)",[["Data",12,DF],["Dia",8],["Registro",14]],[...p.hum.map.keys()].sort().map(x=>[dt(x),dow(x),p.hum.map.get(x)?"negativo":"ok"]),p.nome+" · informação de acompanhamento");
   folha("Parâmetros","Parâmetros usados",[["Parâmetro",46],["Valor",30]],[["Jornada aplicada",jornTxt(p)],["Tolerância de atraso (min)",c.tolAtr],["Tolerância de saída antecipada (min)",c.tolSai],["Meta de aderência (%)",c.m2],["Cerca de rota (m)",c.cerca],["Foto fora da loja (m)",c.distFoto],["Humor negativo",c.neg.join(", ")],["Feriados",c.fer.map(fD).join(", ")],["Período",d.per]]);
   const buf=await wb.xlsx.writeBuffer();return{nome:nomeArq(d,"xlsx"),data:new Blob([buf])}}

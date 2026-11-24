@@ -14,6 +14,8 @@ function ausDe(p){const o={nj:[],at:[],ap:[],ou:[]};((p.fal&&p.fal.list)||[]).fo
 /* fuga de rota: posições fora da cerca, por dia, com a ocorrência de jornada do mesmo dia */
 function rotaDet(p){const D=new Map(p.jor.dias.map(x=>[x.d,x]));return[...group(p.rota.list,x=>x.d)].sort((a,b)=>a[0]<b[0]?-1:1).slice(0,4).map(([d,v])=>{const j=D.get(d),oc=j?[j.atraso?"início tardio":"",j.saida?"saída antecipada":"",j.auto?"check-out automático":""].filter(Boolean):[],
   hs=v.map(x=>x.h).filter(x=>x!=null).sort((a,b)=>a-b);return fDc(d)+": "+v.length+(v.length>1?" posições":" posição")+" fora (até "+Math.round(Math.max(...v.map(x=>x.dist)))+" m"+(hs.length?", "+fH(hs[0])+(hs.length>1?"–"+fH(hs[hs.length-1]):""):"")+")"+(oc.length?" · no mesmo dia: "+oc.join(", "):"")}).join(" | ")+(new Set(p.rota.list.map(x=>x.d)).size>4?" | …":"")}
+/* dossiê: texto factual para "foto da foto" (decisão do dono 24/11: rótulo da tela mantido; documento sem "falsa") */
+function motDoc(m){return(m||[]).map(t=>/foto da foto/i.test(t)?"Imagem de outra tela"+(/hor[áa]rio/i.test(t)?" (captura fora do horário da visita)":""):t).join("; ")}
 /* categorias de foto e de jornada */
 const FOTC=[["rep","Imagem repetida",/repetida/i,"#E11D48"],["dist","Fora do raio da loja",/m da loja|raio|dist/i,"#F59E0B"],["falsa","Foto da foto (possível foto falsa)",/foto da foto|falsa|hor[áa]rio/i,"#8B5CF6"],["preta","Foto preta",/preta|escura/i,"#94A3B8"]];
 const fotCat=f=>{const m=(f.mot||[]).join(" ");const c=["preta","falsa","rep","dist"].map(k=>FOTC.find(x=>x[0]===k)).find(x=>x[2].test(m));return c?c[0]:"out"};

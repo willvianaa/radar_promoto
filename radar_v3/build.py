@@ -207,6 +207,10 @@ for a, b in [
 script = script.replace('.baixo.some(l=>/Meta 1/.test(l.st))?2:1', '.baixo.some(l=>l.pct!=null&&l.pct*100<85)?2:1')
 script = script.replace('n("m1","Meta 1 de aderência (%)",c.m1)+n("m2","Meta 2 de aderência (%)",c.m2)', 'n("m2","Meta de aderência (%)",c.m2)')
 script = script.replace('p.nome+" · Meta 1: "+c.m1+"% · Meta 2: "+c.m2+"%"', 'p.nome+" · Meta de aderência: "+c.m2+"%"')
+# v4.1: no dossiê, "foto da foto" aparece como texto factual (sem adjetivo de juízo, CLAUDE.md §5); na tela fica o rótulo pedido pelo dono
+_n = script.count('x.mot.join("; ")') + script.count('f.mot.join("; ")')
+assert _n == 5, _n
+script = script.replace('x.mot.join("; ")', 'motDoc(x.mot)').replace('f.mot.join("; ")', 'motDoc(f.mot)')
 # calendário: x.n não existe mais; conta as ocorrências do dia
 _oc = "((x.atraso?1:0)+(x.saida?1:0)+(x.auto?1:0))"
 script = sub(script, "n=(x?x.n:0)+nf", "n=(x?" + _oc + ":0)+nf")
