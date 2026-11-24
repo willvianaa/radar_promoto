@@ -21,7 +21,7 @@ def sub(txt, old, new, count=1):
 # ---------------- motor (v2) + ajustes ----------------
 eng = E(6, 291)
 eng = sub(eng, 'A:["Alto","var(--warn)","p-warn"],T:["Atenção","var(--m2)","p-m2"]', 'A:["Alto","var(--rt)","p-rt"],T:["Atenção","var(--warn)","p-warn"]')
-eng = re.sub(r'const TIPOS=\{.*?\};', 'const TIPOS={jor:"Atrasos e saídas",auto:"Check-out automático",pesq:"Pesquisas expiradas",exec:"Dias sem atividades",ader:"Impacto na aderência",falta:"Faltas",foto:"Fotos com indício",rota:"Fuga de rota",sobre:"Sobrecarga",humor:"Humor"};', eng, count=1, flags=re.S)
+eng = re.sub(r'const TIPOS=\{.*?\};', 'const TIPOS={jor:"Jornada: início tardio e saída",auto:"Jornada: check-out automático",pesq:"Pesquisas expiradas",exec:"Dias sem atividades",ader:"Impacto na aderência",falta:"Ausências: falta não justificada",foto:"Fotos com indício",rota:"Fuga de rota",sobre:"Sobrecarga",humor:"Humor"};', eng, count=1, flags=re.S)
 eng = sub(eng, 'al:{niv:"",tipo:""},demo:true', 'al:{niv:"",tipo:""},alN:60,rkN:15,PL:null,demo:true')
 eng = sub(eng, 'const x={d,cin:first,', 'const x={d,vs,cin:first,')
 eng = sub(eng, 'let seq=0,cur=0,neg=0;for(const d of hd){if(hm.get(d)){neg++;cur++;if(cur>seq)seq=cur}else cur=0}', 'let seq=0,cur=0,neg=0,seqFim=null;for(const d of hd){if(hm.get(d)){neg++;cur++;if(cur>seq){seq=cur;seqFim=d}}else cur=0}')
@@ -69,6 +69,12 @@ eng = sub(eng, '''  if(hNeg&&imp)add("sobre",2,"Possível sobrecarga","Humor neg
   const cgT=cgAlta?"Média de "+Math.round(cg.media)+" visitas contratadas por semana (até "+plural(cg.lojas,"loja","lojas")+") e aderência de "+pc(o.ad.sem[0].pct,0)+" para "+pc(o.ad.sem[o.ad.sem.length-1].pct,0)+" nas semanas fechadas.":"";
   const hT=hNeg?"Humor negativo em "+pc(h.pct,0)+" dos dias (maior sequência: "+plural(h.seq,"dia","dias")+")"+(imp&&!cgAlta?", junto com queda de desempenho e "+plural(o.lojas.length,"loja atendida","lojas atendidas"):"")+".":"";
   if((hNeg&&imp)||cgAlta)add("sobre",hNeg&&cgAlta?3:2,"Possível sobrecarga",[cgT,hT,pdT].filter(Boolean).join(" "));""")
+
+# ---------------- v4.0: jornada unificada + ausências (afastamentos) ----------------
+eng = sub(eng, 'if(/FALTA|ATESTADO|AUSENCIA|JUSTIFICATIVA/.test(H)', 'if(/FALTA|ATESTADO|AUSENCIA|AFASTAMENT|JUSTIFICATIVA/.test(H)')
+eng = sub(eng, 'ftipo:[/^TIPO/,/JUSTIFICAD/,/^FALTA/]', 'ftipo:[/^TIPO/,/JUSTIFICAD/,/^FALTA/,/AFASTAMENT/]')
+eng = sub(eng, 'o.motivo=s("motivo");', 'o.motivo=s("motivo")||s("ftipo");')
+eng = sub(eng, 'motivo:inj?"":"Consulta médica"', 'motivo:inj?"":["Atestado médico","Oportunidade no aparelho","Consulta médica","Curso da empresa"][fn%4]')
 
 # ---------------- UI ----------------
 radar = L(736, 765)
@@ -162,6 +168,7 @@ script = "\n".join([
     P("alertas_v2.js"),
     P("extras_v37.js"),
     P("v39.js"),
+    P("indicadores_v40.js"),
     P("humor_analise.js"),
     P("setores.js"),
     radar,
