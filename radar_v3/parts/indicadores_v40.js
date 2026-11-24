@@ -60,9 +60,9 @@ function modalKpi(k,tiles,tabs,nota){const d=KPI[k],V=kpiVals(R().list)[k],el=do
   el.addEventListener("click",e=>{const im=e.target.closest(".kx-im");if(im){const x=(window.__KXF||[])[+im.dataset.kxf];if(x){const par=x.fs.find(y=>y!==x.f&&((x.f.hash&&y.hash===x.f.hash)||x.ex));fotoModal(Object.assign({k:""},x.p,{nome:x.ex?x.p.nome+" · exemplo fictício":x.p.nome}),x.f,par)}return}const t=e.target.closest(".kx-tab");if(t){el.querySelectorAll(".kx-tab").forEach(b=>b.classList.toggle("on",b===t));el.querySelectorAll(".kx-p").forEach(p=>p.hidden=p.dataset.p!==t.dataset.tab);return}
     if(e.target===el||e.target.closest(".lb-x"))fechar();else if(e.target.closest("[data-a]"))setTimeout(fechar,0)});
   document.addEventListener("keydown",ek);document.body.appendChild(el)}
-function exRow(p,val,det,cor){return'<div class="kr ex-row"><span class="kr-av" style="background:var(--m2)">'+esc(p.nome[0]+p.nome.split(" ").pop()[0])+'</span><span class="kr-n"><b>'+esc(p.nome)+''+EXP+'</b><small>'+esc(p.uf)+' · '+esc(p.sup)+'</small><small class="kr-d">'+esc(det)+'</small></span><span class="kr-v" style="color:'+cor+'">'+val+'</span></div>'}
+function exRow(p,val,det,cor,pill){return'<div class="kr ex-row"><span class="kr-av" style="background:var(--m2)">'+esc(p.nome[0]+p.nome.split(" ").pop()[0])+'</span><span class="kr-n"><b>'+esc(p.nome)+''+(pill||EXP)+'</b><small>'+esc(p.uf)+' · '+esc(p.sup)+'</small><small class="kr-d">'+esc(det)+'</small></span><span class="kr-v" style="color:'+cor+'">'+val+'</span></div>'}
 /* miniaturas das fotos com indício no detalhe; clique amplia (fotoModal). Exemplos fictícios: imagens de exemplo, marcadas */
-const fotoUrl=f=>/^https?:/.test(f.url||"")?f.url:f.url?"fotos/"+String(f.url).split("/").pop():"";
+const fotoUrl=f=>f.url?"fotos/"+String(f.url).split(/[\/]/).pop():"";
 function thumbs(p,fs,ex){const v=fs.filter(f=>fotoUrl(f)).slice(0,8);if(!v.length)return"";
   return'<div class="kx-ths">'+v.map(f=>{const i=window.__KXF.push({p,f,fs,ex})-1;return'<button class="kx-im" data-kxf="'+i+'" title="Ampliar"><img loading="lazy" src="'+esc(fotoUrl(f))+'" alt="Foto de '+esc(fDc(f.d))+'"><small>'+fDc(f.d)+(f.h!=null?" "+fH(f.h):"")+'</small></button>'}).join("")+(fs.length>v.length?'<span class="kx-more">+'+(fs.length-v.length)+'</span>':"")+'</div>'}
 const FOTO_EX={
@@ -94,7 +94,7 @@ function kpiModal(k){const d=KPI[k];if(!d)return;const L=R().list,V=kpiVals(L)[k
   if(k==="foto"){tiles=[[V.big,"fotos com indício","#14B8A6"],...FOTC.map(x=>[num(L.reduce((a,p)=>a+p.fot.filter(f=>fotCat(f)===x[0]).length,0)),x[1].toLowerCase(),x[3]])].concat(R().has.rota?[[num(L.reduce((a,p)=>a+p.rota.dias,0)),"dias com fuga de rota (cerca "+S.cfg.cerca+" m)","#F97316"]]:[]);
     window.__KXF=[];
     tabs=FOTC.map(x=>{const ps=L.map(p=>[p,p.fot.filter(f=>fotCat(f)===x[0])]).filter(y=>y[1].length).sort((a,b)=>b[1].length-a[1].length);
-      if(!ps.length&&FOTO_EX[x[0]])return{l:x[1],c:x[3],ex:true,n:FOTO_EX[x[0]].length,rows:FOTO_EX[x[0]].map(e=>exRow(e.p,e.fs.length+(e.fs.length>1?" fotos":" foto"),e.det,x[3])+thumbs(e.p,e.fs,true))};
+      if(!ps.length&&FOTO_EX[x[0]])return{l:x[1],c:x[3],ex:true,n:FOTO_EX[x[0]].length,rows:FOTO_EX[x[0]].map(e=>exRow(e.p,e.fs.length+(e.fs.length>1?" fotos":" foto"),e.det,x[3],'<span class="pill p-warn ex-pill">exemplo · nome fictício</span>')+thumbs(e.p,e.fs,true))};
       return{l:x[1],c:x[3],n:ps.length,rows:ps.map(([p,fs])=>kmRow(p,fs.length,fs.length+" de "+p.fotN+" fotos · "+dts(fs)+" · "+[...new Set(fs.map(f=>(f.loja||"").replace(/^[A-Z]{2} \/ /,"")))].slice(0,2).join(", "),x[3])+thumbs(p,fs,false))}});
     if(R().has.rota){const ps=L.filter(p=>p.rota.dias).sort((a,b)=>b.rota.dias-a.rota.dias);
       tabs.push({l:"Fuga de rota (cerca "+S.cfg.cerca+" m)",c:"#F97316",n:ps.length,rows:ps.map(p=>kmRow(p,p.rota.dias+(p.rota.dias>1?" dias":" dia"),rotaDet(p),"#F97316"))})}
