@@ -545,7 +545,7 @@ function modalLista(tit,sub,rows,foot){const el=document.createElement("div");el
   const fechar=()=>{el.remove();document.removeEventListener("keydown",ek)},ek=e=>{if(e.key==="Escape")fechar()};
   el.addEventListener("click",e=>{if(e.target===el||e.target.closest(".lb-x"))fechar();else if(e.target.closest("[data-a]"))setTimeout(fechar,0)});document.addEventListener("keydown",ek);document.body.appendChild(el)}
 function kmRow(p,val,det,cor){const ini=(p.nome.split(" ")[0]||"?")[0]+((p.nome.split(" ").filter(Boolean).pop()||"")[0]||"");
-  return'<button class="kr" data-a="abrir" data-v="'+esc(p.k)+'"><span class="kr-av" style="background:'+(p.niv?NIV[p.niv][1]:"var(--m2)")+'">'+esc(ini)+'</span><span class="kr-n"><b>'+esc(p.nome)+'</b><small>'+esc(p.uf||"—")+' · '+esc(p.sup||"sem supervisor")+'</small><small class="kr-d">'+det+'</small></span><span class="kr-v" style="color:'+(cor||"var(--ink)")+'">'+val+'</span></button>'}
+  return'<button class="kr" data-a="abrir" data-v="'+esc(p.k)+'"><span class="kr-av" style="background:'+(p.niv?NIV[p.niv][1]:"var(--m2)")+'">'+esc(ini)+'</span><span class="kr-n"><b>'+esc(p.nome)+'</b><small>'+esc(p.uf||"—")+' · '+esc(p.sup||"sem supervisor")+'</small><small class="kr-d">'+esc(det)+'</small></span><span class="kr-v" style="color:'+(cor||"var(--ink)")+'">'+val+'</span></button>'}
 function nivModal(n){const L=R().list,nm={C:"Crítico",A:"Alto",T:"Atenção",B:"Monitorar"}[n],ps=(n==="B"?L.filter(p=>!p.niv&&p.alertas.length):L.filter(p=>p.niv===n)).sort((a,b)=>b.risco-a.risco);
   modalLista(plural(ps.length,"promotor","promotores")+" em "+nm,"Nível de alerta",ps.slice(0,60).map(p=>kmRow(p,p.risco,p.alertas.slice(0,3).map(a=>a.tit).join(" · ")||"sem alertas",p.niv?NIV[p.niv][1]:"var(--m2)")).join(""),'<div class="lb-ft"><span class="muted small">Ordenado pelo risco. Clique para abrir o Raio-X.</span><button class="btn" data-a="niv" data-v="'+n+'">Ver na central de alertas →</button></div>')}
 /* busca de promotor com sugestões */
@@ -631,7 +631,7 @@ function kpiModal(k){const d=KPI[k];if(!d)return;const L=R().list,V=kpiVals(L)[k
     tabs=FOTC.map(x=>{const ps=L.map(p=>[p,p.fot.filter(f=>fotCat(f)===x[0])]).filter(y=>y[1].length).sort((a,b)=>b[1].length-a[1].length);return{l:x[1],c:x[3],n:ps.length,rows:ps.map(([p,fs])=>kmRow(p,fs.length,fs.length+" de "+p.fotN+" fotos · "+dts(fs)+" · "+[...new Set(fs.map(f=>(f.loja||"").replace(/^[A-Z]{2} \/ /,"")))].slice(0,2).join(", "),x[3]))}})}
   if(k==="aus"&&R().has.faltas){const AP=L.map(p=>[p,ausDe(p)]);
     tiles=[[V.big,"dias de ausência","#EC4899"],...AUS.map(x=>[num(AP.reduce((a,y)=>a+y[1][x[0]].length,0)),x[1].toLowerCase()+" · "+plural(AP.filter(y=>y[1][x[0]].length).length,"promotor","promotores"),x[2]])];
-    tabs=AUS.map(x=>{const ps=AP.filter(y=>y[1][x[0]].length).sort((a,b)=>b[1][x[0]].length-a[1][x[0]].length);return{l:x[1],c:x[2],n:ps.length,rows:ps.map(([p,a])=>{const v=a[x[0]];return kmRow(p,v.length+(v.length>1?" dias":" dia"),dts(v)+(v.some(z=>z.motivo)?" · "+[...new Set(v.map(z=>z.motivo).filter(Boolean))].slice(0,2).join("; "):""),x[2])})}});
+    tabs=AUS.map(x=>{const ps=AP.filter(y=>y[1][x[0]].length).sort((a,b)=>b[1][x[0]].length-a[1][x[0]].length);return{l:x[1],c:x[2],n:ps.length,rows:ps.map(([p,a])=>{const v=a[x[0]];return kmRow(p,v.length+(v.length>1?" dias":" dia"),dts(v),x[2])})}});
     nota="Só falta não justificada gera alerta. Atestados e justificativas aparecem para acompanhamento."}
   modalKpi(k,tiles,tabs,nota)}
 
